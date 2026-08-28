@@ -3,11 +3,6 @@
 /**
  * Les actions possibles sur un appareil : vendre, réserver, retour,
  * réparation, perte, transfert, correction.
- *
- * Chaque action ouvre une petite fenêtre avec uniquement les champs qui
- * la concernent. On n'affiche que les actions réellement possibles depuis
- * le statut courant : proposer « Vendre » sur un appareil déjà vendu ne
- * servirait qu'à produire une erreur.
  */
 
 import { useState } from "react";
@@ -26,7 +21,9 @@ import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
 import { permissions } from "@/lib/permissions";
+import { convertirMontant, obtenirDevise } from "@/lib/devises";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -47,122 +44,116 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { libellesStatuts } from "@/lib/format";
 import type { StatutTelephone, Telephone } from "@/types";
 
 /** Les champs qu'une action demande. */
 type Champ = "prix" | "client" | "motif" | "commentaire" | "boutique" | "statut";
 
-type Action = {
+type ActionDef = {
   cle: string;
-  libelle: string;
-  /** Chemin appelé sur l'API, après /telephones/{id}/ */
+  cleLibelle: string;
+  cleDesc: string;
   route: string;
   icone: LucideIcon;
-  /** Depuis quels statuts cette action est proposée. */
   depuis: StatutTelephone[];
   champs: Champ[];
-  description: string;
-  /** Corps supplémentaire envoyé systématiquement. */
   corpsFixe?: Record<string, unknown>;
   destructive?: boolean;
-  /** Qui a le droit de déclencher cette action. */
   autorise: (role: "proprietaire" | "vendeuse" | "secretaire" | "admin") => boolean;
 };
 
-const actions: Action[] = [
+const actions: ActionDef[] = [
   {
     cle: "vente",
-    libelle: "Vendre",
+    cleLibelle: "telephones.actionVente",
+    cleDesc: "telephones.enregistrerVenteTitre",
     route: "vente",
     icone: Banknote,
     depuis: ["en_stock", "reserve"],
     champs: ["prix", "client", "commentaire"],
-    description: "L'appareil sort du stock et passe en « vendu ».",
     autorise: permissions.bougerStock,
   },
   {
     cle: "reservation",
-    libelle: "Réserver",
+    cleLibelle: "telephones.actionReservation",
+    cleDesc: "telephones.reservationTitre",
     route: "reservation",
     icone: BookmarkCheck,
     depuis: ["en_stock"],
     champs: ["client", "commentaire"],
-    description: "Mis de côté pour un client, sans sortir du stock.",
     autorise: permissions.bougerStock,
   },
   {
     cle: "annuler-reservation",
-    libelle: "Annuler la réservation",
+    cleLibelle: "telephones.actionCorrection",
+    cleDesc: "telephones.reservationTitre",
     route: "retour",
     icone: Undo2,
     depuis: ["reserve"],
     champs: ["motif"],
-    description: "L'appareil redevient disponible à la vente.",
     autorise: permissions.bougerStock,
   },
   {
     cle: "retour",
-    libelle: "Retour client",
+    cleLibelle: "typesMouvement.retour",
+    cleDesc: "telephones.actionCorrection",
     route: "retour",
     icone: RotateCcw,
     depuis: ["vendu"],
     champs: ["motif", "commentaire"],
-    description: "Le client rapporte l'appareil : il revient en stock.",
     autorise: permissions.bougerStock,
   },
   {
     cle: "sav-depart",
-    libelle: "Envoyer en réparation",
+    cleLibelle: "telephones.actionSav",
+    cleDesc: "telephones.savTitre",
     route: "sav",
     icone: Wrench,
     depuis: ["en_stock", "vendu"],
     champs: ["motif", "commentaire"],
     corpsFixe: { sens: "depart" },
-    description: "L'appareil part au service après-vente.",
     autorise: permissions.bougerStock,
   },
   {
     cle: "sav-retour",
-    libelle: "Revenu de réparation",
+    cleLibelle: "telephones.actionRetourSav",
+    cleDesc: "telephones.savTitre",
     route: "sav",
     icone: Wrench,
     depuis: ["sav"],
     champs: ["motif", "commentaire"],
     corpsFixe: { sens: "retour" },
-    description: "L'appareil est réparé et remis en stock.",
     autorise: permissions.bougerStock,
   },
   {
     cle: "transfert",
-    libelle: "Transférer",
+    cleLibelle: "telephones.actionTransfert",
+    cleDesc: "telephones.transfertTitre",
     route: "transfert",
     icone: ArrowLeftRight,
     depuis: ["en_stock", "reserve"],
     champs: ["boutique", "motif"],
-    description: "Déplacer l'appareil vers une autre de vos boutiques.",
     autorise: permissions.transferer,
   },
   {
     cle: "perte",
-    libelle: "Déclarer perdu",
+    cleLibelle: "telephones.actionPerte",
+    cleDesc: "telephones.perteTitre",
     route: "perte",
     icone: ShieldAlert,
     depuis: ["en_stock", "reserve", "sav"],
     champs: ["motif", "commentaire"],
-    description: "Vol, casse ou disparition. L'appareil sort du stock.",
     destructive: true,
     autorise: permissions.bougerStock,
   },
   {
     cle: "correction",
-    libelle: "Corriger le statut",
+    cleLibelle: "telephones.actionCorrection",
+    cleDesc: "telephones.actionCorrection",
     route: "correction",
     icone: ShieldAlert,
     depuis: ["en_stock", "reserve", "vendu", "sav", "perdu"],
     champs: ["statut", "motif", "commentaire"],
-    description:
-      "Rattrape une situation incohérente. La correction reste dans l'historique.",
     destructive: true,
     autorise: permissions.corriger,
   },
@@ -176,19 +167,21 @@ export function ActionsTelephone({
   surSucces: () => void;
 }) {
   const { utilisateur } = useAuth();
-  const [ouverte, setOuverte] = useState<Action | null>(null);
+  const { t } = useI18n();
+  const [ouverte, setOuverte] = useState<ActionDef | null>(null);
 
   if (!utilisateur) return null;
 
   const disponibles = actions.filter(
     (action) =>
-      action.depuis.includes(telephone.statut) && action.autorise(utilisateur.role),
+      action.depuis.includes(telephone.statut) &&
+      action.autorise(utilisateur.role),
   );
 
   if (disponibles.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Aucune action disponible sur cet appareil avec votre rôle.
+        {t("telephones.aucunHistorique")}
       </p>
     );
   }
@@ -205,7 +198,7 @@ export function ActionsTelephone({
               onClick={() => setOuverte(action)}
             >
               <Icone className="mr-2 h-4 w-4" />
-              {action.libelle}
+              {t(action.cleLibelle)}
             </Button>
           );
         })}
@@ -224,21 +217,27 @@ export function ActionsTelephone({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-
 function FenetreAction({
   action,
   telephone,
   onFermer,
   onSucces,
 }: {
-  action: Action | null;
+  action: ActionDef | null;
   telephone: Telephone;
   onFermer: () => void;
   onSucces: () => void;
 }) {
   const router = useRouter();
-  const { boutiques, devise } = useAuth();
+  const { boutiques, devise, deviseBoutique } = useAuth();
+  const { t, libelleStatut, lang } = useI18n();
+
+  const deviseOrigine = telephone.boutique?.devise ?? deviseBoutique;
+  const configDevise = obtenirDevise(devise);
+  const prixConverti = convertirMontant(telephone.prix_vente || 0, deviseOrigine, devise);
+  const prixInitialPlaceholder = prixConverti > 0
+    ? String(configDevise.decimales === 0 ? Math.round(prixConverti) : Number(prixConverti.toFixed(configDevise.decimales)))
+    : "";
 
   const [prix, setPrix] = useState("");
   const [clientNom, setClientNom] = useState("");
@@ -250,11 +249,10 @@ function FenetreAction({
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
-  // Les autres boutiques : on ne transfère pas vers celle où l'on est déjà.
   const destinations = boutiques.filter((b) => b.id !== telephone.boutique?.id);
 
   function reinitialiser() {
-    setPrix(String(telephone.prix_vente || ""));
+    setPrix(prixInitialPlaceholder);
     setClientNom("");
     setClientTelephone("");
     setMotif("");
@@ -273,7 +271,18 @@ function FenetreAction({
 
     const corps: Record<string, unknown> = { ...action.corpsFixe };
 
-    if (action.champs.includes("prix")) corps.prix = prix ? Number(prix) : null;
+    if (action.champs.includes("prix")) {
+      if (prix) {
+        const montantSaisi = Number(prix);
+        const montantDeviseBoutique = convertirMontant(montantSaisi, devise, deviseOrigine);
+        const configBoutique = obtenirDevise(deviseOrigine);
+        corps.prix = configBoutique.decimales === 0
+          ? Math.round(montantDeviseBoutique)
+          : Number(montantDeviseBoutique.toFixed(configBoutique.decimales));
+      } else {
+        corps.prix = null;
+      }
+    }
     if (action.champs.includes("client")) {
       corps.client_nom = clientNom || null;
       corps.client_telephone = clientTelephone || null;
@@ -283,7 +292,6 @@ function FenetreAction({
       corps.commentaire = commentaire || null;
     }
     if (action.champs.includes("boutique")) {
-      
       corps.boutique_destination_id = String(boutiqueId);
     }
     if (action.champs.includes("statut")) corps.statut = statut;
@@ -293,7 +301,7 @@ function FenetreAction({
         `/telephones/${telephone.id}/${action.route}`,
         corps,
       );
-      toast.success(reponse.message);
+      toast.success(reponse.message || t("telephones.mouvementEnregistre"));
       reinitialiser();
       onSucces();
       router.refresh();
@@ -301,12 +309,19 @@ function FenetreAction({
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
         toast.error(e.resume());
-        console.log("Boutique de destination", boutiqueId);
       }
     } finally {
       setEnvoiEnCours(false);
     }
   }
+
+  const statutsDispo: StatutTelephone[] = [
+    "en_stock",
+    "reserve",
+    "vendu",
+    "sav",
+    "perdu",
+  ];
 
   return (
     <Dialog
@@ -321,16 +336,18 @@ function FenetreAction({
           <>
             <form onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
               <DialogHeader>
-                <DialogTitle>{action.libelle}</DialogTitle>
+                <DialogTitle>{t(action.cleLibelle)}</DialogTitle>
                 <DialogDescription>
-                  {telephone.modele?.libelle} · {action.description}
+                  {telephone.modele?.libelle} · {t(action.cleDesc)}
                 </DialogDescription>
               </DialogHeader>
 
               <DialogCorps>
                 {action.champs.includes("prix") && (
                   <div className="space-y-2">
-                    <Label htmlFor="prix">Prix de vente réel ({devise})</Label>
+                    <Label htmlFor="prix">
+                      {t("telephones.prixVendu")} ({devise})
+                    </Label>
                     <Input
                       id="prix"
                       type="number"
@@ -338,10 +355,12 @@ function FenetreAction({
                       className="chiffres h-10"
                       value={prix}
                       onChange={(e) => setPrix(e.target.value)}
-                      placeholder={String(telephone.prix_vente)}
+                      placeholder={prixInitialPlaceholder}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Laissez tel quel si le client paie le prix affiché.
+                      {lang === "en"
+                        ? "Leave as is if customer pays listed price."
+                        : "Laissez tel quel si le client paie le prix affiché."}
                     </p>
                   </div>
                 )}
@@ -350,7 +369,7 @@ function FenetreAction({
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="client-nom">
-                        Nom du client
+                        {t("telephones.clientNom")}
                         {action.cle === "reservation" && (
                           <span className="ml-0.5 text-destructive">*</span>
                         )}
@@ -369,7 +388,9 @@ function FenetreAction({
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="client-tel">Téléphone</Label>
+                      <Label htmlFor="client-tel">
+                        {t("telephones.clientTelephone")}
+                      </Label>
                       <Input
                         id="client-tel"
                         className="h-10"
@@ -383,12 +404,14 @@ function FenetreAction({
                 {action.champs.includes("boutique") && (
                   <div className="space-y-2">
                     <Label>
-                      Boutique de destination
+                      {t("telephones.boutiqueDestination")}
                       <span className="ml-0.5 text-destructive">*</span>
                     </Label>
                     {destinations.length === 0 ? (
                       <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-                        Vous n&apos;avez accès à aucune autre boutique.
+                        {lang === "en"
+                          ? "You do not have access to any other store."
+                          : "Vous n'avez accès à aucune autre boutique."}
                       </p>
                     ) : (
                       <Select
@@ -399,7 +422,11 @@ function FenetreAction({
                         onValueChange={(v) => setBoutiqueId(v ?? "")}
                       >
                         <SelectTrigger className="h-10 w-full">
-                          <SelectValue placeholder="Choisir la boutique" />
+                          <SelectValue
+                            placeholder={
+                              lang === "en" ? "Select store" : "Choisir la boutique"
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           {destinations.map((boutique) => (
@@ -423,9 +450,11 @@ function FenetreAction({
 
                 {action.champs.includes("statut") && (
                   <div className="space-y-2">
-                    <Label>Nouveau statut</Label>
+                    <Label>{t("commun.statut")}</Label>
                     <Select
-                      items={libellesStatuts}
+                      items={Object.fromEntries(
+                        statutsDispo.map((s) => [s, libelleStatut(s)]),
+                      )}
                       value={statut}
                       onValueChange={(v) =>
                         setStatut((v ?? "en_stock") as StatutTelephone)
@@ -435,13 +464,11 @@ function FenetreAction({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(libellesStatuts).map(
-                          ([valeur, libelle]) => (
-                            <SelectItem key={valeur} value={valeur}>
-                              {libelle}
-                            </SelectItem>
-                          ),
-                        )}
+                        {statutsDispo.map((valeur) => (
+                          <SelectItem key={valeur} value={valeur}>
+                            {libelleStatut(valeur)}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -450,8 +477,9 @@ function FenetreAction({
                 {action.champs.includes("motif") && (
                   <div className="space-y-2">
                     <Label htmlFor="motif">
-                      Motif
-                      {(action.cle === "perte" || action.cle === "correction") && (
+                      {t("telephones.motif")}
+                      {(action.cle === "perte" ||
+                        action.cle === "correction") && (
                         <span className="ml-0.5 text-destructive">*</span>
                       )}
                     </Label>
@@ -465,19 +493,27 @@ function FenetreAction({
                       onChange={(e) => setMotif(e.target.value)}
                       placeholder={
                         action.cle === "perte"
-                          ? "Vol, casse, disparition…"
-                          : "Précisez la raison"
+                          ? lang === "en"
+                            ? "Lost, stolen, damaged..."
+                            : "Vol, casse, disparition…"
+                          : lang === "en"
+                            ? "Specify reason"
+                            : "Précisez la raison"
                       }
                     />
                     {erreurs.motif && (
-                      <p className="text-xs text-destructive">{erreurs.motif}</p>
+                      <p className="text-xs text-destructive">
+                        {erreurs.motif}
+                      </p>
                     )}
                   </div>
                 )}
 
                 {action.champs.includes("commentaire") && (
                   <div className="space-y-2">
-                    <Label htmlFor="commentaire">Commentaire</Label>
+                    <Label htmlFor="commentaire">
+                      {t("telephones.commentaire")}
+                    </Label>
                     <Textarea
                       id="commentaire"
                       rows={2}
@@ -496,7 +532,7 @@ function FenetreAction({
 
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={onFermer}>
-                  Annuler
+                  {t("commun.annuler")}
                 </Button>
                 <Button
                   type="submit"
@@ -508,7 +544,7 @@ function FenetreAction({
                   {envoiEnCours && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Confirmer
+                  {t("commun.valider")}
                 </Button>
               </DialogFooter>
             </form>

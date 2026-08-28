@@ -4,12 +4,20 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { BookOpen, Loader2, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import {
+  BookOpen,
+  Loader2,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { useListe } from "@/lib/useListe";
-import { formaterMontant } from "@/lib/format";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
 import { permissions } from "@/lib/permissions";
 import {
   Apparait,
@@ -48,10 +56,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import type { Marque, Modele } from "@/types";
+import type { Gamme, Marque, Modele, ModeleStockage } from "@/types";
 
 export default function PageCatalogue() {
-  const { devise, utilisateur, parametresBoutique } = useAuth();
+  const { devise, deviseBoutique, utilisateur, parametresBoutique } = useAuth();
+  const { t, formatMontant, lang } = useI18n();
   const parametresUrl = useSearchParams();
 
   const [recherche, setRecherche] = useState("");
@@ -64,6 +73,7 @@ export default function PageCatalogue() {
   const [enEdition, setEnEdition] = useState<Partial<Modele> | null>(null);
   const [aSupprimer, setASupprimer] = useState<Modele | null>(null);
   const [marqueOuverte, setMarqueOuverte] = useState(false);
+  const [gammeOuverte, setGammeOuverte] = useState(false);
 
   const boutiqueId = parametresBoutique.boutique_id;
 
@@ -94,18 +104,18 @@ export default function PageCatalogue() {
   );
 
   const modeles = (donnees?.data ?? []).filter(
-    (m) => !marqueFiltre || m.marque.id === marqueFiltre,
+    (m) => !marqueFiltre || m.gamme.marque.id === marqueFiltre,
   );
 
   async function supprimer() {
     if (!aSupprimer) return;
     try {
       await api.delete(`/modeles/${aSupprimer.id}`);
-      toast.success("Modèle supprimé.");
+      toast.success(lang === "en" ? "Model deleted." : "Modèle supprimé.");
       setASupprimer(null);
       recharger();
     } catch (e) {
-      toast.error(e instanceof ErreurApi ? e.resume() : "Erreur inconnue.");
+      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
     }
   }
 
@@ -114,19 +124,25 @@ export default function PageCatalogue() {
   return (
     <>
       <TitrePage
-        titre="Catalogue"
-        description="Les modèles que vous vendez. Le stock se compte en appareils."
+        titre={t("modeles.titre")}
+        description={t("modeles.description")}
       >
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setMarqueOuverte(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouvelle marque
-          </Button>
-          <Button onClick={() => setEnEdition({})}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouveau modèle
-          </Button>
-        </div>
+        {utilisateur?.role !== "vendeuse" && (
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setMarqueOuverte(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t("modeles.ajouterMarque")}
+            </Button>
+            <Button variant="outline" onClick={() => setGammeOuverte(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t("modeles.ajouterGamme")}
+            </Button>
+            <Button onClick={() => setEnEdition({})}>
+              <Plus className="mr-2 h-4 w-4" />
+              {t("modeles.ajouterModele")}
+            </Button>
+          </div>
+        )}
       </TitrePage>
 
       <Card className="mb-4">
@@ -135,7 +151,7 @@ export default function PageCatalogue() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="h-10 pl-9"
-              placeholder="Marque ou modèle…"
+              placeholder={lang === "en" ? "Brand or model..." : "Marque ou modèle…"}
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
             />
@@ -147,10 +163,16 @@ export default function PageCatalogue() {
             onValueChange={(v) => setMarqueFiltre(v ?? "")}
           >
             <SelectTrigger className="h-10 w-44">
-              <SelectValue placeholder="Toutes les marques" />
+              <SelectValue
+                placeholder={
+                  lang === "en" ? "All brands" : "Toutes les marques"
+                }
+              />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Toutes les marques</SelectItem>
+              <SelectItem value="">
+                {lang === "en" ? "All brands" : "Toutes les marques"}
+              </SelectItem>
               {marques.map((m) => (
                 <SelectItem key={m.id} value={m.id}>
                   {m.nom}
@@ -166,7 +188,9 @@ export default function PageCatalogue() {
               onCheckedChange={setAlertesSeules}
             />
             <Label htmlFor="alertes" className="font-normal">
-              À réapprovisionner seulement
+              {lang === "en"
+                ? "Restock alerts only"
+                : "À réapprovisionner seulement"}
             </Label>
           </div>
         </CardContent>
@@ -179,17 +203,21 @@ export default function PageCatalogue() {
       ) : modeles.length === 0 ? (
         <EtatVide
           icone={<BookOpen className="h-5 w-5" />}
-          titre={alertesSeules ? "Aucune alerte" : "Catalogue vide"}
+          titre={
+            alertesSeules
+              ? t("dashboard.aucuneAlerte")
+              : t("modeles.aucunModele")
+          }
           description={
             alertesSeules
-              ? "Tous vos modèles sont au-dessus de leur seuil."
-              : "Ajoutez les modèles que vous vendez pour pouvoir enregistrer des appareils."
+              ? t("dashboard.alertesDesc")
+              : t("modeles.aucunModeleDesc")
           }
         >
           {!alertesSeules && (
             <Button onClick={() => setEnEdition({})}>
               <Plus className="mr-2 h-4 w-4" />
-              Nouveau modèle
+              {t("modeles.ajouterModele")}
             </Button>
           )}
         </EtatVide>
@@ -201,16 +229,19 @@ export default function PageCatalogue() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Modèle</TableHead>
-                      <TableHead className="hidden md:table-cell">
-                        RAM
+                      <TableHead>{t("modeles.nomModele")}</TableHead>
+                      <TableHead className="text-right">
+                        {t("modeles.prixVenteConseille")}
                       </TableHead>
                       <TableHead className="text-right">
-                        Prix conseillé
+                        {t("modeles.enStock")}
                       </TableHead>
-                      <TableHead className="text-right">En stock</TableHead>
-                      <TableHead className="text-right">Seuil</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="text-right">
+                        {t("modeles.seuilAlerte")}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {t("commun.actions")}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -224,17 +255,15 @@ export default function PageCatalogue() {
                             <p className="font-medium">{modele.libelle}</p>
                             {!modele.actif && (
                               <p className="text-xs text-muted-foreground">
-                                Désactivé
+                                {t("commun.inactif")}
                               </p>
                             )}
                           </TableCell>
-                          <TableCell className="hidden text-muted-foreground md:table-cell">
-                            {modele.ram ?? "—"}
-                          </TableCell>
                           <TableCell className="chiffres whitespace-nowrap text-right">
-                            {formaterMontant(
+                            {formatMontant(
                               modele.prix_vente_conseille,
                               devise,
+                              deviseBoutique,
                             )}
                           </TableCell>
                           <TableCell className="text-right">
@@ -262,7 +291,9 @@ export default function PageCatalogue() {
                                 onClick={() => setEnEdition(modele)}
                               >
                                 <Pencil className="h-4 w-4" />
-                                <span className="sr-only">Modifier</span>
+                                <span className="sr-only">
+                                  {t("commun.modifier")}
+                                </span>
                               </Button>
                               {peutSupprimer && (
                                 <Button
@@ -271,7 +302,9 @@ export default function PageCatalogue() {
                                   onClick={() => setASupprimer(modele)}
                                 >
                                   <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">Supprimer</span>
+                                  <span className="sr-only">
+                                    {t("commun.supprimer")}
+                                  </span>
                                 </Button>
                               )}
                             </div>
@@ -307,25 +340,36 @@ export default function PageCatalogue() {
         }}
       />
 
+      <FenetreGamme
+        ouverte={gammeOuverte}
+        marques={marques}
+        onFermer={() => setGammeOuverte(false)}
+        onSucces={() => setGammeOuverte(false)}
+      />
+
       <Dialog
         open={aSupprimer !== null}
         onOpenChange={(ouvert) => !ouvert && setASupprimer(null)}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Supprimer « {aSupprimer?.libelle} » ?</DialogTitle>
+            <DialogTitle>
+              {lang === "en"
+                ? `Delete "${aSupprimer?.libelle}"?`
+                : `Supprimer « ${aSupprimer?.libelle} » ?`}
+            </DialogTitle>
             <DialogDescription>
-              Un modèle dont des appareils existent encore ne peut pas être
-              supprimé. Désactivez-le plutôt : il disparaîtra des listes de
-              saisie sans effacer l&apos;historique.
+              {lang === "en"
+                ? "A model with existing registered devices cannot be deleted. Deactivate it instead so it hides from intake lists while preserving history."
+                : "Un modèle dont des appareils existent encore ne peut pas être supprimé. Désactivez-le plutôt : il disparaîtra des listes de saisie sans effacer l'historique."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setASupprimer(null)}>
-              Annuler
+              {t("commun.annuler")}
             </Button>
             <Button variant="destructive" onClick={() => void supprimer()}>
-              Supprimer
+              {t("commun.supprimer")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -333,8 +377,6 @@ export default function PageCatalogue() {
     </>
   );
 }
-
-/* -------------------------------------------------------------------------- */
 
 function FenetreModele({
   modele,
@@ -349,12 +391,15 @@ function FenetreModele({
   onFermer: () => void;
   onSucces: () => void;
 }) {
+  const { t, lang } = useI18n();
   const modification = Boolean(modele?.id);
 
+  const [marqueId, setMarqueId] = useState("");
+  const [gammes, setGammes] = useState<Gamme[]>([]);
+
   const [champs, setChamps] = useState({
-    marque_id: "",
+    gamme_id: "",
     nom: "",
-    stockage: "",
     ram: "",
     description: "",
     prix_achat_conseille: "0",
@@ -367,11 +412,23 @@ function FenetreModele({
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
   useEffect(() => {
+    if (!marqueId) {
+      setGammes([]);
+      return;
+    }
+    api
+      .get<{ data: Gamme[] }>("/gammes", { marque_id: marqueId })
+      .then((r) => setGammes(r.data))
+      .catch(() => setGammes([]));
+  }, [marqueId]);
+
+  useEffect(() => {
     if (!modele) return;
+
+    setMarqueId(modele.gamme?.marque.id ?? "");
     setChamps({
-      marque_id: modele.marque?.id ?? "",
+      gamme_id: modele.gamme?.id ?? "",
       nom: modele.nom ?? "",
-      stockage: modele.stockage ?? "",
       ram: modele.ram ?? "",
       description: modele.description ?? "",
       prix_achat_conseille: String(modele.prix_achat_conseille ?? 0),
@@ -389,15 +446,19 @@ function FenetreModele({
     setChamps((precedent) => ({ ...precedent, [champ]: valeur }));
   }
 
+  function choisirMarque(id: string) {
+    setMarqueId(id);
+    modifier("gamme_id", "");
+  }
+
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
     setErreurs({});
     setEnvoiEnCours(true);
 
     const corps = {
-      marque_id: champs.marque_id,
+      gamme_id: champs.gamme_id,
       nom: champs.nom,
-      stockage: champs.stockage || null,
       ram: champs.ram || null,
       description: champs.description || null,
       prix_achat_conseille: Number(champs.prix_achat_conseille),
@@ -409,10 +470,10 @@ function FenetreModele({
     try {
       if (modification) {
         await api.put(`/modeles/${modele!.id}`, corps);
-        toast.success("Modèle mis à jour.");
+        toast.success(lang === "en" ? "Model updated." : "Modèle mis à jour.");
       } else {
         await api.post("/modeles", corps);
-        toast.success("Modèle ajouté au catalogue.");
+        toast.success(t("modeles.modeleCree"));
       }
       onSucces();
     } catch (e) {
@@ -431,11 +492,16 @@ function FenetreModele({
         <form onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
           <DialogHeader>
             <DialogTitle>
-              {modification ? "Modifier le modèle" : "Nouveau modèle"}
+              {modification
+                ? lang === "en"
+                  ? "Edit Model"
+                  : "Modifier le modèle"
+                : t("modeles.ajouterModele")}
             </DialogTitle>
             <DialogDescription>
-              La référence complète (marque, nom, stockage) doit être unique
-              dans votre catalogue.
+              {lang === "en"
+                ? "Full reference (brand, range, model) must be unique in your catalog."
+                : "La référence complète (marque, gamme, nom) doit être unique dans votre catalogue."}
             </DialogDescription>
           </DialogHeader>
 
@@ -443,15 +509,20 @@ function FenetreModele({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>
-                  Marque<span className="ml-0.5 text-destructive">*</span>
+                  {t("modeles.marques")}
+                  <span className="ml-0.5 text-destructive">*</span>
                 </Label>
                 <Select
                   items={Object.fromEntries(marques.map((m) => [m.id, m.nom]))}
-                  value={champs.marque_id}
-                  onValueChange={(v) => modifier("marque_id", v ?? "")}
+                  value={marqueId}
+                  onValueChange={(v) => choisirMarque(v ?? "")}
                 >
                   <SelectTrigger className="h-10 w-full">
-                    <SelectValue placeholder="Choisir la marque" />
+                    <SelectValue
+                      placeholder={
+                        lang === "en" ? "Choose brand" : "Choisir la marque"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {marques.map((m) => (
@@ -461,21 +532,49 @@ function FenetreModele({
                     ))}
                   </SelectContent>
                 </Select>
-                {marques.length === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    Aucune marque disponible. Créez-en une d&apos;abord.
-                  </p>
-                )}
-                {erreurs.marque_id && (
-                  <p className="text-xs text-destructive">
-                    {erreurs.marque_id}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-2">
+                <Label>
+                  {t("modeles.gammes")}
+                  <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                <Select
+                  items={Object.fromEntries(gammes.map((g) => [g.id, g.nom]))}
+                  value={champs.gamme_id}
+                  onValueChange={(v) => modifier("gamme_id", v ?? "")}
+                  disabled={!marqueId}
+                >
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue
+                      placeholder={
+                        marqueId
+                          ? lang === "en"
+                            ? "Choose range"
+                            : "Choisir la gamme"
+                          : lang === "en"
+                            ? "Choose brand first"
+                            : "Choisissez d'abord la marque"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {gammes.map((g) => (
+                      <SelectItem key={g.id} value={g.id}>
+                        {g.nom}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {erreurs.gamme_id && (
+                  <p className="text-xs text-destructive">{erreurs.gamme_id}</p>
+                )}
+              </div>
+
+              <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="nom">
-                  Modèle<span className="ml-0.5 text-destructive">*</span>
+                  {t("telephones.modele")}
+                  <span className="ml-0.5 text-destructive">*</span>
                 </Label>
                 <Input
                   id="nom"
@@ -483,7 +582,7 @@ function FenetreModele({
                   className="h-10"
                   value={champs.nom}
                   onChange={(e) => modifier("nom", e.target.value)}
-                  placeholder="Galaxy A54"
+                  placeholder="14 Pro Max"
                 />
                 {erreurs.nom && (
                   <p className="text-xs text-destructive">{erreurs.nom}</p>
@@ -491,18 +590,7 @@ function FenetreModele({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="stockage">Stockage</Label>
-                <Input
-                  id="stockage"
-                  className="h-10"
-                  value={champs.stockage}
-                  onChange={(e) => modifier("stockage", e.target.value)}
-                  placeholder="128 Go"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="ram">Mémoire vive</Label>
+                <Label htmlFor="ram">RAM</Label>
                 <Input
                   id="ram"
                   className="h-10"
@@ -514,7 +602,7 @@ function FenetreModele({
 
               <div className="space-y-2">
                 <Label htmlFor="pac">
-                  Prix d&apos;achat conseillé ({devise})
+                  {t("modeles.prixAchatConseille")} ({devise})
                 </Label>
                 <Input
                   id="pac"
@@ -529,7 +617,9 @@ function FenetreModele({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="pvc">Prix de vente conseillé ({devise})</Label>
+                <Label htmlFor="pvc">
+                  {t("modeles.prixVenteConseille")} ({devise})
+                </Label>
                 <Input
                   id="pvc"
                   type="number"
@@ -544,7 +634,7 @@ function FenetreModele({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="seuil">Seuil d&apos;alerte</Label>
+              <Label htmlFor="seuil">{t("modeles.seuilAlerte")}</Label>
               <Input
                 id="seuil"
                 type="number"
@@ -554,8 +644,7 @@ function FenetreModele({
                 onChange={(e) => modifier("seuil_alerte", e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Une alerte apparaît quand il reste ce nombre d&apos;appareils,
-                ou moins.
+                {t("modeles.seuilAlerteDesc")}
               </p>
             </div>
 
@@ -569,6 +658,13 @@ function FenetreModele({
               />
             </div>
 
+            {modification && modele?.id && (
+              <GestionStockages
+                modeleId={String(modele.id)}
+                stockagesInitiaux={modele.stockages ?? []}
+              />
+            )}
+
             <div className="flex items-center gap-3">
               <Switch
                 id="actif"
@@ -576,20 +672,26 @@ function FenetreModele({
                 onCheckedChange={(v) => modifier("actif", v)}
               />
               <Label htmlFor="actif" className="font-normal">
-                Actif (proposé à la saisie d&apos;un appareil)
+                {lang === "en"
+                  ? "Active (available during device intake)"
+                  : "Actif (proposé à la saisie d'un appareil)"}
               </Label>
             </div>
           </DialogCorps>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onFermer}>
-              Annuler
+              {t("commun.annuler")}
             </Button>
             <Button type="submit" disabled={envoiEnCours}>
               {envoiEnCours && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {modification ? "Enregistrer" : "Ajouter au catalogue"}
+              {modification
+                ? t("commun.enregistrer")
+                : lang === "en"
+                  ? "Add to catalog"
+                  : "Ajouter au catalogue"}
             </Button>
           </DialogFooter>
         </form>
@@ -598,7 +700,92 @@ function FenetreModele({
   );
 }
 
-/* -------------------------------------------------------------------------- */
+function GestionStockages({
+  modeleId,
+  stockagesInitiaux,
+}: {
+  modeleId: string;
+  stockagesInitiaux: ModeleStockage[];
+}) {
+  const { t, lang } = useI18n();
+  const [stockages, setStockages] =
+    useState<ModeleStockage[]>(stockagesInitiaux);
+  const [nouveau, setNouveau] = useState("");
+  const [envoi, setEnvoi] = useState(false);
+
+  async function ajouter() {
+    if (!nouveau.trim()) return;
+    setEnvoi(true);
+    try {
+      const r = await api.post<{ data: ModeleStockage }>(
+        `/modeles/${modeleId}/stockages`,
+        { valeur: nouveau.trim() },
+      );
+      setStockages((precedent) => [...precedent, r.data]);
+      setNouveau("");
+    } catch (e) {
+      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
+  async function retirer(id: string) {
+    try {
+      await api.delete(`/modeles/${modeleId}/stockages/${id}`);
+      setStockages((precedent) => precedent.filter((s) => s.id !== id));
+    } catch (e) {
+      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>{t("modeles.capacitesStockage")}</Label>
+      <div className="flex flex-wrap gap-2">
+        {stockages.map((s) => (
+          <span
+            key={s.id}
+            className="flex items-center gap-1 rounded-full border px-3 py-1 text-sm"
+          >
+            {s.valeur}
+            <button
+              type="button"
+              onClick={() => void retirer(s.id)}
+              className="text-muted-foreground hover:text-destructive"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        ))}
+        {stockages.length === 0 && (
+          <p className="text-xs text-muted-foreground">
+            {lang === "en"
+              ? "No storage capacity added yet."
+              : "Aucun stockage pour l'instant."}
+          </p>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <Input
+          className="h-9"
+          value={nouveau}
+          onChange={(e) => setNouveau(e.target.value)}
+          placeholder="256 Go"
+        />
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={envoi}
+          onClick={() => void ajouter()}
+        >
+          {t("commun.ajouter")}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 function FenetreMarque({
   ouverte,
@@ -609,6 +796,7 @@ function FenetreMarque({
   onFermer: () => void;
   onSucces: () => void;
 }) {
+  const { t, lang } = useI18n();
   const [nom, setNom] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
@@ -627,7 +815,7 @@ function FenetreMarque({
 
     try {
       await api.post("/marques", { nom });
-      toast.success("Marque ajoutée.");
+      toast.success(t("modeles.marqueCreee"));
       onSucces();
     } catch (e) {
       if (e instanceof ErreurApi) {
@@ -643,16 +831,19 @@ function FenetreMarque({
       <DialogContent className="sm:max-w-sm">
         <form onSubmit={envoyer}>
           <DialogHeader>
-            <DialogTitle>Nouvelle marque</DialogTitle>
+            <DialogTitle>{t("modeles.ajouterMarque")}</DialogTitle>
             <DialogDescription>
-              Elle sera disponible pour tous les modèles de votre catalogue.
+              {lang === "en"
+                ? "Available across all models in your catalog."
+                : "Elle sera disponible pour tous les modèles de votre catalogue."}
             </DialogDescription>
           </DialogHeader>
 
           <DialogCorps>
             <div className="space-y-2">
               <Label htmlFor="nom-marque">
-                Nom<span className="ml-0.5 text-destructive">*</span>
+                {t("modeles.nomMarque")}
+                <span className="ml-0.5 text-destructive">*</span>
               </Label>
               <Input
                 id="nom-marque"
@@ -669,13 +860,131 @@ function FenetreMarque({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onFermer}>
-              Annuler
+              {t("commun.annuler")}
             </Button>
             <Button type="submit" disabled={envoiEnCours}>
               {envoiEnCours && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              Créer
+              {lang === "en" ? "Create" : "Créer"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function FenetreGamme({
+  ouverte,
+  marques,
+  onFermer,
+  onSucces,
+}: {
+  ouverte: boolean;
+  marques: Marque[];
+  onFermer: () => void;
+  onSucces: () => void;
+}) {
+  const { t, lang } = useI18n();
+  const [marqueId, setMarqueId] = useState("");
+  const [nom, setNom] = useState("");
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [envoiEnCours, setEnvoiEnCours] = useState(false);
+
+  useEffect(() => {
+    if (ouverte) {
+      setMarqueId("");
+      setNom("");
+      setErreur(null);
+    }
+  }, [ouverte]);
+
+  async function envoyer(evenement: React.FormEvent) {
+    evenement.preventDefault();
+    setErreur(null);
+    setEnvoiEnCours(true);
+
+    try {
+      await api.post("/gammes", { marque_id: marqueId, nom });
+      toast.success(t("modeles.gammeCreee"));
+      onSucces();
+    } catch (e) {
+      if (e instanceof ErreurApi) {
+        setErreur(e.erreurDe("nom") ?? e.resume());
+      }
+    } finally {
+      setEnvoiEnCours(false);
+    }
+  }
+
+  return (
+    <Dialog open={ouverte} onOpenChange={(o) => !o && onFermer()}>
+      <DialogContent className="sm:max-w-sm">
+        <form onSubmit={envoyer}>
+          <DialogHeader>
+            <DialogTitle>{t("modeles.ajouterGamme")}</DialogTitle>
+            <DialogDescription>
+              {lang === "en"
+                ? "e.g. iPhone, Galaxy S, Redmi Note..."
+                : "Ex: iPhone, Galaxy S, MacBook…"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogCorps>
+            <div className="space-y-2">
+              <Label>
+                {t("modeles.marques")}
+                <span className="ml-0.5 text-destructive">*</span>
+              </Label>
+              <Select
+                items={Object.fromEntries(marques.map((m) => [m.id, m.nom]))}
+                value={marqueId}
+                onValueChange={(v) => setMarqueId(v ?? "")}
+              >
+                <SelectTrigger className="h-10 w-full">
+                  <SelectValue
+                    placeholder={
+                      lang === "en" ? "Choose brand" : "Choisir la marque"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {marques.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.nom}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="nom-gamme">
+                {t("modeles.nomGamme")}
+                <span className="ml-0.5 text-destructive">*</span>
+              </Label>
+              <Input
+                id="nom-gamme"
+                required
+                className="h-10"
+                value={nom}
+                onChange={(e) => setNom(e.target.value)}
+                placeholder="iPhone"
+              />
+              {erreur && <p className="text-xs text-destructive">{erreur}</p>}
+            </div>
+          </DialogCorps>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onFermer}>
+              {t("commun.annuler")}
+            </Button>
+            <Button type="submit" disabled={envoiEnCours}>
+              {envoiEnCours && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {lang === "en" ? "Create" : "Créer"}
             </Button>
           </DialogFooter>
         </form>

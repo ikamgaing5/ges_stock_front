@@ -7,19 +7,33 @@ import type {
   StatutTelephone,
   TypeMouvement,
 } from "@/types";
+import type { Langue } from "@/lib/i18n/types";
+import { formaterMontantAvecConversion } from "@/lib/devises";
 
-/** 185000 -> « 185 000 XAF » */
-export function formaterMontant(valeur: number, devise = "XAF"): string {
-  return `${new Intl.NumberFormat("fr-FR").format(Math.round(valeur))} ${devise}`;
+/** 185000 -> « 185 000 FCFA » (XAF) ou « 282,03 € » (EUR) */
+export function formaterMontant(
+  valeur: number,
+  devise = "XAF",
+  lang: Langue = "fr",
+  deviseSource?: string,
+): string {
+  return formaterMontantAvecConversion(
+    valeur,
+    deviseSource ?? devise,
+    devise,
+    lang,
+  );
 }
 
-export function formaterNombre(valeur: number): string {
-  return new Intl.NumberFormat("fr-FR").format(valeur);
+export function formaterNombre(valeur: number, lang: Langue = "fr"): string {
+  const locale = lang === "en" ? "en-US" : "fr-FR";
+  return new Intl.NumberFormat(locale).format(valeur);
 }
 
 /** « 2026-08-13T05:42:31Z » -> « 13/08/2026 05:42 » */
-export function formaterDate(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", {
+export function formaterDate(iso: string, lang: Langue = "fr"): string {
+  const locale = lang === "en" ? "en-US" : "fr-FR";
+  return new Date(iso).toLocaleString(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -28,9 +42,10 @@ export function formaterDate(iso: string): string {
   });
 }
 
-/** « 2026-12-31 » -> « 31 décembre 2026 » */
-export function formaterDateCourte(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", {
+/** « 2026-12-31 » -> « 31 décembre 2026 » (FR) / « December 31, 2026 » (EN) */
+export function formaterDateCourte(iso: string, lang: Langue = "fr"): string {
+  const locale = lang === "en" ? "en-US" : "fr-FR";
+  return new Date(iso).toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",

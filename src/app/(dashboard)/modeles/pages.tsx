@@ -84,7 +84,7 @@ export default function PageCatalogue() {
   const [marqueFiltre, setMarqueFiltre] = useState("");
 
   const marquesDisponibles = Array.from(
-    new Set(modeles.map((m) => m.marque)),
+    new Set(modeles.map((m) => (m as any).marque)),
   ).sort();
 
   async function supprimer() {
@@ -355,9 +355,9 @@ function FenetreModele({
   useEffect(() => {
     if (!modele) return;
     setChamps({
-      marque: modele.marque ?? "",
+      marque: (modele as any).marque ?? "",
       nom: modele.nom ?? "",
-      stockage: modele.stockage ?? "",
+      stockage: (modele as any).stockage ?? "",
       ram: modele.ram ?? "",
       description: modele.description ?? "",
       prix_achat_conseille: String(modele.prix_achat_conseille ?? 0),

@@ -6,8 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Loader2, Pencil, Plus, Store, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
-import { formaterNombre } from "@/lib/format";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
 import {
   Apparait,
   EtatErreur,
@@ -29,10 +29,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DEVISES } from "@/lib/devises";
 import type { Boutique } from "@/types";
 
 export default function PageBoutiques() {
   const { rafraichir } = useAuth();
+  const { t, formatNombre, lang } = useI18n();
 
   const [boutiques, setBoutiques] = useState<Boutique[]>([]);
   const [chargement, setChargement] = useState(true);
@@ -46,11 +55,11 @@ export default function PageBoutiques() {
       const reponse = await api.get<{ data: Boutique[] }>("/boutiques");
       setBoutiques(reponse.data);
     } catch (e) {
-      setErreur(e instanceof ErreurApi ? e.message : "Erreur inconnue.");
+      setErreur(e instanceof ErreurApi ? e.message : t("commun.erreur"));
     } finally {
       setChargement(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void charger();
@@ -60,24 +69,24 @@ export default function PageBoutiques() {
     if (!aSupprimer) return;
     try {
       await api.delete(`/boutiques/${aSupprimer.id}`);
-      toast.success("Boutique supprimée.");
+      toast.success(t("boutiques.boutiqueSupprimee"));
       setASupprimer(null);
       void charger();
       void rafraichir();
     } catch (e) {
-      toast.error(e instanceof ErreurApi ? e.resume() : "Erreur inconnue.");
+      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
     }
   }
 
   return (
     <>
       <TitrePage
-        titre="Boutiques"
-        description="Vos points de vente. Chacun a son propre stock."
+        titre={t("boutiques.titre")}
+        description={t("boutiques.description")}
       >
         <Button onClick={() => setEnEdition({})}>
           <Plus className="mr-2 h-4 w-4" />
-          Nouvelle boutique
+          {t("boutiques.ajouterBoutique")}
         </Button>
       </TitrePage>
 
@@ -88,12 +97,12 @@ export default function PageBoutiques() {
       ) : boutiques.length === 0 ? (
         <EtatVide
           icone={<Store className="h-5 w-5" />}
-          titre="Aucune boutique"
-          description="Créez votre premier point de vente pour commencer à saisir du stock."
+          titre={t("boutiques.aucuneBoutique")}
+          description={t("boutiques.aucuneBoutiqueDesc")}
         >
           <Button onClick={() => setEnEdition({})}>
             <Plus className="mr-2 h-4 w-4" />
-            Nouvelle boutique
+            {t("boutiques.ajouterBoutique")}
           </Button>
         </EtatVide>
       ) : (
@@ -108,12 +117,12 @@ export default function PageBoutiques() {
                       <p className="truncate text-sm text-muted-foreground">
                         {[boutique.ville, boutique.adresse]
                           .filter(Boolean)
-                          .join(" · ") || "Adresse non renseignée"}
+                          .join(" · ") || t("boutiques.adresseNonRenseignee")}
                       </p>
                     </div>
                     {!boutique.active && (
                       <span className="shrink-0 rounded-full bg-statut-neutre-fond px-2 py-0.5 text-xs text-statut-neutre">
-                        Fermée
+                        {t("boutiques.fermee")}
                       </span>
                     )}
                   </div>
@@ -121,16 +130,18 @@ export default function PageBoutiques() {
                   <dl className="flex gap-6 text-sm">
                     <div>
                       <dt className="text-xs text-muted-foreground">
-                        En stock
+                        {t("dashboard.enStock")}
                       </dt>
                       <dd className="chiffres mt-0.5 text-lg font-semibold">
-                        {formaterNombre(boutique.nb_en_stock ?? 0)}
+                        {formatNombre(boutique.nb_en_stock ?? 0)}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-xs text-muted-foreground">Équipe</dt>
+                      <dt className="text-xs text-muted-foreground">
+                        {t("equipe.titre")}
+                      </dt>
                       <dd className="chiffres mt-0.5 text-lg font-semibold">
-                        {formaterNombre(boutique.nb_employes ?? 0)}
+                        {formatNombre(boutique.nb_employes ?? 0)}
                       </dd>
                     </div>
                   </dl>
@@ -148,7 +159,7 @@ export default function PageBoutiques() {
                       onClick={() => setEnEdition(boutique)}
                     >
                       <Pencil className="mr-2 h-3.5 w-3.5" />
-                      Modifier
+                      {t("commun.modifier")}
                     </Button>
                     <Button
                       variant="ghost"
@@ -156,7 +167,7 @@ export default function PageBoutiques() {
                       onClick={() => setASupprimer(boutique)}
                     >
                       <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Supprimer</span>
+                      <span className="sr-only">{t("commun.supprimer")}</span>
                     </Button>
                   </div>
                 </CardContent>
@@ -172,7 +183,6 @@ export default function PageBoutiques() {
         onSucces={() => {
           setEnEdition(null);
           void charger();
-          // Le sélecteur de boutique doit refléter le changement.
           void rafraichir();
         }}
       />
@@ -183,19 +193,23 @@ export default function PageBoutiques() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Supprimer « {aSupprimer?.nom} » ?</DialogTitle>
+            <DialogTitle>
+              {lang === "en"
+                ? `Delete "${aSupprimer?.nom}"?`
+                : `Supprimer « ${aSupprimer?.nom} » ?`}
+            </DialogTitle>
             <DialogDescription>
-              Une boutique qui contient encore des appareils ne peut pas être
-              supprimée. Transférez-les d&apos;abord, ou marquez simplement la
-              boutique comme fermée.
+              {lang === "en"
+                ? "A store that still contains devices cannot be deleted. Transfer them first or simply mark the store as closed."
+                : "Une boutique qui contient encore des appareils ne peut pas être supprimée. Transférez-les d'abord, ou marquez simplement la boutique comme fermée."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setASupprimer(null)}>
-              Annuler
+              {t("commun.annuler")}
             </Button>
             <Button variant="destructive" onClick={() => void supprimer()}>
-              Supprimer
+              {t("commun.supprimer")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -203,8 +217,6 @@ export default function PageBoutiques() {
     </>
   );
 }
-
-/* -------------------------------------------------------------------------- */
 
 function FenetreBoutique({
   boutique,
@@ -215,6 +227,7 @@ function FenetreBoutique({
   onFermer: () => void;
   onSucces: () => void;
 }) {
+  const { t, lang } = useI18n();
   const modification = Boolean(boutique?.id);
 
   const [champs, setChamps] = useState({
@@ -266,10 +279,10 @@ function FenetreBoutique({
     try {
       if (modification) {
         await api.put(`/boutiques/${boutique!.id}`, corps);
-        toast.success("Boutique mise à jour.");
+        toast.success(lang === "en" ? "Store updated." : "Boutique mise à jour.");
       } else {
         await api.post("/boutiques", corps);
-        toast.success("Boutique créée.");
+        toast.success(t("boutiques.boutiqueCreee"));
       }
       onSucces();
     } catch (e) {
@@ -288,14 +301,19 @@ function FenetreBoutique({
         <form onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
           <DialogHeader>
             <DialogTitle>
-              {modification ? "Modifier la boutique" : "Nouvelle boutique"}
+              {modification
+                ? lang === "en"
+                  ? "Edit Store"
+                  : "Modifier la boutique"
+                : t("boutiques.ajouterBoutique")}
             </DialogTitle>
           </DialogHeader>
 
           <DialogCorps>
             <div className="space-y-2">
               <Label htmlFor="b-nom">
-                Nom<span className="ml-0.5 text-destructive">*</span>
+                {t("auth.nomBoutique")}
+                <span className="ml-0.5 text-destructive">*</span>
               </Label>
               <Input
                 id="b-nom"
@@ -312,28 +330,40 @@ function FenetreBoutique({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="b-ville">Ville</Label>
+                <Label htmlFor="b-ville">{t("auth.villeBoutique")}</Label>
                 <Input
                   id="b-ville"
                   className="h-10"
                   value={champs.ville}
                   onChange={(e) => modifier("ville", e.target.value)}
+                  placeholder="Douala"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="b-devise">Devise</Label>
-                <Input
-                  id="b-devise"
-                  className="h-10"
+                <Label htmlFor="b-devise">{t("boutiques.devise")}</Label>
+                <Select
                   value={champs.devise}
-                  onChange={(e) => modifier("devise", e.target.value)}
-                  placeholder="XAF, EUR, USD…"
-                />
+                  onValueChange={(v) => v && modifier("devise", v)}
+                >
+                  <SelectTrigger id="b-devise" className="h-10 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DEVISES.map((d) => (
+                      <SelectItem key={d.code} value={d.code}>
+                        <span className="font-semibold mr-1.5">{d.code}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {lang === "en" ? d.nomEn : d.nom} ({d.symbole})
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="b-adresse">Adresse</Label>
+              <Label htmlFor="b-adresse">{t("boutiques.adresse")}</Label>
               <Input
                 id="b-adresse"
                 className="h-10"
@@ -343,7 +373,7 @@ function FenetreBoutique({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="b-tel">Téléphone</Label>
+              <Label htmlFor="b-tel">{t("monCompte.telephone")}</Label>
               <Input
                 id="b-tel"
                 className="h-10"
@@ -359,18 +389,24 @@ function FenetreBoutique({
                 onCheckedChange={(v) => modifier("active", v)}
               />
               <Label htmlFor="b-active" className="font-normal">
-                Boutique ouverte
+                {t("boutiques.boutiqueOuverte")}
               </Label>
             </div>
           </DialogCorps>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onFermer}>
-              Annuler
+              {t("commun.annuler")}
             </Button>
             <Button type="submit" disabled={envoiEnCours}>
-              {envoiEnCours && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {modification ? "Enregistrer" : "Créer la boutique"}
+              {envoiEnCours && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {modification
+                ? t("commun.enregistrer")
+                : lang === "en"
+                  ? "Create store"
+                  : "Créer la boutique"}
             </Button>
           </DialogFooter>
         </form>

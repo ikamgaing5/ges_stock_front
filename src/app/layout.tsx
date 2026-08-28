@@ -3,7 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { I18nProvider } from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
+import { BandeauCookies } from "@/components/bandeau-cookies";
 
 /*
  * Les polices sont chargées par next/font : les fichiers sont téléchargés
@@ -27,15 +29,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Parc Mobile",
+  title: "Telora",
   description:
-    "Suivi du stock de téléphones, appareil par appareil, pour les boutiques multi-points de vente.",
+    "Système de gestion de stock et point de vente pour boutiques de téléphones.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 /**
  * Enveloppe TOUTES les pages de l'application.
  * C'est ici qu'on met ce qui doit être disponible partout :
- * les polices, l'utilisateur connecté et les notifications.
+ * les polices, l'internationalisation, l'utilisateur connecté et les notifications.
  */
 export default function RootLayout({
   children,
@@ -43,20 +52,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    // `suppressHydrationWarning` est requis par next-themes : il écrit la
-    // classe du thème sur <html> avant l'affichage, ce qui crée forcément
-    // un écart avec ce qu'a produit le serveur. L'avertissement est donc
-    // attendu, et seulement sur cette balise.
+    // `suppressHydrationWarning` est requis par next-themes et i18n
     <html
       lang="fr"
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
-        <ThemeProvider>
-          <AuthProvider>{children}</AuthProvider>
-          <Toaster richColors position="top-right" />
-        </ThemeProvider>
+        <I18nProvider>
+          <ThemeProvider>
+            <AuthProvider>{children}</AuthProvider>
+            <BandeauCookies />
+            <Toaster richColors position="top-right" />
+          </ThemeProvider>
+        </I18nProvider>
       </body>
     </html>
   );

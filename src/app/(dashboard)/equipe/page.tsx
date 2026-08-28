@@ -12,8 +12,8 @@ import { Loader2, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { useListe } from "@/lib/useListe";
-import { descriptionsRoles, libellesRoles } from "@/lib/format";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
 import { permissions } from "@/lib/permissions";
 import {
   Apparait,
@@ -47,15 +47,16 @@ import {
 import type { Role, Utilisateur } from "@/types";
 
 export default function PageEquipe() {
-  const { utilisateur: moi } = useAuth();
+  const { utilisateur: moi, parametresBoutique } = useAuth();
+  const { t, libelleRole, descriptionRole, lang } = useI18n();
 
   const [enEdition, setEnEdition] = useState<Partial<Utilisateur> | null>(null);
   const [aSupprimer, setASupprimer] = useState<Utilisateur | null>(null);
 
   const { donnees, chargement, erreur, recharger } = useListe(
     (signal) =>
-      api.get<{ data: Utilisateur[] }>("/employes", undefined, signal),
-    [],
+      api.get<{ data: Utilisateur[] }>("/employes", parametresBoutique, signal),
+    [parametresBoutique],
   );
 
   const equipe = donnees?.data ?? [];
@@ -64,11 +65,11 @@ export default function PageEquipe() {
     if (!aSupprimer) return;
     try {
       await api.delete(`/employes/${aSupprimer.id}`);
-      toast.success("Compte supprimé.");
+      toast.success(t("equipe.compteSupprime"));
       setASupprimer(null);
       recharger();
     } catch (e) {
-      toast.error(e instanceof ErreurApi ? e.resume() : "Erreur inconnue.");
+      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
     }
   }
 
@@ -77,13 +78,13 @@ export default function PageEquipe() {
   return (
     <>
       <TitrePage
-        titre="Équipe"
-        description="Vos vendeuses et secrétaires, et les boutiques auxquelles elles ont accès."
+        titre={t("equipe.titre")}
+        description={t("equipe.description")}
       >
         {peutGerer && (
           <Button onClick={() => setEnEdition({})}>
             <Plus className="mr-2 h-4 w-4" />
-            Ajouter une personne
+            {t("equipe.ajouterPersonne")}
           </Button>
         )}
       </TitrePage>
@@ -95,13 +96,13 @@ export default function PageEquipe() {
       ) : equipe.length === 0 ? (
         <EtatVide
           icone={<Users className="h-5 w-5" />}
-          titre="Personne pour le moment"
-          description="Créez un compte pour chaque vendeuse et rattachez-la à ses boutiques."
+          titre={t("equipe.aucunMembre")}
+          description={t("equipe.aucunMembreDesc")}
         >
           {peutGerer && (
             <Button onClick={() => setEnEdition({})}>
               <Plus className="mr-2 h-4 w-4" />
-              Ajouter une personne
+              {t("equipe.ajouterPersonne")}
             </Button>
           )}
         </EtatVide>
@@ -113,15 +114,17 @@ export default function PageEquipe() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Personne</TableHead>
-                      <TableHead>Rôle</TableHead>
-                      <TableHead>Boutiques</TableHead>
+                      <TableHead>{t("equipe.tableauPersonne")}</TableHead>
+                      <TableHead>{t("equipe.tableauRole")}</TableHead>
+                      <TableHead>{t("equipe.tableauBoutiques")}</TableHead>
                       <TableHead className="hidden lg:table-cell">
-                        Téléphone
+                        {t("monCompte.telephone")}
                       </TableHead>
-                      <TableHead>Accès</TableHead>
+                      <TableHead>{t("equipe.tableauStatut")}</TableHead>
                       {peutGerer && (
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="text-right">
+                          {t("commun.actions")}
+                        </TableHead>
                       )}
                     </TableRow>
                   </TableHeader>
@@ -135,9 +138,9 @@ export default function PageEquipe() {
                           </p>
                         </TableCell>
                         <TableCell>
-                          <p>{libellesRoles[personne.role]}</p>
+                          <p>{libelleRole(personne.role)}</p>
                           <p className="text-xs text-muted-foreground">
-                            {descriptionsRoles[personne.role]}
+                            {descriptionRole(personne.role)}
                           </p>
                         </TableCell>
                         <TableCell>
@@ -155,7 +158,7 @@ export default function PageEquipe() {
                             {(personne.boutiques_rattachees ?? []).length ===
                               0 && (
                               <span className="text-xs text-statut-alerte">
-                                Aucune boutique
+                                {t("equipe.aucuneBoutique")}
                               </span>
                             )}
                           </div>
@@ -171,7 +174,9 @@ export default function PageEquipe() {
                                 : "text-sm text-muted-foreground"
                             }
                           >
-                            {personne.actif ? "Actif" : "Désactivé"}
+                            {personne.actif
+                              ? t("commun.actif")
+                              : t("commun.inactif")}
                           </span>
                         </TableCell>
                         {peutGerer && (
@@ -183,7 +188,9 @@ export default function PageEquipe() {
                                 onClick={() => setEnEdition(personne)}
                               >
                                 <Pencil className="h-4 w-4" />
-                                <span className="sr-only">Modifier</span>
+                                <span className="sr-only">
+                                  {t("commun.modifier")}
+                                </span>
                               </Button>
                               <Button
                                 variant="ghost"
@@ -191,7 +198,9 @@ export default function PageEquipe() {
                                 onClick={() => setASupprimer(personne)}
                               >
                                 <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Supprimer</span>
+                                <span className="sr-only">
+                                  {t("commun.supprimer")}
+                                </span>
                               </Button>
                             </div>
                           </TableCell>
@@ -222,19 +231,20 @@ export default function PageEquipe() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Supprimer le compte de {aSupprimer?.name} ?
+              {t("equipe.supprimerConfirmationTitre", {
+                nom: aSupprimer?.name ?? "",
+              })}
             </DialogTitle>
             <DialogDescription>
-              Cette personne ne pourra plus se connecter. Les mouvements
-              qu&apos;elle a enregistrés restent dans l&apos;historique.
+              {t("equipe.supprimerConfirmationDesc")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setASupprimer(null)}>
-              Annuler
+              {t("commun.annuler")}
             </Button>
             <Button variant="destructive" onClick={() => void supprimer()}>
-              Supprimer
+              {t("commun.supprimer")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -242,8 +252,6 @@ export default function PageEquipe() {
     </>
   );
 }
-
-/* -------------------------------------------------------------------------- */
 
 function FenetreEmploye({
   cible,
@@ -255,6 +263,7 @@ function FenetreEmploye({
   onSucces: () => void;
 }) {
   const { boutiques } = useAuth();
+  const { t, libelleRole, descriptionRole, lang } = useI18n();
   const modification = Boolean(cible?.id);
 
   const [nom, setNom] = useState("");
@@ -263,7 +272,7 @@ function FenetreEmploye({
   const [role, setRole] = useState<Role>("vendeuse");
   const [telephone, setTelephone] = useState("");
   const [actif, setActif] = useState(true);
-  const [choisies, setChoisies] = useState<number[]>([]);
+  const [choisies, setChoisies] = useState<string[]>([]);
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
@@ -279,7 +288,7 @@ function FenetreEmploye({
     setErreurs({});
   }, [cible]);
 
-  function basculerBoutique(id: number) {
+  function basculerBoutique(id: string) {
     setChoisies((precedent) =>
       precedent.includes(id)
         ? precedent.filter((valeur) => valeur !== id)
@@ -291,15 +300,6 @@ function FenetreEmploye({
     evenement.preventDefault();
     setErreurs({});
     setEnvoiEnCours(true);
-
-    // const corps: Record<string, unknown> = {
-    //   name: nom,
-    //   email,
-    //   role,
-    //   telephone: telephone || null,
-    //   actif,
-    //   boutiques: choisies,
-    // };
 
     const corps: Record<string, unknown> = modification
       ? {
@@ -318,14 +318,14 @@ function FenetreEmploye({
     try {
       if (modification) {
         await api.put(`/employes/${cible!.id}`, corps);
-        toast.success("Compte mis à jour.");
+        toast.success(t("equipe.compteModifie"));
       } else {
         await api.post("/employes", {
           email,
           role,
           boutiques: choisies,
         });
-        toast.success("Invitation envoyée.");
+        toast.success(t("equipe.invitationEnvoyee"));
       }
       onSucces();
     } catch (e) {
@@ -344,36 +344,23 @@ function FenetreEmploye({
         <form onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
           <DialogHeader>
             <DialogTitle>
-              {modification ? "Modifier le compte" : "Nouvelle personne"}
+              {modification
+                ? t("equipe.modifierCompte")
+                : t("equipe.ajouterPersonne")}
             </DialogTitle>
             <DialogDescription>
               {modification
-                ? "Laissez le mot de passe vide pour ne pas le changer."
-                : "Un email d'invitation sera envoyé pour qu'elle configure son compte."}
+                ? t("equipe.laisserVideMdp")
+                : t("equipe.invitationDesc")}
             </DialogDescription>
           </DialogHeader>
 
           <DialogCorps>
-            {/* <div className="space-y-2">
-              <Label htmlFor="e-nom">
-                Nom complet<span className="ml-0.5 text-destructive">*</span>
-              </Label>
-              <Input
-                id="e-nom"
-                required
-                className="h-10"
-                value={nom}
-                onChange={(e) => setNom(e.target.value)}
-              />
-              {erreurs.name && (
-                <p className="text-xs text-destructive">{erreurs.name}</p>
-              )}
-            </div> */}
-
             {modification && (
               <div className="space-y-2">
                 <Label htmlFor="e-nom">
-                  Nom complet<span className="ml-0.5 text-destructive">*</span>
+                  {t("auth.nomComplet")}
+                  <span className="ml-0.5 text-destructive">*</span>
                 </Label>
                 <Input
                   id="e-nom"
@@ -388,10 +375,11 @@ function FenetreEmploye({
               </div>
             )}
 
-            <div className="grid gap-4 ">
+            <div className="grid gap-4">
               <div className="space-y-2">
                 <Label htmlFor="e-email">
-                  Email<span className="ml-0.5 text-destructive">*</span>
+                  {t("auth.email")}
+                  <span className="ml-0.5 text-destructive">*</span>
                 </Label>
                 <Input
                   id="e-email"
@@ -405,45 +393,10 @@ function FenetreEmploye({
                   <p className="text-xs text-destructive">{erreurs.email}</p>
                 )}
               </div>
-
-              {/* <div className="space-y-2">
-                <Label htmlFor="e-tel">Téléphone</Label>
-                <Input
-                  id="e-tel"
-                  className="h-10"
-                  value={telephone}
-                  onChange={(e) => setTelephone(e.target.value)}
-                />
-              </div> */}
             </div>
 
-            {/* <div className="space-y-2">
-              <Label htmlFor="e-mdp">
-                Mot de passe
-                {!modification && (
-                  <span className="ml-0.5 text-destructive">*</span>
-                )}
-              </Label>
-              <Input
-                id="e-mdp"
-                type="password"
-                required={!modification}
-                minLength={8}
-                className="h-10"
-                autoComplete="new-password"
-                value={motDePasse}
-                onChange={(e) => setMotDePasse(e.target.value)}
-                placeholder={modification ? "Inchangé" : "8 caractères minimum"}
-              />
-              {erreurs.password && (
-                <p className="text-xs text-destructive">{erreurs.password}</p>
-              )}
-            </div> */}
-
-            {/* Le rôle : deux cartes plutôt qu'une liste déroulante, pour que
-                la différence entre vendeuse et secrétaire soit lisible. */}
             <div className="space-y-2">
-              <Label>Rôle</Label>
+              <Label>{t("equipe.role")}</Label>
               <div className="grid gap-2 sm:grid-cols-2">
                 {(["vendeuse", "secretaire"] as const).map((valeur) => (
                   <button
@@ -458,10 +411,10 @@ function FenetreEmploye({
                     ].join(" ")}
                   >
                     <p className="text-sm font-medium">
-                      {libellesRoles[valeur]}
+                      {libelleRole(valeur)}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {descriptionsRoles[valeur]}
+                      {descriptionRole(valeur)}
                     </p>
                   </button>
                 ))}
@@ -470,7 +423,7 @@ function FenetreEmploye({
 
             <div className="space-y-2">
               <Label>
-                Boutiques accessibles
+                {t("equipe.boutiquesRattachees")}
                 <span className="ml-0.5 text-destructive">*</span>
               </Label>
               <div className="space-y-1.5 rounded-lg border p-3">
@@ -495,7 +448,7 @@ function FenetreEmploye({
                 ))}
               </div>
               <p className="text-xs text-muted-foreground">
-                Cette personne ne verra que le stock des boutiques cochées.
+                {t("equipe.restrictionBoutiquesDesc")}
               </p>
               {erreurs.boutiques && (
                 <p className="text-xs text-destructive">{erreurs.boutiques}</p>
@@ -505,20 +458,20 @@ function FenetreEmploye({
             <div className="flex items-center gap-3">
               <Switch id="e-actif" checked={actif} onCheckedChange={setActif} />
               <Label htmlFor="e-actif" className="font-normal">
-                Compte actif (peut se connecter)
+                {t("equipe.compteActif")}
               </Label>
             </div>
           </DialogCorps>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onFermer}>
-              Annuler
+              {t("commun.annuler")}
             </Button>
             <Button type="submit" disabled={envoiEnCours}>
               {envoiEnCours && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {modification ? "Enregistrer" : "Créer le compte"}
+              {modification ? t("commun.enregistrer") : t("equipe.inviter")}
             </Button>
           </DialogFooter>
         </form>

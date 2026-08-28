@@ -8,12 +8,8 @@ import { Building2, Loader2, Search, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { useListe } from "@/lib/useListe";
-import {
-  couleursAbonnements,
-  formaterDate,
-  formaterDateCourte,
-  libellesAbonnements,
-} from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
+import { couleursAbonnements } from "@/lib/format";
 import {
   Apparait,
   EtatErreur,
@@ -50,19 +46,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Page, StatutAbonnement, Utilisateur } from "@/types";
-
-const optionsStatut: Record<string, string> = {
-  tous: "Tous les statuts",
-  ...libellesAbonnements,
-};
+import type { Page, PlanAbonnement, StatutAbonnement, Utilisateur } from "@/types";
 
 export default function PageClients() {
+  const { t, formatDate, formatDateCourte, libelleAbonnement, lang } = useI18n();
   const parametresUrl = useSearchParams();
 
   const [recherche, setRecherche] = useState("");
   const [statut, setStatut] = useState(parametresUrl.get("statut") ?? "tous");
   const [enEdition, setEnEdition] = useState<Utilisateur | null>(null);
+
+  const statutsDispo: StatutAbonnement[] = ["essai", "actif", "suspendu", "expire"];
+
+  const optionsStatut: Record<string, string> = {
+    tous: t("admin.tousStatuts"),
+    ...Object.fromEntries(
+      statutsDispo.map((s) => [s, libelleAbonnement(s)]),
+    ),
+  };
 
   const { donnees, chargement, erreur, recharger } = useListe(
     (signal) =>
@@ -80,8 +81,8 @@ export default function PageClients() {
   return (
     <>
       <TitrePage
-        titre="Clients"
-        description="Les propriétaires inscrits sur la plateforme."
+        titre={t("admin.clients")}
+        description={t("admin.clientsDesc")}
       />
 
       <Card className="mb-4">
@@ -90,7 +91,7 @@ export default function PageClients() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="h-10 pl-9"
-              placeholder="Nom ou email…"
+              placeholder={t("admin.recherchePlaceholder")}
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
             />
@@ -122,8 +123,8 @@ export default function PageClients() {
       ) : clients.length === 0 ? (
         <EtatVide
           icone={<Building2 className="h-5 w-5" />}
-          titre="Aucun client"
-          description="Les propriétaires qui s'inscrivent apparaîtront ici."
+          titre={t("admin.aucunClient")}
+          description={t("admin.aucunClientDesc")}
         />
       ) : (
         <Apparait>
@@ -133,17 +134,23 @@ export default function PageClients() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Client</TableHead>
-                      <TableHead>Abonnement</TableHead>
+                      <TableHead>{t("admin.tableauNom")}</TableHead>
+                      <TableHead>{t("admin.tableauAbonnement")}</TableHead>
                       <TableHead className="hidden lg:table-cell">
-                        Échéance
+                        {t("admin.tableauEcheance")}
                       </TableHead>
-                      <TableHead className="text-right">Boutiques</TableHead>
-                      <TableHead className="text-right">Employés</TableHead>
+                      <TableHead className="text-right">
+                        {t("telephones.boutique")}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {t("equipe.titre")}
+                      </TableHead>
                       <TableHead className="hidden xl:table-cell">
-                        Inscrit le
+                        {lang === "en" ? "Registered on" : "Inscrit le"}
                       </TableHead>
-                      <TableHead className="text-right">Gérer</TableHead>
+                      <TableHead className="text-right">
+                        {t("commun.actions")}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -156,20 +163,29 @@ export default function PageClients() {
                           </p>
                           {!client.actif && (
                             <p className="text-xs text-statut-alerte">
-                              Compte désactivé
+                              {lang === "en"
+                                ? "Account disabled"
+                                : "Compte désactivé"}
                             </p>
                           )}
                         </TableCell>
                         <TableCell>
                           {client.abonnement?.statut ? (
-                            <span
-                              className={[
-                                "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-                                couleursAbonnements[client.abonnement.statut],
-                              ].join(" ")}
-                            >
-                              {libellesAbonnements[client.abonnement.statut]}
-                            </span>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span
+                                className={[
+                                  "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
+                                  couleursAbonnements[client.abonnement.statut],
+                                ].join(" ")}
+                              >
+                                {libelleAbonnement(client.abonnement.statut)}
+                              </span>
+                              {client.abonnement.plan === "premium" && (
+                                <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                                  Premium
+                                </span>
+                              )}
+                            </div>
                           ) : (
                             <span className="text-sm text-muted-foreground">
                               —
@@ -178,7 +194,7 @@ export default function PageClients() {
                         </TableCell>
                         <TableCell className="hidden whitespace-nowrap text-sm lg:table-cell">
                           {client.abonnement?.echeance
-                            ? formaterDateCourte(client.abonnement.echeance)
+                            ? formatDateCourte(client.abonnement.echeance)
                             : "—"}
                         </TableCell>
                         <TableCell className="chiffres text-right">
@@ -188,7 +204,7 @@ export default function PageClients() {
                           {client.employes_count ?? 0}
                         </TableCell>
                         <TableCell className="hidden whitespace-nowrap text-xs text-muted-foreground xl:table-cell">
-                          {formaterDate(client.created_at)}
+                          {formatDate(client.created_at)}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -197,7 +213,9 @@ export default function PageClients() {
                             onClick={() => setEnEdition(client)}
                           >
                             <Settings2 className="h-4 w-4" />
-                            <span className="sr-only">Gérer l&apos;abonnement</span>
+                            <span className="sr-only">
+                              {t("admin.modifierAcces")}
+                            </span>
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -222,8 +240,6 @@ export default function PageClients() {
   );
 }
 
-/* -------------------------------------------------------------------------- */
-
 function FenetreAbonnement({
   client,
   onFermer,
@@ -233,14 +249,20 @@ function FenetreAbonnement({
   onFermer: () => void;
   onSucces: () => void;
 }) {
+  const { t, libelleAbonnement, lang } = useI18n();
+
   const [statut, setStatut] = useState<StatutAbonnement>("actif");
+  const [plan, setPlan] = useState<PlanAbonnement>("standard");
   const [echeance, setEcheance] = useState("");
   const [actif, setActif] = useState(true);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
+  const statutsDispo: StatutAbonnement[] = ["essai", "actif", "suspendu", "expire"];
+
   useEffect(() => {
     if (!client) return;
     setStatut((client.abonnement?.statut as StatutAbonnement) ?? "actif");
+    setPlan(client.abonnement?.plan ?? "standard");
     setEcheance(client.abonnement?.echeance ?? "");
     setActif(client.actif);
   }, [client]);
@@ -252,10 +274,9 @@ function FenetreAbonnement({
     setEnvoiEnCours(true);
 
     try {
-      // Deux appels : l'abonnement et l'accès au compte sont deux notions
-      // distinctes côté API.
       await api.put(`/admin/proprietaires/${client.id}/abonnement`, {
         statut,
+        plan,
         echeance: echeance || null,
       });
 
@@ -263,10 +284,10 @@ function FenetreAbonnement({
         await api.put(`/admin/proprietaires/${client.id}/acces`, { actif });
       }
 
-      toast.success("Compte mis à jour.");
+      toast.success(t("admin.compteModifie"));
       onSucces();
     } catch (e) {
-      toast.error(e instanceof ErreurApi ? e.resume() : "Erreur inconnue.");
+      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
     } finally {
       setEnvoiEnCours(false);
     }
@@ -277,18 +298,25 @@ function FenetreAbonnement({
       <DialogContent>
         <form onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
           <DialogHeader>
-            <DialogTitle>Abonnement de {client?.name}</DialogTitle>
+            <DialogTitle>
+              {lang === "en"
+                ? `Subscription for ${client?.name}`
+                : `Abonnement de ${client?.name}`}
+            </DialogTitle>
             <DialogDescription>
-              Un abonnement suspendu ou expiré bloque l&apos;accès du client et de
-              toute son équipe. Les données restent conservées.
+              {lang === "en"
+                ? "A suspended or expired subscription blocks access for the client and their entire team. Data remains preserved."
+                : "Un abonnement suspendu ou expiré bloque l'accès du client et de toute son équipe. Les données restent conservées."}
             </DialogDescription>
           </DialogHeader>
 
           <DialogCorps>
             <div className="space-y-2">
-              <Label>Statut</Label>
+              <Label>{t("commun.statut")}</Label>
               <Select
-                items={libellesAbonnements}
+                items={Object.fromEntries(
+                  statutsDispo.map((s) => [s, libelleAbonnement(s)]),
+                )}
                 value={statut}
                 onValueChange={(v) =>
                   setStatut((v ?? "actif") as StatutAbonnement)
@@ -298,19 +326,46 @@ function FenetreAbonnement({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(libellesAbonnements).map(
-                    ([valeur, libelle]) => (
-                      <SelectItem key={valeur} value={valeur}>
-                        {libelle}
-                      </SelectItem>
-                    ),
-                  )}
+                  {statutsDispo.map((valeur) => (
+                    <SelectItem key={valeur} value={valeur}>
+                      {libelleAbonnement(valeur)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="echeance">Échéance</Label>
+              <Label>{lang === "en" ? "Subscription Tier" : "Formule d'abonnement"}</Label>
+              <Select
+                items={{
+                  standard: lang === "en" ? "Standard" : "Standard",
+                  premium:
+                    lang === "en"
+                      ? "Premium (IMEI lookup enabled)"
+                      : "Premium (Identification IMEI incluse)",
+                }}
+                value={plan}
+                onValueChange={(v) => setPlan((v ?? "standard") as PlanAbonnement)}
+              >
+                <SelectTrigger className="h-10 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">
+                    {lang === "en" ? "Standard" : "Standard"}
+                  </SelectItem>
+                  <SelectItem value="premium">
+                    {lang === "en"
+                      ? "Premium (IMEI lookup enabled)"
+                      : "Premium (Identification IMEI incluse)"}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="echeance">{t("admin.tableauEcheance")}</Label>
               <Input
                 id="echeance"
                 type="date"
@@ -319,25 +374,29 @@ function FenetreAbonnement({
                 onChange={(e) => setEcheance(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Passée cette date, l&apos;accès se bloque automatiquement.
+                {lang === "en"
+                  ? "Past this date, access is automatically blocked."
+                  : "Passée cette date, l'accès se bloque automatiquement."}
               </p>
             </div>
 
             <div className="flex items-center gap-3 border-t pt-4">
               <Switch id="a-actif" checked={actif} onCheckedChange={setActif} />
               <Label htmlFor="a-actif" className="font-normal">
-                Le compte peut se connecter
+                {lang === "en"
+                  ? "Account can sign in"
+                  : "Le compte peut se connecter"}
               </Label>
             </div>
           </DialogCorps>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onFermer}>
-              Annuler
+              {t("commun.annuler")}
             </Button>
             <Button type="submit" disabled={envoiEnCours}>
               {envoiEnCours && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Enregistrer
+              {t("commun.enregistrer")}
             </Button>
           </DialogFooter>
         </form>

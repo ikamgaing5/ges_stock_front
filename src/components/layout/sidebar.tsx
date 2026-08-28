@@ -26,40 +26,41 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { IconeTelora } from "@/components/ui/logo-telora";
 import { useAuth } from "@/components/auth-provider";
 import { permissions } from "@/lib/permissions";
-import { libellesRoles } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import type { Role } from "@/types";
 
-type Lien = {
+type LienDef = {
   href: string;
-  libelle: string;
+  cleLibelle: string;
   icone: LucideIcon;
   /** Absent = visible par tout le monde. */
   visiblePour?: (role: Role) => boolean;
 };
 
-const liens: Lien[] = [
-  { href: "/", libelle: "Tableau de bord", icone: LayoutDashboard },
+const liens: LienDef[] = [
+  { href: "/", cleLibelle: "nav.tableauDeBord", icone: LayoutDashboard },
   {
     href: "/scanner",
-    libelle: "Scanner",
+    cleLibelle: "nav.scanner",
     icone: ScanLine,
     visiblePour: permissions.bougerStock,
   },
-  { href: "/telephones", libelle: "Parc d'appareils", icone: Smartphone },
-  { href: "/modeles", libelle: "Catalogue", icone: BookOpen },
-  { href: "/mouvements", libelle: "Historique", icone: ArrowLeftRight },
+  { href: "/telephones", cleLibelle: "nav.parc", icone: Smartphone },
+  { href: "/modeles", cleLibelle: "nav.catalogue", icone: BookOpen },
+  { href: "/mouvements", cleLibelle: "nav.historique", icone: ArrowLeftRight },
   {
     href: "/equipe",
-    libelle: "Équipe",
+    cleLibelle: "nav.equipe",
     icone: Users,
     visiblePour: permissions.voirEquipe,
   },
   {
     href: "/boutiques",
-    libelle: "Boutiques",
+    cleLibelle: "nav.boutiques",
     icone: Store,
     visiblePour: permissions.gererBoutiques,
   },
@@ -68,6 +69,7 @@ const liens: Lien[] = [
 export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
   const chemin = usePathname();
   const { utilisateur, boutiques } = useAuth();
+  const { t, libelleRole } = useI18n();
 
   if (!utilisateur) return null;
 
@@ -86,18 +88,16 @@ export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
           onClick={onNaviguer}
           className="flex min-w-0 flex-1 items-center gap-2.5"
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Smartphone className="h-[18px] w-[18px]" />
-          </div>
-          <span className="truncate font-heading text-[15px] font-semibold tracking-tight">
-            Parc Mobile
+          <IconeTelora size={32} />
+          <span className="truncate font-heading text-[16px] font-bold tracking-tight text-foreground">
+            TELORA
           </span>
         </Link>
 
         {dansLeTiroir && (
           <Button variant="ghost" size="icon-sm" onClick={onNaviguer}>
             <X className="h-4 w-4" />
-            <span className="sr-only">Fermer le menu</span>
+            <span className="sr-only">{t("nav.fermerMenu")}</span>
           </Button>
         )}
       </div>
@@ -128,7 +128,7 @@ export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
               )}
             >
               <Icone className="h-4 w-4 shrink-0" />
-              {lien.libelle}
+              {t(lien.cleLibelle)}
             </Link>
           );
         })}
@@ -139,8 +139,9 @@ export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
       <div className="border-t px-4 py-3">
         <p className="truncate text-sm font-medium">{utilisateur.name}</p>
         <p className="truncate text-xs text-muted-foreground">
-          {libellesRoles[utilisateur.role]}
-          {boutiques.length > 1 && ` · ${boutiques.length} boutiques`}
+          {libelleRole(utilisateur.role)}
+          {boutiques.length > 1 &&
+            ` · ${boutiques.length} ${t("boutiques.titre").toLowerCase()}`}
         </p>
       </div>
     </nav>

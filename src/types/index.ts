@@ -28,6 +28,7 @@ export type TypeMouvement =
   | "correction";
 
 export type StatutAbonnement = "essai" | "actif" | "suspendu" | "expire";
+export type PlanAbonnement = "standard" | "premium";
 
 /** État de la double authentification, pour la personne connectée. */
 export interface DeuxFacteurs {
@@ -37,6 +38,8 @@ export interface DeuxFacteurs {
 
 export interface Abonnement {
   statut: StatutAbonnement | null;
+  plan?: PlanAbonnement;
+  est_premium?: boolean;
   echeance: string | null;
   utilisable: boolean;
 }
@@ -64,6 +67,7 @@ export interface Utilisateur {
   actif: boolean;
   proprietaire_id: number | null;
   created_at: string;
+  est_premium?: boolean;
   /** Présent uniquement pour la personne connectée. */
   abonnement?: Abonnement;
   /** Présent uniquement pour la personne connectée. */
@@ -77,18 +81,53 @@ export interface Utilisateur {
   employes_count?: number;
 }
 
+export interface ResultatLookupImei {
+  trouve: boolean;
+  premium_requis?: boolean;
+  message?: string;
+  deja_en_catalogue?: boolean;
+  tac?: string;
+  marque?: string;
+  gamme?: string;
+  modele?: string;
+  nom_commercial?: string;
+  stockage_defaut?: string;
+  selection?: {
+    marque_id: string;
+    gamme_id: string;
+    modele_id: string;
+    modele_stockage_id: string | null;
+  } | null;
+}
+
 export type Marque = {
   id: string;
   nom: string;
 };
 
+// export type Marque = { id: string; nom: string };
+export type Gamme =
+  {
+    id: string;
+    nom: string;
+    marque: Marque
+  };
+
+export type ModeleStockage =
+  {
+    id: string;
+    valeur: string
+  };
+
 
 /** Une référence commerciale du catalogue : « Samsung Galaxy A54 128 Go ». */
 export interface Modele {
   id: number;
-  marque: Marque;
+  // marque: Marque;
+  gamme: Gamme;
   nom: string;
-  stockage: string | null;
+  // stockage: string | null;
+  stockages: ModeleStockage[];
   ram: string | null;
   libelle: string;
   description: string | null;
@@ -106,6 +145,7 @@ export interface Telephone {
   id: number | string;
   boutique_id: number;
   modele_id: number;
+  modele_stockage: ModeleStockage;
   imei: string;
   imei2: string | null;
   numero_serie: string | null;
@@ -207,3 +247,6 @@ export interface ResultatImei {
   message?: string;
   data?: Telephone;
 }
+
+
+

@@ -11,6 +11,8 @@ import { ErreurApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IconeTelora } from "@/components/ui/logo-telora";
+import { PiedDePageLegal } from "@/components/layout/pied-de-page-legal";
 
 /** Page de connexion (/connexion). */
 export default function PageConnexion() {
@@ -84,33 +86,34 @@ export default function PageConnexion() {
   }
 
   return (
-    <div className="relative flex min-h-[100dvh] items-center justify-center bg-muted/40 p-4">
+    <div className="relative flex min-h-[100dvh] flex-col items-center justify-between bg-muted/40 p-4">
       {/* Le thème doit pouvoir se changer avant même de se connecter :
           on ouvre parfois l'application dans le noir. */}
       <div className="absolute top-4 right-4">
         <BasculeTheme />
       </div>
 
-      <div className="anim-apparait w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+      <div className="flex-1 flex items-center justify-center w-full py-8">
+        <div className="anim-apparait w-full max-w-sm">
+          <div className="mb-8 flex flex-col items-center gap-3 text-center">
             {jetonDefi ? (
-              <ShieldCheck className="h-6 w-6" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
             ) : (
-              <Smartphone className="h-6 w-6" />
+              <IconeTelora size={52} />
             )}
+            <div>
+              <h1 className="font-heading text-xl font-semibold tracking-tight">
+                {jetonDefi ? "Vérification en deux étapes" : "Telora"}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {jetonDefi
+                  ? "Saisissez le code affiché par votre application d'authentification."
+                  : "Connectez-vous pour gérer votre stock"}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-heading text-xl font-semibold tracking-tight">
-              {jetonDefi ? "Vérification en deux étapes" : "Parc Mobile"}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {jetonDefi
-                ? "Saisissez le code affiché par votre application d'authentification."
-                : "Connectez-vous pour gérer votre stock"}
-            </p>
-          </div>
-        </div>
 
         {jetonDefi ? (
           /* ------------- Deuxième étape : le code ------------- */
@@ -249,6 +252,9 @@ export default function PageConnexion() {
           </p>
         )}
       </div>
+      </div>
+
+      {/* <PiedDePageLegal className="mt-auto pt-6" /> */}
     </div>
   );
 }

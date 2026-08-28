@@ -4,6 +4,9 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { api, ErreurApi, enregistrerToken } from "@/lib/api";
+import { BasculeTheme } from "@/components/bascule-theme";
+import { BasculeLangue } from "@/components/bascule-langue";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +19,7 @@ export default function PageInvitation({
 }) {
   const { token } = use(params);
   const router = useRouter();
+  const { t, lang } = useI18n();
 
   const [email, setEmail] = useState<string | null>(null);
   const [chargement, setChargement] = useState(true);
@@ -50,7 +54,7 @@ export default function PageInvitation({
         },
       );
       enregistrerToken(reponse.token);
-      toast.success("Compte activé.");
+      toast.success(t("auth.compteActive"));
       router.push("/telephones");
     } catch (err) {
       if (err instanceof ErreurApi) {
@@ -66,30 +70,44 @@ export default function PageInvitation({
 
   if (invalide || !email) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-2 text-center">
-        <p className="text-lg font-medium">Invitation invalide ou expirée</p>
+      <div className="relative flex min-h-screen flex-col items-center justify-center gap-2 p-4 text-center">
+        <div className="absolute top-4 right-4 flex items-center gap-1">
+          <BasculeLangue />
+          <BasculeTheme />
+        </div>
+        <p className="text-lg font-medium">
+          {t("auth.invitationInvalide")}
+        </p>
         <p className="text-sm text-muted-foreground">
-          Demandez à la personne qui vous a invité de renvoyer un lien.
+          {t("auth.invitationInvalideDesc")}
         </p>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="relative flex min-h-screen items-center justify-center p-4">
+      <div className="absolute top-4 right-4 flex items-center gap-1">
+        <BasculeLangue />
+        <BasculeTheme />
+      </div>
+
       <form onSubmit={envoyer} className="w-full max-w-sm space-y-5">
         <div>
-          <h1 className="text-xl font-semibold">Finaliser votre compte</h1>
+          <h1 className="text-xl font-semibold">
+            {t("auth.invitationTitre")}
+          </h1>
           <p className="text-sm text-muted-foreground">{email}</p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="i-nom">Nom complet</Label>
+          <Label htmlFor="i-nom">{t("auth.nomComplet")}</Label>
           <Input
             id="i-nom"
             required
             value={nom}
             onChange={(e) => setNom(e.target.value)}
+            placeholder={t("auth.nomPlaceholder")}
           />
           {erreurs.name && (
             <p className="text-xs text-destructive">{erreurs.name}</p>
@@ -97,16 +115,17 @@ export default function PageInvitation({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="i-tel">Téléphone</Label>
+          <Label htmlFor="i-tel">{t("monCompte.telephone")}</Label>
           <Input
             id="i-tel"
             value={telephone}
             onChange={(e) => setTelephone(e.target.value)}
+            placeholder="677 11 22 33"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="i-mdp">Mot de passe</Label>
+          <Label htmlFor="i-mdp">{t("auth.motDePasse")}</Label>
           <Input
             id="i-mdp"
             type="password"
@@ -123,7 +142,7 @@ export default function PageInvitation({
 
         <Button type="submit" className="w-full" disabled={envoiEnCours}>
           {envoiEnCours && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Activer mon compte
+          {t("auth.activerCompte")}
         </Button>
       </form>
     </div>

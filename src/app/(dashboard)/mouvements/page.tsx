@@ -2,19 +2,14 @@
 
 /** L'historique de tous les mouvements (/mouvements). */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeftRight } from "lucide-react";
 import { api } from "@/lib/api";
 import { useListe } from "@/lib/useListe";
 import { formaterImei } from "@/lib/imei";
-import {
-  formaterDate,
-  formaterMontant,
-  libellesMouvements,
-  libellesStatuts,
-} from "@/lib/format";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
 import {
   Apparait,
   EtatErreur,
@@ -42,15 +37,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Mouvement, Page } from "@/types";
-
-const optionsType: Record<string, string> = {
-  tous: "Tous les types",
-  ...libellesMouvements,
-};
+import type { Mouvement, Page, TypeMouvement } from "@/types";
 
 export default function PageHistorique() {
-  const { devise, parametresBoutique } = useAuth();
+  const { devise, deviseBoutique, parametresBoutique } = useAuth();
+  const {
+    t,
+    formatMontant,
+    formatDate,
+    libelleStatut,
+    libelleMouvement,
+  } = useI18n();
 
   const [type, setType] = useState("tous");
   const [du, setDu] = useState("");
@@ -58,6 +55,25 @@ export default function PageHistorique() {
   const [page, setPage] = useState(1);
 
   const boutiqueId = parametresBoutique.boutique_id;
+
+  const typesDispo: TypeMouvement[] = [
+    "entree",
+    "vente",
+    "reservation",
+    "transfert",
+    "sav",
+    "retour",
+    "perte",
+    "correction",
+  ];
+
+  const optionsType: Record<string, string> = useMemo(
+    () => ({
+      tous: t("mouvements.tousTypes"),
+      ...Object.fromEntries(typesDispo.map((m) => [m, libelleMouvement(m)])),
+    }),
+    [t, libelleMouvement],
+  );
 
   const { donnees, chargement, erreur, recharger } = useListe(
     (signal) =>
@@ -84,14 +100,14 @@ export default function PageHistorique() {
   return (
     <>
       <TitrePage
-        titre="Historique"
-        description={`${total} mouvement(s) enregistré(s)`}
+        titre={t("mouvements.titre")}
+        description={t("mouvements.totalMouvements", { total })}
       />
 
       <Card className="mb-4">
         <CardContent className="flex flex-wrap items-end gap-3 pt-6">
           <div className="space-y-2">
-            <Label>Type</Label>
+            <Label>{t("commun.actions")}</Label>
             <Select
               items={optionsType}
               value={type}
@@ -114,7 +130,7 @@ export default function PageHistorique() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="du">Du</Label>
+            <Label htmlFor="du">{t("mouvements.filtreDu")}</Label>
             <Input
               id="du"
               type="date"
@@ -128,7 +144,7 @@ export default function PageHistorique() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="au">Au</Label>
+            <Label htmlFor="au">{t("mouvements.filtreAu")}</Label>
             <Input
               id="au"
               type="date"
@@ -151,7 +167,7 @@ export default function PageHistorique() {
                 setPage(1);
               }}
             >
-              Réinitialiser
+              {t("commun.reinitialiser")}
             </Button>
           )}
         </CardContent>
@@ -164,11 +180,11 @@ export default function PageHistorique() {
       ) : mouvements.length === 0 ? (
         <EtatVide
           icone={<ArrowLeftRight className="h-5 w-5" />}
-          titre="Aucun mouvement"
+          titre={t("mouvements.aucunMouvement")}
           description={
             filtreActif
-              ? "Aucun résultat avec ces filtres."
-              : "Les entrées, ventes et transferts apparaîtront ici."
+              ? t("mouvements.aucunMouvementFiltres")
+              : t("mouvements.aucunMouvementDesc")
           }
         />
       ) : (
@@ -179,21 +195,25 @@ export default function PageHistorique() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Appareil</TableHead>
-                      <TableHead>Action</TableHead>
+                      <TableHead>{t("commun.date")}</TableHead>
+                      <TableHead>{t("mouvements.tableauAppareil")}</TableHead>
+                      <TableHead>{t("commun.actions")}</TableHead>
                       <TableHead className="hidden lg:table-cell">
-                        Statut
+                        {t("commun.statut")}
                       </TableHead>
-                      <TableHead className="hidden md:table-cell">Par</TableHead>
-                      <TableHead className="text-right">Détail</TableHead>
+                      <TableHead className="hidden md:table-cell">
+                        {t("mouvements.tableauAuteur")}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {t("commun.details")}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {mouvements.map((mouvement) => (
                       <TableRow key={mouvement.id}>
                         <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                          {formaterDate(mouvement.created_at)}
+                          {formatDate(mouvement.created_at)}
                         </TableCell>
                         <TableCell>
                           <Link
@@ -214,11 +234,11 @@ export default function PageHistorique() {
                         <TableCell className="hidden whitespace-nowrap text-xs lg:table-cell">
                           {mouvement.statut_avant && (
                             <span className="text-muted-foreground">
-                              {libellesStatuts[mouvement.statut_avant]} →{" "}
+                              {libelleStatut(mouvement.statut_avant)} →{" "}
                             </span>
                           )}
                           <span className="font-medium">
-                            {libellesStatuts[mouvement.statut_apres]}
+                            {libelleStatut(mouvement.statut_apres)}
                           </span>
                         </TableCell>
                         <TableCell className="hidden whitespace-nowrap text-sm md:table-cell">
@@ -235,7 +255,7 @@ export default function PageHistorique() {
                             <>
                               {mouvement.prix !== null && (
                                 <span className="chiffres block font-medium text-foreground">
-                                  {formaterMontant(mouvement.prix, devise)}
+                                  {formatMontant(mouvement.prix, devise, deviseBoutique)}
                                 </span>
                               )}
                               {mouvement.client_nom && (
@@ -243,7 +263,9 @@ export default function PageHistorique() {
                                   {mouvement.client_nom}
                                 </span>
                               )}
-                              {mouvement.motif && <span>{mouvement.motif}</span>}
+                              {mouvement.motif && (
+                                <span>{mouvement.motif}</span>
+                              )}
                             </>
                           )}
                         </TableCell>
@@ -265,10 +287,10 @@ export default function PageHistorique() {
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
           >
-            Précédent
+            {t("commun.precedent")}
           </Button>
           <span className="chiffres text-sm text-muted-foreground">
-            Page {page} sur {nbPages}
+            {t("commun.pageSur", { current: page, total: nbPages })}
           </span>
           <Button
             variant="outline"
@@ -276,7 +298,7 @@ export default function PageHistorique() {
             disabled={page >= nbPages}
             onClick={() => setPage((p) => p + 1)}
           >
-            Suivant
+            {t("commun.suivant")}
           </Button>
         </div>
       )}

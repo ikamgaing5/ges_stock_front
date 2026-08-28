@@ -2,12 +2,6 @@
 
 /**
  * Mot de passe oublié (/mot-de-passe-oublie).
- *
- * Deux étapes, comme l'inscription : on demande l'adresse, un code part
- * par email, puis ce code accompagne le nouveau mot de passe.
- *
- * Le serveur répond la même chose que le compte existe ou non : sinon,
- * cette page deviendrait un moyen de savoir qui est inscrit.
  */
 
 import { useEffect, useState } from "react";
@@ -18,10 +12,13 @@ import { toast } from "sonner";
 import { api, enregistrerToken, ErreurApi } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { BasculeTheme } from "@/components/bascule-theme";
+import { BasculeLangue } from "@/components/bascule-langue";
 import { ChampCode } from "@/components/champ-code";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PiedDePageLegal } from "@/components/layout/pied-de-page-legal";
 import type { Utilisateur } from "@/types";
 
 const DELAI_RENVOI = 60;
@@ -29,6 +26,7 @@ const DELAI_RENVOI = 60;
 export default function PageMotDePasseOublie() {
   const router = useRouter();
   const { rafraichir } = useAuth();
+  const { t, lang } = useI18n();
 
   const [etape, setEtape] = useState<"email" | "code">("email");
   const [email, setEmail] = useState("");
@@ -54,7 +52,7 @@ export default function PageMotDePasseOublie() {
       await api.post("/mot-de-passe/code", { email });
       setEtape("code");
       setSecondesAvantRenvoi(DELAI_RENVOI);
-      toast.success("Si un compte existe, un code vient d'être envoyé.");
+      toast.success(t("auth.codeEnvoyeEmail"));
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
@@ -71,7 +69,9 @@ export default function PageMotDePasseOublie() {
     evenement.preventDefault();
 
     if (motDePasse !== confirmation) {
-      setErreurs({ confirmation: "Les deux mots de passe diffèrent." });
+      setErreurs({
+        confirmation: t("auth.motsDePasseDifferents"),
+      });
       return;
     }
 
@@ -89,11 +89,9 @@ export default function PageMotDePasseOublie() {
         },
       );
 
-      // Le serveur renvoie un token : inutile de redemander de se
-      // connecter juste après avoir prouvé son identité par email.
       enregistrerToken(reponse.token);
       await rafraichir();
-      toast.success("Mot de passe modifié.");
+      toast.success(t("auth.motDePasseReinitialise"));
       router.push("/");
     } catch (e) {
       if (e instanceof ErreurApi) {
@@ -105,12 +103,14 @@ export default function PageMotDePasseOublie() {
   }
 
   return (
-    <div className="relative flex min-h-[100dvh] items-center justify-center bg-muted/40 p-4">
-      <div className="absolute top-4 right-4">
+    <div className="relative flex min-h-[100dvh] flex-col items-center justify-between bg-muted/40 p-4">
+      <div className="absolute top-4 right-4 flex items-center gap-1">
+        <BasculeLangue />
         <BasculeTheme />
       </div>
 
-      <div className="anim-apparait w-full max-w-sm">
+      <div className="flex-1 flex items-center justify-center w-full py-8">
+        <div className="anim-apparait w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             {etape === "email" ? (
@@ -122,19 +122,13 @@ export default function PageMotDePasseOublie() {
           <div>
             <h1 className="font-heading text-xl font-semibold tracking-tight">
               {etape === "email"
-                ? "Mot de passe oublié"
-                : "Choisissez un nouveau mot de passe"}
+                ? t("auth.motDePasseOublieTitre")
+                : t("auth.reinitialiserMotDePasse")}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {etape === "email" ? (
-                "Indiquez votre adresse : nous vous enverrons un code."
-              ) : (
-                <>
-                  Code envoyé à
-                  <br />
-                  <span className="font-medium text-foreground">{email}</span>
-                </>
-              )}
+              {etape === "email"
+                ? t("auth.motDePasseOublieDesc")
+                : t("auth.codeInstructions", { email })}
             </p>
           </div>
         </div>
@@ -145,7 +139,7 @@ export default function PageMotDePasseOublie() {
             className="space-y-4 rounded-xl border bg-card p-6 shadow-sm"
           >
             <div className="space-y-2">
-              <Label htmlFor="email">Adresse email</Label>
+              <Label htmlFor="email">{t("auth.email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -155,7 +149,7 @@ export default function PageMotDePasseOublie() {
                 autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="vous@boutique.cm"
+                placeholder={t("auth.emailPlaceholder")}
               />
               {erreurs.email && (
                 <p className="text-xs text-destructive">{erreurs.email}</p>
@@ -169,7 +163,7 @@ export default function PageMotDePasseOublie() {
               disabled={envoiEnCours}
             >
               {envoiEnCours && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Envoyer le code
+              {t("auth.envoyerCode")}
             </Button>
           </form>
         ) : (
@@ -178,7 +172,7 @@ export default function PageMotDePasseOublie() {
             className="space-y-5 rounded-xl border bg-card p-6 shadow-sm"
           >
             <div className="space-y-2">
-              <Label>Code reçu par email</Label>
+              <Label>{t("auth.codeVerification")}</Label>
               <ChampCode
                 valeur={code}
                 onChange={setCode}
@@ -192,7 +186,7 @@ export default function PageMotDePasseOublie() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mdp">Nouveau mot de passe</Label>
+              <Label htmlFor="mdp">{t("auth.nouveauMotDePasse")}</Label>
               <Input
                 id="mdp"
                 type="password"
@@ -207,13 +201,13 @@ export default function PageMotDePasseOublie() {
                 <p className="text-xs text-destructive">{erreurs.password}</p>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  8 caractères minimum
+                  {t("auth.huitCaracteresMin")}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mdp2">Confirmation</Label>
+              <Label htmlFor="mdp2">{t("auth.confirmationMotDePasse")}</Label>
               <Input
                 id="mdp2"
                 type="password"
@@ -237,7 +231,7 @@ export default function PageMotDePasseOublie() {
               disabled={envoiEnCours || code.replace(/\D/g, "").length < 6}
             >
               {envoiEnCours && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Changer le mot de passe
+              {t("monCompte.changerMotDePasse")}
             </Button>
 
             <div className="flex items-center justify-between gap-3 border-t pt-4 text-sm">
@@ -251,7 +245,7 @@ export default function PageMotDePasseOublie() {
                 className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
-                Autre adresse
+                {t("auth.autreEmail")}
               </button>
 
               <button
@@ -261,8 +255,8 @@ export default function PageMotDePasseOublie() {
                 className="font-medium text-primary underline underline-offset-4 disabled:text-muted-foreground disabled:no-underline"
               >
                 {secondesAvantRenvoi > 0
-                  ? `Renvoyer dans ${secondesAvantRenvoi} s`
-                  : "Renvoyer le code"}
+                  ? `${t("auth.renvoyerCode")} (${secondesAvantRenvoi}s)`
+                  : t("auth.renvoyerCode")}
               </button>
             </div>
           </form>
@@ -273,10 +267,13 @@ export default function PageMotDePasseOublie() {
             href="/connexion"
             className="font-medium text-primary underline underline-offset-4"
           >
-            Retour à la connexion
+            {t("auth.retourConnexion")}
           </Link>
         </p>
       </div>
+      </div>
+
+      <PiedDePageLegal className="max-w-xl w-full" />
     </div>
   );
 }

@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { api, ErreurApi } from "@/lib/api";
-import { formaterDate, formaterMontant, formaterNombre } from "@/lib/format";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
 import {
   Apparait,
   EtatErreur,
@@ -29,7 +29,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TableauBord } from "@/types";
 
 export default function PageTableauBord() {
-  const { utilisateur, devise, boutiqueActive, parametresBoutique } = useAuth();
+  const { utilisateur, devise, deviseBoutique, boutiques, boutiqueActive, parametresBoutique } = useAuth();
+  const { t } = useI18n();
 
   const [donnees, setDonnees] = useState<TableauBord | null>(null);
   const [chargement, setChargement] = useState(true);
@@ -40,12 +41,11 @@ export default function PageTableauBord() {
     try {
       setDonnees(await api.get<TableauBord>("/tableau-bord", parametresBoutique));
     } catch (e) {
-      setErreur(e instanceof ErreurApi ? e.message : "Erreur inconnue.");
+      setErreur(e instanceof ErreurApi ? e.message : t("commun.erreur"));
     } finally {
       setChargement(false);
     }
-    // On recharge dès que la boutique sélectionnée change.
-  }, [parametresBoutique]);
+  }, [parametresBoutique, t]);
 
   useEffect(() => {
     void charger();
@@ -56,17 +56,16 @@ export default function PageTableauBord() {
   return (
     <>
       <TitrePage
-        titre={`Bonjour ${prenom}`}
+        titre={t("dashboard.bonjour", { nom: prenom })}
         description={
           boutiqueActive
-            ? `${boutiqueActive.nom} — état du parc aujourd'hui.`
-            : "Toutes vos boutiques réunies."
+            ? t("dashboard.descriptionBoutique", { boutique: boutiqueActive.nom })
+            : t("dashboard.descriptionToutes")
         }
       >
-        <Button nativeButton={false}
-        render={<Link href="/telephones/nouveau" />}>
+        <Button nativeButton={false} render={<Link href="/telephones/nouveau" />}>
           <ScanLine className="mr-2 h-4 w-4" />
-          Entrée de stock
+          {t("dashboard.entreeStock")}
         </Button>
       </TitrePage>
 
@@ -75,7 +74,12 @@ export default function PageTableauBord() {
       ) : chargement || !donnees ? (
         <SquelettesCartes />
       ) : (
-        <Contenu donnees={donnees} devise={devise} />
+        <Contenu
+          donnees={donnees}
+          devise={devise}
+          deviseBoutique={deviseBoutique}
+          boutiques={boutiques}
+        />
       )}
     </>
   );
@@ -84,10 +88,15 @@ export default function PageTableauBord() {
 function Contenu({
   donnees,
   devise,
+  deviseBoutique,
+  boutiques,
 }: {
   donnees: TableauBord;
   devise: string;
+  deviseBoutique: string;
+  boutiques: { id: string | number; devise?: string }[];
 }) {
+  const { t, formatMontant, formatNombre, formatDate } = useI18n();
   const s = donnees.statistiques;
 
   return (
@@ -95,33 +104,33 @@ function Contenu({
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Apparait index={0}>
           <Statistique
-            libelle="Appareils en stock"
-            valeur={formaterNombre(s.nb_en_stock)}
-            detail={`${formaterMontant(s.valeur_vente, devise)} de valeur`}
+            libelle={t("dashboard.appareilsEnStock")}
+            valeur={formatNombre(s.nb_en_stock)}
+            detail={`${formatMontant(s.valeur_vente, devise, deviseBoutique)} ${t("dashboard.deValeur")}`}
             icone={PackageCheck}
           />
         </Apparait>
         <Apparait index={1}>
           <Statistique
-            libelle="Ventes du jour"
-            valeur={formaterNombre(s.ventes_du_jour)}
-            detail={formaterMontant(s.chiffre_du_jour, devise)}
+            libelle={t("dashboard.ventesDuJour", { count: s.ventes_du_jour })}
+            valeur={formatNombre(s.ventes_du_jour)}
+            detail={formatMontant(s.chiffre_du_jour, devise, deviseBoutique)}
             icone={Banknote}
           />
         </Apparait>
         <Apparait index={2}>
           <Statistique
-            libelle="Ventes du mois"
-            valeur={formaterNombre(s.ventes_du_mois)}
-            detail={formaterMontant(s.chiffre_du_mois, devise)}
+            libelle={t("dashboard.ventesMois", { count: s.ventes_du_mois })}
+            valeur={formatNombre(s.ventes_du_mois)}
+            detail={formatMontant(s.chiffre_du_mois, devise, deviseBoutique)}
             icone={BadgeCheck}
           />
         </Apparait>
         <Apparait index={3}>
           <Statistique
-            libelle="À réapprovisionner"
-            valeur={formaterNombre(s.nb_alertes)}
-            detail="Modèles sous le seuil"
+            libelle={t("dashboard.alertesStock")}
+            valeur={formatNombre(s.nb_alertes)}
+            detail={t("dashboard.alertesDesc")}
             icone={TriangleAlert}
             accent={s.nb_alertes > 0 ? "text-statut-alerte" : undefined}
             lien={s.nb_alertes > 0 ? "/modeles?statut=alerte" : undefined}
@@ -134,18 +143,18 @@ function Contenu({
         <Apparait index={4} className="mt-4">
           <div className="flex flex-wrap gap-x-8 gap-y-3 rounded-xl border bg-card px-5 py-4 text-sm">
             <Compteur
-              libelle="Réservés"
+              libelle={t("dashboard.appareilsReserves")}
               valeur={s.nb_reserves}
               lien="/telephones?statut=reserve"
             />
             <Compteur
-              libelle="En réparation"
+              libelle={t("dashboard.enReparation")}
               valeur={s.nb_sav}
               lien="/telephones?statut=sav"
               icone={Wrench}
             />
             <Compteur
-              libelle="Perdus"
+              libelle={t("dashboard.appareilsPerdus")}
               valeur={s.nb_perdus}
               lien="/telephones?statut=perdu"
             />
@@ -158,18 +167,18 @@ function Contenu({
         <Apparait index={5}>
           <Card className="h-full">
             <CardHeader className="flex-row items-center justify-between">
-              <CardTitle className="text-base">À réapprovisionner</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.alertesStock")}</CardTitle>
               <Link
                 href="/modeles?statut=alerte"
                 className="text-sm text-muted-foreground hover:text-foreground"
               >
-                Tout voir
+                {t("commun.voirTout")}
               </Link>
             </CardHeader>
             <CardContent>
               {donnees.alertes.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
-                  Aucun modèle sous son seuil. Le stock est confortable.
+                  {t("dashboard.aucuneAlerte")}
                 </p>
               ) : (
                 <ul className="divide-y">
@@ -208,18 +217,18 @@ function Contenu({
         <Apparait index={6}>
           <Card className="h-full">
             <CardHeader className="flex-row items-center justify-between">
-              <CardTitle className="text-base">Dernière activité</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.derniersMouvements")}</CardTitle>
               <Link
                 href="/mouvements"
                 className="text-sm text-muted-foreground hover:text-foreground"
               >
-                Tout voir
+                {t("commun.voirTout")}
               </Link>
             </CardHeader>
             <CardContent>
               {donnees.derniers_mouvements.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
-                  Rien à afficher pour le moment.
+                  {t("dashboard.aucunMouvement")}
                 </p>
               ) : (
                 <ul className="divide-y">
@@ -240,7 +249,7 @@ function Contenu({
                         <div className="flex shrink-0 flex-col items-end gap-1">
                           <PastilleMouvement type={mouvement.type} />
                           <span className="text-xs text-muted-foreground">
-                            {formaterDate(mouvement.created_at)}
+                            {formatDate(mouvement.created_at)}
                           </span>
                         </div>
                       </Link>
@@ -258,7 +267,7 @@ function Contenu({
         <Apparait index={7} className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Stock par boutique</CardTitle>
+              <CardTitle className="text-base">{t("dashboard.repartitionBoutiques")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {donnees.par_boutique.map((ligne) => {
@@ -268,6 +277,11 @@ function Contenu({
                 );
                 const part = total > 0 ? (ligne.nb_en_stock / total) * 100 : 0;
 
+                const boutiqueLigne = boutiques.find(
+                  (b) => String(b.id) === String(ligne.boutique_id),
+                );
+                const deviseSourceLigne = boutiqueLigne?.devise ?? deviseBoutique;
+
                 return (
                   <div key={ligne.boutique_id}>
                     <div className="flex items-baseline justify-between gap-3 text-sm">
@@ -275,8 +289,9 @@ function Contenu({
                         {ligne.boutique}
                       </span>
                       <span className="chiffres shrink-0 text-muted-foreground">
-                        {formaterNombre(ligne.nb_en_stock)} appareils ·{" "}
-                        {formaterMontant(ligne.valeur, devise)}
+                        {formatNombre(ligne.nb_en_stock)}{" "}
+                        {t("telephones.titre").toLowerCase()} ·{" "}
+                        {formatMontant(ligne.valeur, devise, deviseSourceLigne)}
                       </span>
                     </div>
                     {/* Barre de proportion, sans piste de fond marquée */}
@@ -349,12 +364,13 @@ function Compteur({
   lien: string;
   icone?: LucideIcon;
 }) {
+  const { formatNombre } = useI18n();
   if (valeur === 0) return null;
 
   return (
     <Link href={lien} className="group flex items-center gap-2">
       {Icone && <Icone className="h-4 w-4 text-muted-foreground" />}
-      <span className="chiffres font-semibold">{formaterNombre(valeur)}</span>
+      <span className="chiffres font-semibold">{formatNombre(valeur)}</span>
       <span className="text-muted-foreground">{libelle}</span>
       <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
     </Link>

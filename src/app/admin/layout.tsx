@@ -14,12 +14,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { Building2, LogOut, Loader2, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { BasculeTheme } from "@/components/bascule-theme";
+import { BasculeLangue } from "@/components/bascule-langue";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const liens = [
-  { href: "/admin", libelle: "Vue d'ensemble", icone: ShieldCheck },
-  { href: "/admin/proprietaires", libelle: "Clients", icone: Building2 },
+  { href: "/admin", cleLibelle: "admin.vueEnsemble", icone: ShieldCheck },
+  { href: "/admin/proprietaires", cleLibelle: "admin.clients", icone: Building2 },
 ];
 
 export default function AdminLayout({
@@ -28,6 +30,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { utilisateur, chargement, deconnexion } = useAuth();
+  const { t } = useI18n();
   const router = useRouter();
   const chemin = usePathname();
 
@@ -48,7 +51,7 @@ export default function AdminLayout({
     return (
       <div className="flex min-h-[100dvh] items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <span className="sr-only">Chargement</span>
+        <span className="sr-only">{t("commun.chargement")}</span>
       </div>
     );
   }
@@ -62,7 +65,7 @@ export default function AdminLayout({
               <ShieldCheck className="h-4 w-4" />
             </div>
             <span className="font-heading text-sm font-semibold">
-              Administration
+              {t("nav.administration")}
             </span>
           </div>
 
@@ -85,13 +88,14 @@ export default function AdminLayout({
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  {lien.libelle}
+                  {t(lien.cleLibelle)}
                 </Link>
               );
             })}
           </nav>
 
           <div className="ml-auto flex items-center gap-1">
+            <BasculeLangue />
             <BasculeTheme />
 
             <Button
@@ -100,7 +104,7 @@ export default function AdminLayout({
               onClick={() => void deconnexion()}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Se déconnecter</span>
+              <span className="hidden sm:inline">{t("nav.deconnexion")}</span>
             </Button>
           </div>
         </div>

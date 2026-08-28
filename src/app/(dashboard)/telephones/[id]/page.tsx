@@ -7,13 +7,8 @@ import Link from "next/link";
 import { ArrowLeft, Store } from "lucide-react";
 import { api, ErreurApi } from "@/lib/api";
 import { formaterImei } from "@/lib/imei";
-import {
-  formaterDate,
-  formaterMontant,
-  libellesEtats,
-  libellesStatuts,
-} from "@/lib/format";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
 import { ActionsTelephone } from "@/components/actions-telephone";
 import {
   Apparait,
@@ -40,9 +35,10 @@ export default function PageAppareil({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // Dans Next.js 16, `params` est une promesse : use() en extrait la valeur.
   const { id } = use(params);
-  const { devise } = useAuth();
+  const { devise, deviseBoutique } = useAuth();
+  const { t, formatMontant, formatDate, libelleEtat, libelleStatut, lang } =
+    useI18n();
 
   const [appareil, setAppareil] = useState<Telephone | null>(null);
   const [historique, setHistorique] = useState<Mouvement[]>([]);
@@ -66,51 +62,49 @@ export default function PageAppareil({
       setAppareil(fiche.data);
       setHistorique(mouvements.data);
     } catch (e) {
-        if (e instanceof ErreurApi && e.statut === 404) {
-          setNonTrouve(true);
-        } else if (e instanceof ErreurApi && e.statut === 403) {
-          setNonAutorise(true);
-        } else {
-          setErreur(e instanceof ErreurApi ? e.message : "Erreur inconnue.");
-        }
+      if (e instanceof ErreurApi && e.statut === 404) {
+        setNonTrouve(true);
+      } else if (e instanceof ErreurApi && e.statut === 403) {
+        setNonAutorise(true);
+      } else {
+        setErreur(e instanceof ErreurApi ? e.message : t("commun.erreur"));
+      }
     } finally {
       setChargement(false);
     }
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     void charger();
   }, [charger]);
 
-
   if (chargement) return <SquelettesTableau />;
-if (nonTrouve || nonAutorise) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-      <p className="text-lg font-medium">
-        {nonTrouve ? "Téléphone non répertorié" : "Accès non autorisé"}
-      </p>
-      <p className="text-sm text-muted-foreground">
-        {nonTrouve
-          ? "Cet appareil n'existe pas ou a été supprimé."
-          : "Vous n'avez pas les droits pour consulter cet appareil."}
-      </p>
-      <Button
-        variant="outline"
-        nativeButton={false}
-        render={<Link href="/telephones" />}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Retour au parc
-      </Button>
-    </div>
-  );
-}
+
+  if (nonTrouve || nonAutorise) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+        <p className="text-lg font-medium">
+          {t(nonTrouve ? "telephones.deviceNotFound" : "telephones.accessDenied")}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {t(nonTrouve ? "telephones.deviceNotFoundDesc" : "telephones.accessDeniedDesc")}
+        </p>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href="/telephones" />}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          {t("telephones.backToInventory")}
+        </Button>
+      </div>
+    );
+  }
 
   if (erreur || !appareil) {
     return (
       <EtatErreur
-        message={erreur ?? "Appareil introuvable."}
+        message={erreur ?? t("telephones.deviceNotFoundSimple")}
         onReessayer={() => void charger()}
       />
     );
@@ -126,7 +120,7 @@ if (nonTrouve || nonAutorise) {
         render={<Link href="/telephones" />}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Retour au parc
+        {t("telephones.backToInventory")}
       </Button>
 
       <TitrePage titre={appareil.modele?.libelle ?? "Appareil"}>
@@ -142,7 +136,7 @@ if (nonTrouve || nonAutorise) {
           <Apparait>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Actions</CardTitle>
+                <CardTitle className="text-base">{t("commun.actions")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ActionsTelephone
@@ -156,28 +150,40 @@ if (nonTrouve || nonAutorise) {
           <Apparait index={1}>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Identification</CardTitle>
+                <CardTitle className="text-base">
+                  {t("telephones.identification")}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Ligne libelle="IMEI" valeur={formaterImei(appareil.imei)} mono />
+                <Ligne
+                  libelle={t("telephones.imei")}
+                  valeur={formaterImei(appareil.imei)}
+                  mono
+                />
                 {appareil.imei2 && (
                   <Ligne
-                    libelle="IMEI 2"
+                    libelle={t("telephones.imei2")}
                     valeur={formaterImei(appareil.imei2)}
                     mono
                   />
                 )}
                 {appareil.numero_serie && (
                   <Ligne
-                    libelle="Numéro de série"
+                    libelle={t("telephones.numeroSerie")}
                     valeur={appareil.numero_serie}
                     mono
                   />
                 )}
-                <Ligne libelle="Couleur" valeur={appareil.couleur ?? "—"} />
-                <Ligne libelle="État" valeur={libellesEtats[appareil.etat]} />
                 <Ligne
-                  libelle="Boutique"
+                  libelle={t("telephones.couleur")}
+                  valeur={appareil.couleur ?? "—"}
+                />
+                <Ligne
+                  libelle={t("commun.etat")}
+                  valeur={libelleEtat(appareil.etat)}
+                />
+                <Ligne
+                  libelle={t("telephones.boutique")}
                   valeur={appareil.boutique?.nom ?? "—"}
                   icone={<Store className="h-3.5 w-3.5" />}
                 />
@@ -188,46 +194,54 @@ if (nonTrouve || nonAutorise) {
           <Apparait index={2}>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Commercial</CardTitle>
+                <CardTitle className="text-base">
+                  {t("telephones.commercial")}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Ligne
-                  libelle="Prix d'achat"
-                  valeur={formaterMontant(appareil.prix_achat, devise)}
+                  libelle={t("telephones.prixAchat")}
+                  valeur={formatMontant(appareil.prix_achat, devise, appareil.boutique?.devise ?? deviseBoutique)}
                 />
                 <Ligne
-                  libelle="Prix de vente"
-                  valeur={formaterMontant(appareil.prix_vente, devise)}
+                  libelle={t("telephones.prixVente")}
+                  valeur={formatMontant(appareil.prix_vente, devise, appareil.boutique?.devise ?? deviseBoutique)}
                 />
                 {appareil.prix_vente_reel !== null && (
                   <Ligne
-                    libelle="Vendu à"
-                    valeur={formaterMontant(appareil.prix_vente_reel, devise)}
+                    libelle={t("telephones.venduA", { client: "" })}
+                    valeur={formatMontant(appareil.prix_vente_reel, devise, appareil.boutique?.devise ?? deviseBoutique)}
                     accent
                   />
                 )}
                 {appareil.fournisseur && (
-                  <Ligne libelle="Fournisseur" valeur={appareil.fournisseur} />
+                  <Ligne
+                    libelle={t("telephones.fournisseur")}
+                    valeur={appareil.fournisseur}
+                  />
                 )}
                 {appareil.client_nom && (
-                  <Ligne libelle="Client" valeur={appareil.client_nom} />
+                  <Ligne
+                    libelle={t("telephones.clientNom")}
+                    valeur={appareil.client_nom}
+                  />
                 )}
                 {appareil.client_telephone && (
                   <Ligne
-                    libelle="Téléphone client"
+                    libelle={t("telephones.clientTelephone")}
                     valeur={appareil.client_telephone}
                   />
                 )}
                 <Ligne
-                  libelle="Entré le"
+                  libelle={t("telephones.tableauDateEntree")}
                   valeur={
-                    appareil.entre_le ? formaterDate(appareil.entre_le) : "—"
+                    appareil.entre_le ? formatDate(appareil.entre_le) : "—"
                   }
                 />
                 {appareil.sorti_le && (
                   <Ligne
-                    libelle="Sorti le"
-                    valeur={formaterDate(appareil.sorti_le)}
+                    libelle={t("telephones.exitedOn")}
+                    valeur={formatDate(appareil.sorti_le)}
                   />
                 )}
                 {appareil.notes && (
@@ -243,30 +257,32 @@ if (nonTrouve || nonAutorise) {
         <Apparait index={3}>
           <Card className="h-full">
             <CardHeader>
-              <CardTitle className="text-base">Historique de l&apos;appareil</CardTitle>
+              <CardTitle className="text-base">
+                {t("telephones.historiqueAppareil")}
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {historique.length === 0 ? (
                 <p className="py-10 text-center text-sm text-muted-foreground">
-                  Aucun mouvement enregistré.
+                  {t("telephones.aucunHistorique")}
                 </p>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Action</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead>Par</TableHead>
-                        <TableHead>Détail</TableHead>
+                        <TableHead>{t("commun.date")}</TableHead>
+                        <TableHead>{t("commun.actions")}</TableHead>
+                        <TableHead>{t("commun.statut")}</TableHead>
+                        <TableHead>{t("mouvements.tableauAuteur")}</TableHead>
+                        <TableHead>{t("commun.details")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {historique.map((mouvement) => (
                         <TableRow key={mouvement.id}>
                           <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                            {formaterDate(mouvement.created_at)}
+                            {formatDate(mouvement.created_at)}
                           </TableCell>
                           <TableCell>
                             <PastilleMouvement type={mouvement.type} />
@@ -274,12 +290,12 @@ if (nonTrouve || nonAutorise) {
                           <TableCell className="whitespace-nowrap text-xs">
                             {mouvement.statut_avant ? (
                               <span className="text-muted-foreground">
-                                {libellesStatuts[mouvement.statut_avant]}
+                                {libelleStatut(mouvement.statut_avant)}
                                 {" → "}
                               </span>
                             ) : null}
                             <span className="font-medium">
-                              {libellesStatuts[mouvement.statut_apres]}
+                              {libelleStatut(mouvement.statut_apres)}
                             </span>
                           </TableCell>
                           <TableCell className="whitespace-nowrap text-sm">
@@ -301,10 +317,12 @@ if (nonTrouve || nonAutorise) {
                                 )}
                                 {mouvement.prix !== null && (
                                   <span className="chiffres block">
-                                    {formaterMontant(mouvement.prix, devise)}
+                                    {formatMontant(mouvement.prix, devise, appareil.boutique?.devise ?? deviseBoutique)}
                                   </span>
                                 )}
-                                {mouvement.motif && <span>{mouvement.motif}</span>}
+                                {mouvement.motif && (
+                                  <span>{mouvement.motif}</span>
+                                )}
                               </>
                             )}
                           </TableCell>

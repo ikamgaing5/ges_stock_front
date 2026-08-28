@@ -9,8 +9,10 @@ import { LogOut, Menu, UserRound } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { Sidebar } from "@/components/layout/sidebar";
 import { SelecteurBoutique } from "@/components/layout/selecteur-boutique";
+import { SelecteurDevise } from "@/components/layout/selecteur-devise";
 import { BasculeTheme } from "@/components/bascule-theme";
-import { libellesRoles } from "@/lib/format";
+import { BasculeLangue } from "@/components/bascule-langue";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,6 +30,7 @@ import {
 
 export function Header() {
   const { utilisateur, deconnexion } = useAuth();
+  const { t, libelleRole } = useI18n();
   const [menuOuvert, setMenuOuvert] = useState(false);
   const chemin = usePathname();
 
@@ -45,11 +48,11 @@ export function Header() {
           render={<Button variant="ghost" size="icon" className="lg:hidden" />}
         >
           <Menu className="h-5 w-5" />
-          <span className="sr-only">Ouvrir le menu</span>
+          <span className="sr-only">{t("nav.ouvrirMenu")}</span>
         </TiroirDeclencheur>
 
         <TiroirContenu>
-          <TiroirTitre className="sr-only">Menu principal</TiroirTitre>
+          <TiroirTitre className="sr-only">{t("nav.menuPrincipal")}</TiroirTitre>
           <Sidebar onNaviguer={() => setMenuOuvert(false)} />
         </TiroirContenu>
       </Tiroir>
@@ -58,6 +61,8 @@ export function Header() {
 
       {/* `ml-auto` colle ce bloc et tout ce qui suit au bord droit. */}
       <div className="ml-auto flex items-center gap-1">
+        <SelecteurDevise />
+        <BasculeLangue />
         <BasculeTheme />
 
         <DropdownMenu>
@@ -78,7 +83,7 @@ export function Header() {
             <div className="px-1.5 py-1">
               <p className="truncate text-sm font-medium">{utilisateur.name}</p>
               <p className="truncate text-xs text-muted-foreground">
-                {libellesRoles[utilisateur.role]}
+                {libelleRole(utilisateur.role)}
               </p>
               <p className="truncate text-xs text-muted-foreground">
                 {utilisateur.email}
@@ -94,12 +99,12 @@ export function Header() {
               render={<Link href="/mon-compte" />}
             >
               <UserRound className="mr-2 h-4 w-4" />
-              Mon compte
+              {t("nav.monCompte")}
             </DropdownMenuItem>
 
             <DropdownMenuItem onClick={() => void deconnexion()}>
               <LogOut className="mr-2 h-4 w-4" />
-              Se déconnecter
+              {t("nav.deconnexion")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

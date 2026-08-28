@@ -38,25 +38,33 @@ export function imeiValide(saisie: string): boolean {
   return somme % 10 === 0;
 }
 
+import type { Langue } from "@/lib/i18n/types";
+
 /**
  * Explique pourquoi une saisie est refusée, en une phrase utilisable
  * telle quelle dans l'interface.
  */
-export function messageImei(saisie: string): string | null {
+export function messageImei(saisie: string, lang: Langue = "fr"): string | null {
   const chiffres = nettoyerImei(saisie);
 
   if (chiffres.length === 0) return null;
 
   if (chiffres.length < 15) {
-    return `${chiffres.length} chiffres sur 15. Continuez la saisie ou rescannez.`;
+    return lang === "en"
+      ? `${chiffres.length} digits of 15. Continue typing or scan again.`
+      : `${chiffres.length} chiffres sur 15. Continuez la saisie ou rescannez.`;
   }
 
   if (chiffres.length > 15) {
-    return `${chiffres.length} chiffres : un IMEI en compte exactement 15.`;
+    return lang === "en"
+      ? `${chiffres.length} digits: an IMEI has exactly 15 digits.`
+      : `${chiffres.length} chiffres : un IMEI en compte exactement 15.`;
   }
 
   if (!imeiValide(chiffres)) {
-    return "Ces 15 chiffres ne forment pas un IMEI valide. Vérifiez le dernier chiffre.";
+    return lang === "en"
+      ? "These 15 digits do not form a valid IMEI. Please check the check digit."
+      : "Ces 15 chiffres ne forment pas un IMEI valide. Vérifiez le dernier chiffre.";
   }
 
   return null;

@@ -1,0 +1,21 @@
+<svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="favicon-fond" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#0B132B" />
+      <stop offset="100%" stopColor="#1C2541" />
+    </linearGradient>
+    <linearGradient id="favicon-ondes" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stopColor="#00E5FF" />
+      <stop offset="100%" stopColor="#00A3FF" />
+    </linearGradient>
+    <clipPath id="favicon-clip">
+      <circle cx="50" cy="50" r="48" />
+    </clipPath>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="url(#favicon-fond)" />
+  <g clipPath="url(#favicon-clip)">
+    <path d="M -5 54 C 20 48, 38 18, 64 22 C 82 25, 94 38, 108 36 L 108 24 C 92 25, 80 12, 60 10 C 35 7, 18 36, -5 42 Z" fill="url(#favicon-ondes)" />
+    <path d="M -5 74 C 20 68, 38 38, 64 42 C 82 45, 94 58, 108 56 L 108 44 C 92 45, 80 32, 60 30 C 35 27, 18 56, -5 62 Z" fill="url(#favicon-ondes)" />
+    <path d="M -5 94 C 20 88, 38 58, 64 62 C 82 65, 94 78, 108 76 L 108 64 C 92 65, 80 52, 60 50 C 35 47, 18 76, -5 82 Z" fill="url(#favicon-ondes)" />
+  </g>
+</svg>

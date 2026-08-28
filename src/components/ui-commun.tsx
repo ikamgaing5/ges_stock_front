@@ -10,12 +10,8 @@
 
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import {
-  couleursMouvements,
-  couleursStatuts,
-  libellesMouvements,
-  libellesStatuts,
-} from "@/lib/format";
+import { couleursMouvements, couleursStatuts } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import type { StatutTelephone, TypeMouvement } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -117,10 +113,12 @@ export function EtatErreur({
   message: string;
   onReessayer?: () => void;
 }) {
+  const { t } = useI18n();
+
   return (
     <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4">
       <p className="text-sm font-medium text-destructive">
-        Le chargement a échoué
+        {t("commun.chargementEchoue")}
       </p>
       <p className="mt-1 text-sm text-muted-foreground">{message}</p>
       {onReessayer && (
@@ -129,7 +127,7 @@ export function EtatErreur({
           onClick={onReessayer}
           className="mt-3 text-sm font-medium text-primary underline underline-offset-4"
         >
-          Réessayer
+          {t("commun.reessayer")}
         </button>
       )}
     </div>
@@ -144,6 +142,8 @@ export function PastilleStatut({
   statut: StatutTelephone;
   className?: string;
 }) {
+  const { libelleStatut } = useI18n();
+
   return (
     <span
       className={cn(
@@ -152,13 +152,15 @@ export function PastilleStatut({
         className,
       )}
     >
-      {libellesStatuts[statut]}
+      {libelleStatut(statut)}
     </span>
   );
 }
 
 /** Pastille du type de mouvement. */
 export function PastilleMouvement({ type }: { type: TypeMouvement }) {
+  const { libelleMouvement } = useI18n();
+
   return (
     <span
       className={cn(
@@ -166,7 +168,7 @@ export function PastilleMouvement({ type }: { type: TypeMouvement }) {
         couleursMouvements[type],
       )}
     >
-      {libellesMouvements[type]}
+      {libelleMouvement(type)}
     </span>
   );
 }

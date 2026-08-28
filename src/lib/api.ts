@@ -10,6 +10,12 @@ const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001/api";
 
 const CLE_TOKEN = "gestion-stock-token";
+const CLE_LANGUE = "gestion-stock-lang";
+
+export function lireLangue(): string {
+  if (typeof window === "undefined") return "fr";
+  return window.localStorage.getItem(CLE_LANGUE) ?? "fr";
+}
 
 // --------------------------------------------------------------------------
 // Le token de connexion
@@ -153,6 +159,7 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
 
   const entetes: Record<string, string> = {
     Accept: "application/json",
+    "Accept-Language": lireLangue(),
   };
 
   if (corps !== undefined) {

@@ -27,6 +27,7 @@ import { formaterImei, imeiValide, messageImei, nettoyerImei } from "@/lib/imei"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useI18n } from "@/lib/i18n";
 
 /** Au-delà de cette moyenne entre deux frappes, c'est une saisie humaine. */
 const SEUIL_DOUCHETTE_MS = 30;
@@ -56,6 +57,7 @@ export function ChampImei({
   autoFocus = true,
   viderApresScan = false,
 }: Props) {
+  const { t, lang } = useI18n();
   const champ = useRef<HTMLInputElement>(null);
   const [douchetteDetectee, setDouchetteDetectee] = useState(false);
   const [retour, setRetour] = useState<"succes" | "erreur" | null>(null);
@@ -68,7 +70,7 @@ export function ChampImei({
   const chiffres = nettoyerImei(valeur);
   const complet = chiffres.length === 15;
   const valide = imeiValide(chiffres);
-  const avertissement = erreur ?? messageImei(valeur);
+  const avertissement = erreur ?? messageImei(valeur, lang);
 
   // La lecture par caméra n'existe pas sur tous les navigateurs.
   useEffect(() => {
@@ -176,7 +178,7 @@ export function ChampImei({
           {douchetteDetectee && (
             <span className="inline-flex items-center gap-1 text-xs text-statut-ok">
               <ScanLine className="h-3.5 w-3.5" />
-              Lecteur détecté
+              {t("imei.lecteurDetecte")}
             </span>
           )}
 
@@ -188,7 +190,7 @@ export function ChampImei({
               onClick={() => setCameraOuverte(true)}
             >
               <Camera className="mr-1 h-3.5 w-3.5" />
-              Caméra
+              {t("imei.camera")}
             </Button>
           )}
         </div>
@@ -202,7 +204,7 @@ export function ChampImei({
           inputMode="numeric"
           autoComplete="off"
           autoFocus={autoFocus}
-          placeholder="Scannez ou saisissez les 15 chiffres"
+          placeholder={t("imei.placeholder")}
           value={valeur}
           onChange={(e) => surSaisie(e.target.value)}
           onKeyDown={surFrappe}
@@ -232,7 +234,7 @@ export function ChampImei({
         ) : (
           <span className="inline-flex items-center gap-1 text-muted-foreground">
             <Keyboard className="h-3.5 w-3.5" />
-            Composez le *#06# sur le téléphone pour afficher son IMEI.
+            {t("imei.aideRaccourci")}
           </span>
         )}
       </p>
@@ -266,6 +268,7 @@ function LecteurCamera({
   onLu: (code: string) => void;
   onFermer: () => void;
 }) {
+  const { t } = useI18n();
   const video = useRef<HTMLVideoElement>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
@@ -318,9 +321,7 @@ function LecteurCamera({
 
         animation = requestAnimationFrame(analyser);
       } catch {
-        setErreur(
-          "Impossible d'ouvrir la caméra. Autorisez-en l'accès dans le navigateur, ou saisissez l'IMEI au clavier.",
-        );
+        setErreur(t("imei.cameraErreur"));
       }
     }
 
@@ -332,16 +333,16 @@ function LecteurCamera({
       cancelAnimationFrame(animation);
       flux?.getTracks().forEach((piste) => piste.stop());
     };
-  }, [onLu]);
+  }, [onLu, t]);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 p-4">
       <div className="w-full max-w-md overflow-hidden rounded-xl bg-card">
         <div className="flex items-center justify-between border-b px-4 py-3">
-          <p className="text-sm font-medium">Lecture du code-barres</p>
+          <p className="text-sm font-medium">{t("imei.lectureCodeBarres")}</p>
           <Button variant="ghost" size="icon-sm" onClick={onFermer}>
             <X className="h-4 w-4" />
-            <span className="sr-only">Fermer</span>
+            <span className="sr-only">{t("imei.fermer")}</span>
           </Button>
         </div>
 
@@ -361,7 +362,7 @@ function LecteurCamera({
         )}
 
         <p className="px-4 py-3 text-xs text-muted-foreground">
-          Cadrez le code-barres de la boîte. La lecture se fait toute seule.
+          {t("imei.cadrezCodeBarres")}
         </p>
       </div>
     </div>

@@ -2,14 +2,6 @@
 
 /**
  * Activation de la double authentification, dans « Mon compte ».
- *
- * Trois écrans :
- *   1. inactive  : un bouton, et le mot de passe pour commencer
- *   2. QR code   : à scanner, puis un premier code pour confirmer
- *   3. codes de secours : affichés UNE SEULE FOIS
- *
- * L'activation n'est effective qu'après le premier code : sans cette
- * confirmation, un QR code mal scanné enfermerait la personne dehors.
  */
 
 import { useState } from "react";
@@ -24,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
 import { ChampCode } from "@/components/champ-code";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +27,7 @@ type Preparation = { secret: string; qr_code: string; uri: string };
 
 export function DeuxFacteurs() {
   const { utilisateur, rafraichir } = useAuth();
+  const { t } = useI18n();
 
   const [etape, setEtape] = useState<"repos" | "mot_de_passe" | "qr" | "codes">(
     "repos",
@@ -94,7 +88,7 @@ export function DeuxFacteurs() {
       setCodesSecours(reponse.codes_secours);
       setEtape("codes");
       await rafraichir();
-      toast.success("Double authentification activée.");
+      toast.success(t("deuxFacteurs.activeSucces"));
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
@@ -116,7 +110,7 @@ export function DeuxFacteurs() {
         mot_de_passe_actuel: motDePasse,
       });
       await rafraichir();
-      toast.success("Double authentification désactivée.");
+      toast.success(t("deuxFacteurs.desactiveSucces"));
       revenirAuRepos();
     } catch (e) {
       if (e instanceof ErreurApi) {
@@ -154,18 +148,15 @@ export function DeuxFacteurs() {
 
   function copierCodes() {
     void navigator.clipboard.writeText(codesSecours.join("\n"));
-    toast.success("Codes copiés.");
+    toast.success(t("deuxFacteurs.codesCopies"));
   }
 
   function telechargerCodes() {
-    // Un fichier texte : la personne le range où elle veut, hors du
-    // téléphone qui porte l'application d'authentification.
     const contenu = [
-      "Codes de secours Parc Mobile",
+      "Codes de secours Telora",
       `Compte : ${utilisateur?.email}`,
       "",
-      "Chaque code ne fonctionne qu'une seule fois.",
-      "Rangez-les ailleurs que sur le téléphone qui génère les codes.",
+      t("deuxFacteurs.avertissementUsageUnique"),
       "",
       ...codesSecours,
     ].join("\n");
@@ -186,7 +177,7 @@ export function DeuxFacteurs() {
           ) : (
             <ShieldOff className="h-4 w-4 text-muted-foreground" />
           )}
-          Double authentification
+          {t("deuxFacteurs.titre")}
         </CardTitle>
       </CardHeader>
 
@@ -196,11 +187,7 @@ export function DeuxFacteurs() {
           <div className="space-y-4">
             <div className="flex gap-2.5 rounded-lg bg-statut-attente-fond px-3 py-2.5 text-sm text-statut-attente">
               <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>
-                Notez ces codes maintenant : ils ne seront plus jamais
-                affichés. Ils sont la seule façon de vous connecter si vous
-                perdez votre téléphone.
-              </p>
+              <p>{t("deuxFacteurs.avertissementCodes")}</p>
             </div>
 
             <ul className="grid grid-cols-2 gap-2 rounded-lg border p-3">
@@ -217,14 +204,14 @@ export function DeuxFacteurs() {
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={copierCodes}>
                 <Copy className="mr-2 h-3.5 w-3.5" />
-                Copier
+                {t("deuxFacteurs.copierCodes")}
               </Button>
               <Button variant="outline" size="sm" onClick={telechargerCodes}>
                 <Download className="mr-2 h-3.5 w-3.5" />
-                Télécharger
+                {t("deuxFacteurs.telechargerCodes")}
               </Button>
               <Button size="sm" onClick={revenirAuRepos}>
-                J&apos;ai noté mes codes
+                {t("deuxFacteurs.terminer")}
               </Button>
             </div>
           </div>
@@ -232,22 +219,19 @@ export function DeuxFacteurs() {
           /* ---------------- Écran du QR code ---------------- */
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Scannez ce QR code avec Google Authenticator, Authy, ou toute
-              autre application d&apos;authentification.
+              {t("deuxFacteurs.scannezQrDesc")}
             </p>
 
             <div className="flex justify-center">
               <div
                 className="rounded-lg bg-white p-3"
-                // Le SVG vient de notre propre serveur, généré à partir du
-                // secret : aucun contenu extérieur n'est injecté ici.
                 dangerouslySetInnerHTML={{ __html: preparation.qr_code }}
               />
             </div>
 
             <details className="text-sm">
               <summary className="cursor-pointer text-muted-foreground">
-                Impossible de scanner ? Saisir la clé à la main
+                {t("deuxFacteurs.cleSecrete")}
               </summary>
               <p className="chiffres mt-2 rounded-lg border bg-muted/40 p-2.5 text-center font-mono text-xs break-all">
                 {preparation.secret}
@@ -255,7 +239,7 @@ export function DeuxFacteurs() {
             </details>
 
             <div className="space-y-2 border-t pt-4">
-              <Label>Saisissez le code affiché par l&apos;application</Label>
+              <Label>{t("deuxFacteurs.entrerCode")}</Label>
               <ChampCode
                 valeur={code}
                 onChange={setCode}
@@ -277,10 +261,10 @@ export function DeuxFacteurs() {
                 {envoiEnCours && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Activer
+                {t("deuxFacteurs.activer")}
               </Button>
               <Button variant="ghost" onClick={revenirAuRepos}>
-                Annuler
+                {t("commun.annuler")}
               </Button>
             </div>
           </div>
@@ -293,7 +277,7 @@ export function DeuxFacteurs() {
             className="space-y-4"
           >
             <div className="space-y-2">
-              <Label htmlFor="mdp-2fa">Votre mot de passe</Label>
+              <Label htmlFor="mdp-2fa">{t("monCompte.motDePasseActuel")}</Label>
               <Input
                 id="mdp-2fa"
                 type="password"
@@ -321,13 +305,13 @@ export function DeuxFacteurs() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 {confirmeDesactivation
-                  ? "Désactiver"
+                  ? t("deuxFacteurs.desactiver")
                   : actif
-                    ? "Générer de nouveaux codes"
-                    : "Continuer"}
+                    ? t("deuxFacteurs.genererNouveauxCodes")
+                    : t("commun.suivant")}
               </Button>
               <Button type="button" variant="ghost" onClick={revenirAuRepos}>
-                Annuler
+                {t("commun.annuler")}
               </Button>
             </div>
           </form>
@@ -337,25 +321,25 @@ export function DeuxFacteurs() {
             {actif ? (
               <>
                 <p className="text-sm">
-                  <span className="font-medium text-statut-ok">Active.</span>{" "}
-                  Un code de votre application est demandé à chaque connexion.
+                  <span className="font-medium text-statut-ok">
+                    {t("deuxFacteurs.statutActif")}
+                  </span>{" "}
+                  {t("deuxFacteurs.statutActifDesc")}
                 </p>
 
                 <p className="text-sm text-muted-foreground">
                   {restants > 0 ? (
                     <>
-                      {restants} code(s) de secours restant(s).
+                      {t("deuxFacteurs.codesRestants", { count: restants })}{" "}
                       {restants <= 2 && (
                         <span className="text-statut-attente">
-                          {" "}
-                          Pensez à en générer de nouveaux.
+                          {t("deuxFacteurs.pensezRegenerer")}
                         </span>
                       )}
                     </>
                   ) : (
                     <span className="text-statut-alerte">
-                      Plus aucun code de secours. Si vous perdez votre
-                      téléphone, vous ne pourrez plus vous connecter.
+                      {t("deuxFacteurs.plusDeCodes")}
                     </span>
                   )}
                 </p>
@@ -369,7 +353,7 @@ export function DeuxFacteurs() {
                       setEtape("mot_de_passe");
                     }}
                   >
-                    Nouveaux codes de secours
+                    {t("deuxFacteurs.genererNouveauxCodes")}
                   </Button>
                   <Button
                     variant="outline"
@@ -380,22 +364,19 @@ export function DeuxFacteurs() {
                     }}
                   >
                     <ShieldOff className="mr-2 h-3.5 w-3.5" />
-                    Désactiver
+                    {t("deuxFacteurs.desactiver")}
                   </Button>
                 </div>
               </>
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">
-                  En plus du mot de passe, un code à 6 chiffres généré par
-                  votre téléphone sera demandé à chaque connexion. Même
-                  quelqu&apos;un qui connaîtrait votre mot de passe ne
-                  pourrait pas entrer.
+                  {t("deuxFacteurs.description")}
                 </p>
 
                 <Button size="sm" onClick={() => setEtape("mot_de_passe")}>
                   <ShieldCheck className="mr-2 h-3.5 w-3.5" />
-                  Activer
+                  {t("deuxFacteurs.activer")}
                 </Button>
               </>
             )}

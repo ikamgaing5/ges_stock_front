@@ -22,6 +22,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { api, effacerToken, enregistrerToken, lireToken } from "@/lib/api";
+import { detecterDeviseParIP } from "@/lib/geolocalisation";
 import type { Boutique, Utilisateur } from "@/types";
 
 /**
@@ -36,6 +37,7 @@ type ReponseConnexion = {
 };
 
 const CLE_BOUTIQUE = "gestion-stock-boutique";
+const CLE_DEVISE = "gestion-stock-devise-affichage";
 
 type ContexteAuth = {
   utilisateur: Utilisateur | null;
@@ -47,8 +49,12 @@ type ContexteAuth = {
   changerBoutique: (id: string | null) => void;
   /** À passer aux appels d'API : { ...parametresBoutique } */
   parametresBoutique: { boutique_id?: string };
-  /** La devise à afficher, déduite de la boutique active. */
+  /** La devise à afficher (sélectionnée ou déduite de la boutique). */
   devise: string;
+  /** La devise de base de la boutique active. */
+  deviseBoutique: string;
+  /** Permet de basculer la devise d'affichage. */
+  changerDevise: (devise: string) => void;
   /**
    * Tente la connexion. Si la double authentification est active, ne
    * connecte pas encore : renvoie le jeton de défi à présenter avec le
@@ -190,10 +196,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push("/connexion");
   }, [router]);
 
+  const [deviseChoisie, setDeviseChoisie] = useState<string | null>(null);
+  const [deviseDetectee, setDeviseDetectee] = useState<string | null>(null);
+
+  useEffect(() => {
+    const memorisee = window.localStorage.getItem(CLE_DEVISE);
+    if (memorisee) {
+      setDeviseChoisie(memorisee);
+    } else {
+      // Détection automatique par localisation IP (100% gratuit, sans pop-up)
+      void detecterDeviseParIP().then((detectee) => {
+        setDeviseDetectee(detectee);
+      });
+    }
+  }, []);
+
+  const changerDevise = useCallback((nouvelleDevise: string) => {
+    setDeviseChoisie(nouvelleDevise);
+    window.localStorage.setItem(CLE_DEVISE, nouvelleDevise);
+  }, []);
+
   const boutiqueActive = useMemo(
     () => boutiques.find((b) => b.id === boutiqueId) ?? null,
     [boutiques, boutiqueId],
   );
+
+  const deviseBoutique = useMemo(
+    () => boutiqueActive?.devise ?? boutiques[0]?.devise ?? "XAF",
+    [boutiqueActive, boutiques],
+  );
+
+  const devise = useMemo(() => {
+    // 1. Choix manuel explicite de l'utilisateur
+    if (deviseChoisie) return deviseChoisie;
+    // 2. Si une boutique active est sélectionnée avec sa propre devise
+    if (boutiqueActive?.devise) return boutiqueActive.devise;
+    // 3. Sinon détection automatique par localisation IP
+    if (deviseDetectee) return deviseDetectee;
+    // 4. Repli sur la devise boutique ou XAF
+    return deviseBoutique;
+  }, [deviseChoisie, boutiqueActive, deviseDetectee, deviseBoutique]);
 
   const valeur = useMemo<ContexteAuth>(
     () => ({
@@ -203,7 +245,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       boutiqueActive,
       changerBoutique,
       parametresBoutique: boutiqueId ? { boutique_id: boutiqueId } : {},
-      devise: boutiqueActive?.devise ?? boutiques[0]?.devise ?? "XAF",
+      devise,
+      deviseBoutique,
+      changerDevise,
       connexion,
       connexionDeuxFacteurs,
       deconnexion,
@@ -216,6 +260,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       boutiqueActive,
       boutiqueId,
       changerBoutique,
+      devise,
+      deviseBoutique,
+      changerDevise,
       connexion,
       connexionDeuxFacteurs,
       deconnexion,

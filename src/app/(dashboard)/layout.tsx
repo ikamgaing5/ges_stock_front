@@ -16,7 +16,7 @@ import { Loader2, TriangleAlert } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
-import { formaterDateCourte } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 
 export default function DashboardLayout({
   children,
@@ -24,6 +24,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { utilisateur, chargement } = useAuth();
+  const { t } = useI18n();
   const router = useRouter();
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export default function DashboardLayout({
     return (
       <div className="flex min-h-[100dvh] items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <span className="sr-only">Chargement</span>
+        <span className="sr-only">{t("commun.chargement")}</span>
       </div>
     );
   }
@@ -75,6 +76,7 @@ export default function DashboardLayout({
  */
 function BandeauAbonnement() {
   const { utilisateur } = useAuth();
+  const { formatDateCourte, t, lang } = useI18n();
   const abonnement = utilisateur?.abonnement;
 
   // La date du jour est relevée après l'affichage, pas pendant : lire
@@ -114,23 +116,19 @@ function BandeauAbonnement() {
       <TriangleAlert className="h-4 w-4 shrink-0" />
       <p className="min-w-0 flex-1">
         {bloque ? (
-          <>
-            Votre abonnement n&apos;est plus actif. Les données restent
-            enregistrées, mais l&apos;accès est suspendu. Contactez-nous pour le
-            réactiver.
-          </>
+          t("monCompte.abonnementExpire")
         ) : (
           <>
             {abonnement.statut === "essai"
-              ? "Votre période d'essai"
-              : "Votre abonnement"}{" "}
-            se termine le{" "}
+              ? t("auth.votreEssai")
+              : t("auth.votreAbonnement")}{" "}
+            {t("auth.seTermineLe")}{" "}
             <span className="font-medium">
-              {formaterDateCourte(abonnement.echeance!)}
+              {formatDateCourte(abonnement.echeance!)}
             </span>
             {joursRestants === 0
-              ? " (aujourd'hui)."
-              : ` (dans ${joursRestants} jour${joursRestants! > 1 ? "s" : ""}).`}
+              ? ` (${t("commun.aujourdhui")}).`
+              : ` (${t("commun.dans")} ${joursRestants} ${joursRestants! > 1 ? t("commun.jours") : t("commun.jour")}).`}
           </>
         )}
       </p>
@@ -138,7 +136,7 @@ function BandeauAbonnement() {
         href="/mon-compte"
         className="shrink-0 font-medium underline underline-offset-4"
       >
-        Mon compte
+        {t("nav.monCompte")}
       </Link>
     </div>
   );

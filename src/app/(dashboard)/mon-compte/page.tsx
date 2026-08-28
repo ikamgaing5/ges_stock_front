@@ -1,18 +1,17 @@
 "use client";
 
-/** Mon compte (/mon-compte) : coordonnées, mot de passe, abonnement. */
+/** Mon compte (/mon-compte) : coordonnées, mot de passe, préférences, abonnement. */
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { HelpCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
-import {
-  couleursAbonnements,
-  formaterDateCourte,
-  libellesAbonnements,
-  libellesRoles,
-} from "@/lib/format";
+import { couleursAbonnements } from "@/lib/format";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
+import { BasculeLangue } from "@/components/bascule-langue";
+import { BasculeTheme } from "@/components/bascule-theme";
 import { ChangerEmail } from "@/components/changer-email";
 import { DeuxFacteurs } from "@/components/deux-facteurs";
 import { Apparait, TitrePage } from "@/components/ui-commun";
@@ -23,6 +22,7 @@ import { Label } from "@/components/ui/label";
 
 export default function PageMonCompte() {
   const { utilisateur, rafraichir } = useAuth();
+  const { t, formatDateCourte, libelleRole, libelleAbonnement } = useI18n();
 
   const [nom, setNom] = useState("");
   const [telephone, setTelephone] = useState("");
@@ -48,10 +48,10 @@ export default function PageMonCompte() {
 
     try {
       await api.put("/mon-compte", { name: nom, telephone: telephone || null });
-      toast.success("Coordonnées mises à jour.");
+      toast.success(t("monCompte.coordonneesMisesAJour"));
       await rafraichir();
     } catch (e) {
-      toast.error(e instanceof ErreurApi ? e.resume() : "Erreur inconnue.");
+      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
     } finally {
       setEnregistrement(false);
     }
@@ -68,7 +68,7 @@ export default function PageMonCompte() {
         password: nouveau,
         password_confirmation: confirmation,
       });
-      toast.success("Mot de passe modifié.");
+      toast.success(t("monCompte.motDePasseMisAJour"));
       setAncien("");
       setNouveau("");
       setConfirmation("");
@@ -87,8 +87,8 @@ export default function PageMonCompte() {
   return (
     <div className="mx-auto max-w-2xl">
       <TitrePage
-        titre="Mon compte"
-        description={`${libellesRoles[utilisateur.role]} · ${utilisateur.email}`}
+        titre={t("monCompte.titre")}
+        description={`${libelleRole(utilisateur.role)} · ${utilisateur.email}`}
       />
 
       <div className="space-y-6">
@@ -96,36 +96,48 @@ export default function PageMonCompte() {
           <Apparait>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Abonnement</CardTitle>
+                <CardTitle className="text-base">{t("monCompte.abonnement")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-muted-foreground">Statut</span>
+                  <span className="text-sm text-muted-foreground">{t("monCompte.typeAbonnement")}</span>
+                  {abonnement.plan === "premium" || abonnement.est_premium ? (
+                    <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                      {t("monCompte.planPremiumBadge")}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                      {t("monCompte.planStandardBadge")}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-muted-foreground">{t("commun.statut")}</span>
                   <span
                     className={[
                       "rounded-full px-2.5 py-0.5 text-sm font-medium",
                       couleursAbonnements[abonnement.statut],
                     ].join(" ")}
                   >
-                    {libellesAbonnements[abonnement.statut]}
+                    {libelleAbonnement(abonnement.statut)}
                   </span>
                 </div>
 
                 {abonnement.echeance && (
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-sm text-muted-foreground">
-                      Échéance
+                      {t("admin.tableauEcheance")}
                     </span>
                     <span className="text-sm font-medium">
-                      {formaterDateCourte(abonnement.echeance)}
+                      {formatDateCourte(abonnement.echeance)}
                     </span>
                   </div>
                 )}
 
                 {!abonnement.utilisable && (
                   <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    L&apos;accès aux données est suspendu. Vos informations sont
-                    conservées : contactez-nous pour réactiver le compte.
+                    {t("monCompte.abonnementExpire")}
                   </p>
                 )}
               </CardContent>
@@ -133,15 +145,41 @@ export default function PageMonCompte() {
           </Apparait>
         )}
 
+        {/* Préférences d'affichage (Langue et Thème) */}
         <Apparait index={1}>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Coordonnées</CardTitle>
+              <CardTitle className="text-base">{t("monCompte.preferences")}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium">{t("monCompte.langueLabel")}</p>
+                  <p className="text-xs text-muted-foreground">{t("nav.changerLangue")}</p>
+                </div>
+                <BasculeLangue afficheTexte />
+              </div>
+
+              <div className="flex items-center justify-between gap-4 border-t pt-4">
+                <div>
+                  <p className="text-sm font-medium">{t("monCompte.themeLabel")}</p>
+                  <p className="text-xs text-muted-foreground">{t("nav.apparence")}</p>
+                </div>
+                <BasculeTheme />
+              </div>
+            </CardContent>
+          </Card>
+        </Apparait>
+
+        <Apparait index={2}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">{t("monCompte.coordonnees")}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={enregistrerCoordonnees} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="c-nom">Nom complet</Label>
+                  <Label htmlFor="c-nom">{t("monCompte.nom")}</Label>
                   <Input
                     id="c-nom"
                     required
@@ -152,7 +190,7 @@ export default function PageMonCompte() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="c-tel">Téléphone</Label>
+                  <Label htmlFor="c-tel">{t("monCompte.telephone")}</Label>
                   <Input
                     id="c-tel"
                     className="h-10"
@@ -165,30 +203,30 @@ export default function PageMonCompte() {
                   {enregistrement && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Enregistrer
+                  {t("commun.enregistrer")}
                 </Button>
               </form>
             </CardContent>
           </Card>
         </Apparait>
 
-        <Apparait index={2}>
+        <Apparait index={3}>
           <ChangerEmail />
         </Apparait>
 
-        <Apparait index={3}>
+        <Apparait index={4}>
           <DeuxFacteurs />
         </Apparait>
 
-        <Apparait index={4}>
+        <Apparait index={5}>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Mot de passe</CardTitle>
+              <CardTitle className="text-base">{t("monCompte.securite")}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={changerMotDePasse} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="mdp-actuel">Mot de passe actuel</Label>
+                  <Label htmlFor="mdp-actuel">{t("monCompte.motDePasseActuel")}</Label>
                   <Input
                     id="mdp-actuel"
                     type="password"
@@ -207,7 +245,7 @@ export default function PageMonCompte() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="mdp-nouveau">Nouveau mot de passe</Label>
+                    <Label htmlFor="mdp-nouveau">{t("monCompte.nouveauMotDePasse")}</Label>
                     <Input
                       id="mdp-nouveau"
                       type="password"
@@ -226,7 +264,7 @@ export default function PageMonCompte() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="mdp-confirmation">Confirmation</Label>
+                    <Label htmlFor="mdp-confirmation">{t("monCompte.confirmationNouveau")}</Label>
                     <Input
                       id="mdp-confirmation"
                       type="password"
@@ -243,9 +281,35 @@ export default function PageMonCompte() {
                   {changementMdp && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Changer le mot de passe
+                  {t("monCompte.changerMotDePasse")}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+        </Apparait>
+
+        {/* Rubrique "Avez-vous des questions ?" */}
+        <Apparait index={6}>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                <span>{t("monCompte.questionsTitre")}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {t("monCompte.questionsDesc")}
+              </p>
+              <Button
+                variant="outline"
+                className="gap-2 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground font-medium transition-all"
+                nativeButton={false}
+                render={<Link href="/faq" />}
+              >
+                <HelpCircle className="h-4 w-4" />
+                {t("monCompte.questionsBouton")}
+              </Button>
             </CardContent>
           </Card>
         </Apparait>

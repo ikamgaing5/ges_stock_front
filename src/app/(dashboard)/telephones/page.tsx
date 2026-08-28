@@ -2,15 +2,15 @@
 
 /** Le parc d'appareils (/telephones). */
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Search, Smartphone } from "lucide-react";
 import { api } from "@/lib/api";
 import { useListe } from "@/lib/useListe";
 import { formaterImei } from "@/lib/imei";
-import { formaterDate, formaterMontant, libellesEtats } from "@/lib/format";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
 import {
   Apparait,
   EtatErreur,
@@ -39,17 +39,9 @@ import {
 } from "@/components/ui/table";
 import type { Modele, Page, Telephone } from "@/types";
 
-const optionsStatut: Record<string, string> = {
-  tous: "Tous les statuts",
-  en_stock: "En stock",
-  reserve: "Réservés",
-  vendu: "Vendus",
-  sav: "En réparation",
-  perdu: "Perdus",
-};
-
 export default function PageParc() {
-  const { devise, boutiqueActive, parametresBoutique } = useAuth();
+  const { devise, deviseBoutique, boutiqueActive, parametresBoutique } = useAuth();
+  const { t, formatMontant, formatDate, libelleEtat } = useI18n();
   const parametresUrl = useSearchParams();
 
   const [modeles, setModeles] = useState<Modele[]>([]);
@@ -61,6 +53,18 @@ export default function PageParc() {
   const [page, setPage] = useState(1);
 
   const boutiqueId = parametresBoutique.boutique_id;
+
+  const optionsStatut: Record<string, string> = useMemo(
+    () => ({
+      tous: t("telephones.tousStatuts"),
+      en_stock: t("statuts.en_stock"),
+      reserve: t("statuts.reserve"),
+      vendu: t("statuts.vendu"),
+      sav: t("statuts.sav"),
+      perdu: t("statuts.perdu"),
+    }),
+    [t],
+  );
 
   // `useListe` attend 300 ms après la dernière frappe, et annule la
   // recherche précédente : deux réponses ne peuvent plus se doubler et
@@ -101,25 +105,27 @@ export default function PageParc() {
     return () => controleur.abort();
   }, [boutiqueId]);
 
-  const optionsModeles: Record<string, string> = {
-    tous: "Tous les modèles",
-    ...Object.fromEntries(modeles.map((m) => [String(m.id), m.libelle])),
-  };
+  const optionsModeles: Record<string, string> = useMemo(
+    () => ({
+      tous: t("telephones.tousModeles"),
+      ...Object.fromEntries(modeles.map((m) => [String(m.id), m.libelle])),
+    }),
+    [modeles, t],
+  );
 
   return (
     <>
       <TitrePage
-        titre="Parc d'appareils"
+        titre={t("telephones.titre")}
         description={
           boutiqueActive
-            ? `${total} appareil(s) — ${boutiqueActive.nom}`
-            : `${total} appareil(s), toutes boutiques`
+            ? `${total} ${t("telephones.titre").toLowerCase()} — ${boutiqueActive.nom}`
+            : `${total} ${t("telephones.titre").toLowerCase()}, ${t("dashboard.descriptionToutes").toLowerCase()}`
         }
       >
-        <Button nativeButton={false}
-        render={<Link href="/telephones/nouveau" />}>
+        <Button nativeButton={false} render={<Link href="/telephones/nouveau" />}>
           <Smartphone className="mr-2 h-4 w-4" />
-          Ajouter un appareil
+          {t("telephones.nouvelAppareil")}
         </Button>
       </TitrePage>
 
@@ -129,7 +135,7 @@ export default function PageParc() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="h-10 pl-9"
-              placeholder="IMEI, numéro de série, modèle, client…"
+              placeholder={t("telephones.recherchePlaceholder")}
               value={recherche}
               onChange={(e) => {
                 setRecherche(e.target.value);
@@ -187,17 +193,16 @@ export default function PageParc() {
       ) : appareils.length === 0 ? (
         <EtatVide
           icone={<Smartphone className="h-5 w-5" />}
-          titre="Aucun appareil"
+          titre={t("telephones.aucunAppareil")}
           description={
             recherche
-              ? "Aucun résultat pour cette recherche. Vérifiez l'IMEI ou changez les filtres."
-              : "Enregistrez votre premier appareil en scannant son IMEI."
+              ? t("telephones.aucunAppareilDesc")
+              : t("telephones.aucunAppareilDesc")
           }
         >
-          <Button nativeButton={false}
-        render={<Link href="/telephones/nouveau" />}>
+          <Button nativeButton={false} render={<Link href="/telephones/nouveau" />}>
             <Smartphone className="mr-2 h-4 w-4" />
-            Ajouter un appareil
+            {t("telephones.nouvelAppareil")}
           </Button>
         </EtatVide>
       ) : (
@@ -208,18 +213,20 @@ export default function PageParc() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Appareil</TableHead>
-                      <TableHead>IMEI</TableHead>
+                      <TableHead>{t("telephones.tableauAppareil")}</TableHead>
+                      <TableHead>{t("telephones.tableauImei")}</TableHead>
                       <TableHead className="hidden lg:table-cell">
-                        Boutique
+                        {t("telephones.tableauBoutique")}
                       </TableHead>
                       <TableHead className="hidden md:table-cell">
-                        État
+                        {t("telephones.tableauEtat")}
                       </TableHead>
-                      <TableHead className="text-right">Prix</TableHead>
-                      <TableHead>Statut</TableHead>
+                      <TableHead className="text-right">
+                        {t("telephones.tableauPrixVente")}
+                      </TableHead>
+                      <TableHead>{t("telephones.tableauStatut")}</TableHead>
                       <TableHead className="hidden xl:table-cell">
-                        Entré le
+                        {t("telephones.tableauDateEntree")}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -231,7 +238,7 @@ export default function PageParc() {
                             href={`/telephones/${appareil.id}`}
                             className="font-medium hover:underline"
                           >
-                            {appareil.modele?.libelle ?? "Modèle inconnu"}
+                            {appareil.modele?.libelle ?? "—"}
                           </Link>
                           {appareil.couleur && (
                             <p className="text-xs text-muted-foreground">
@@ -246,12 +253,13 @@ export default function PageParc() {
                           {appareil.boutique?.nom ?? "—"}
                         </TableCell>
                         <TableCell className="hidden text-muted-foreground md:table-cell">
-                          {libellesEtats[appareil.etat]}
+                          {libelleEtat(appareil.etat)}
                         </TableCell>
                         <TableCell className="chiffres whitespace-nowrap text-right">
-                          {formaterMontant(
+                          {formatMontant(
                             appareil.prix_vente_reel ?? appareil.prix_vente,
                             devise,
+                            appareil.boutique?.devise ?? deviseBoutique,
                           )}
                         </TableCell>
                         <TableCell>
@@ -259,7 +267,7 @@ export default function PageParc() {
                         </TableCell>
                         <TableCell className="hidden whitespace-nowrap text-xs text-muted-foreground xl:table-cell">
                           {appareil.entre_le
-                            ? formaterDate(appareil.entre_le)
+                            ? formatDate(appareil.entre_le)
                             : "—"}
                         </TableCell>
                       </TableRow>
@@ -280,10 +288,10 @@ export default function PageParc() {
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
           >
-            Précédent
+            {t("commun.precedent")}
           </Button>
           <span className="chiffres text-sm text-muted-foreground">
-            Page {page} sur {nbPages}
+            {t("commun.pageSur", { current: page, total: nbPages })}
           </span>
           <Button
             variant="outline"
@@ -291,7 +299,7 @@ export default function PageParc() {
             disabled={page >= nbPages}
             onClick={() => setPage((p) => p + 1)}
           >
-            Suivant
+            {t("commun.suivant")}
           </Button>
         </div>
       )}

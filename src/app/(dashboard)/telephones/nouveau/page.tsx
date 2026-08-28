@@ -9,15 +9,16 @@
  * ils sont presque toujours identiques.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Loader2, PackagePlus } from "lucide-react";
+import { ArrowLeft, Check, Loader2, PackagePlus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { imeiValide } from "@/lib/imei";
 import { formaterImei } from "@/lib/imei";
-import { libellesEtats } from "@/lib/format";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
+import { convertirMontant, obtenirDevise } from "@/lib/devises";
 import { ChampImei } from "@/components/champ-imei";
 import { Apparait, TitrePage } from "@/components/ui-commun";
 import { Button } from "@/components/ui/button";
@@ -32,11 +33,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { EtatTelephone, Marque, Modele, Telephone } from "@/types";
+import type {
+  EtatTelephone,
+  Gamme,
+  Marque,
+  Modele,
+  ResultatLookupImei,
+  Telephone,
+} from "@/types";
 
 export default function PageEntreeStock() {
-  const { boutiques, boutiqueActive } = useAuth();
-  console.log("Liste des boutiques", boutiques);
+  const { boutiques, boutiqueActive, utilisateur, devise, deviseBoutique } = useAuth();
+  const { t, libelleEtat, lang } = useI18n();
+
+  const estPremium = Boolean(
+    utilisateur?.est_premium || utilisateur?.abonnement?.plan === "premium",
+  );
 
   const [modeles, setModeles] = useState<Modele[]>([]);
   const [imei, setImei] = useState("");
@@ -45,7 +57,15 @@ export default function PageEntreeStock() {
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
   const [marques, setMarques] = useState<Marque[]>([]);
+  const [gammes, setGammes] = useState<Gamme[]>([]);
+  const [gammeChoisie, setGammeChoisie] = useState("");
+  const [stockageChoisi, setStockageChoisi] = useState("");
   const [marqueChoisie, setMarqueChoisie] = useState("");
+
+  const [detection, setDetection] = useState<ResultatLookupImei | null>(null);
+  const [rechercheEnCours, setRechercheEnCours] = useState(false);
+  const [dernierTacRecherche, setDernierTacRecherche] = useState("");
+  const [importationEnCours, setImportationEnCours] = useState(false);
 
   // Ces champs sont conservés d'un appareil à l'autre.
   const [commun, setCommun] = useState({
@@ -67,19 +87,49 @@ export default function PageEntreeStock() {
   }, []);
 
   useEffect(() => {
+    if (!marqueChoisie) {
+      setGammes([]);
+      return;
+    }
+    api
+      .get<{ data: Gamme[] }>("/gammes", { marque_id: marqueChoisie })
+      .then((r) => setGammes(r.data))
+      .catch(() => setGammes([]));
+  }, [marqueChoisie]);
+
+  useEffect(() => {
     api
       .get<{ data: Modele[] }>("/modeles", { actifs_seulement: true })
       .then((r) => setModeles(r.data))
       .catch(() => setModeles([]));
   }, []);
 
-  const modelesFiltres = marqueChoisie
-    ? modeles.filter((m) => m.marque.id === marqueChoisie)
-    : [];
+  const modelesFiltres = useMemo(() => {
+    if (!gammeChoisie) return [];
+    return modeles.filter(
+      (m) => m.gamme?.id === gammeChoisie || String(m.id) === commun.modele_id,
+    );
+  }, [modeles, gammeChoisie, commun.modele_id]);
+
+  const modeleActuel = modeles.find((m) => String(m.id) === commun.modele_id);
+  const stockagesDisponibles = modeleActuel?.stockages ?? [];
 
   function choisirMarque(id: string) {
     setMarqueChoisie(id);
-    setCommun((precedent) => ({ ...precedent, modele_id: "" }));
+    setGammeChoisie("");
+    setCommun((p) => ({ ...p, modele_id: "" }));
+    setStockageChoisi("");
+  }
+
+  function choisirGamme(id: string) {
+    setGammeChoisie(id);
+    setCommun((p) => ({ ...p, modele_id: "" }));
+    setStockageChoisi("");
+  }
+
+  function choisirModeleAvecStockage(id: string) {
+    choisirModele(id);
+    setStockageChoisi("");
   }
 
   // Si une seule boutique est accessible, elle est choisie d'office.
@@ -93,24 +143,226 @@ export default function PageEntreeStock() {
     setCommun((precedent) => ({ ...precedent, [champ]: valeur }));
   }
 
+  const boutiqueSelectionnee = boutiques.find(
+    (b) => String(b.id) === String(commun.boutique_id),
+  ) ?? boutiqueActive ?? boutiques[0];
+  const deviseEntree = boutiqueSelectionnee?.devise ?? deviseBoutique;
+  const configDeviseEntree = obtenirDevise(deviseEntree);
+
   /** Reprend les prix conseillés du modèle choisi, s'ils sont vides. */
   function choisirModele(id: string) {
     const modele = modeles.find((m) => String(m.id) === id);
 
+    let pacStr = "";
+    let pvcStr = "";
+
+    if (modele?.prix_achat_conseille) {
+      const pac = convertirMontant(modele.prix_achat_conseille, "XAF", deviseEntree);
+      pacStr = String(configDeviseEntree.decimales === 0 ? Math.round(pac) : Number(pac.toFixed(configDeviseEntree.decimales)));
+    }
+    if (modele?.prix_vente_conseille) {
+      const pvc = convertirMontant(modele.prix_vente_conseille, "XAF", deviseEntree);
+      pvcStr = String(configDeviseEntree.decimales === 0 ? Math.round(pvc) : Number(pvc.toFixed(configDeviseEntree.decimales)));
+    }
+
     setCommun((precedent) => ({
       ...precedent,
       modele_id: id,
-      prix_achat:
-        precedent.prix_achat || String(modele?.prix_achat_conseille ?? ""),
-      prix_vente:
-        precedent.prix_vente || String(modele?.prix_vente_conseille ?? ""),
+      prix_achat: precedent.prix_achat || pacStr,
+      prix_vente: precedent.prix_vente || pvcStr,
     }));
   }
+
+  const appliquerSelection = useCallback(
+    async (sel: {
+      marque_id: string;
+      gamme_id: string;
+      modele_id: string;
+      modele_stockage_id: string | null;
+    }) => {
+      setMarqueChoisie(sel.marque_id);
+      try {
+        const [resGammes, resModeles] = await Promise.all([
+          api.get<{ data: Gamme[] }>("/gammes", { marque_id: sel.marque_id }),
+          api.get<{ data: Modele[] }>("/modeles", { actifs_seulement: true }),
+        ]);
+        setGammes(resGammes.data);
+        setModeles(resModeles.data);
+        setGammeChoisie(sel.gamme_id);
+
+        const mod = resModeles.data.find((m) => String(m.id) === sel.modele_id);
+        let pacStr = "";
+        let pvcStr = "";
+
+        if (mod?.prix_achat_conseille) {
+          const pac = convertirMontant(mod.prix_achat_conseille, "XAF", deviseEntree);
+          pacStr = String(configDeviseEntree.decimales === 0 ? Math.round(pac) : Number(pac.toFixed(configDeviseEntree.decimales)));
+        }
+        if (mod?.prix_vente_conseille) {
+          const pvc = convertirMontant(mod.prix_vente_conseille, "XAF", deviseEntree);
+          pvcStr = String(configDeviseEntree.decimales === 0 ? Math.round(pvc) : Number(pvc.toFixed(configDeviseEntree.decimales)));
+        }
+
+        setCommun((precedent) => ({
+          ...precedent,
+          modele_id: sel.modele_id,
+          prix_achat: precedent.prix_achat || pacStr,
+          prix_vente: precedent.prix_vente || pvcStr,
+        }));
+
+        if (sel.modele_stockage_id) {
+          setStockageChoisi(sel.modele_stockage_id);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    [configDeviseEntree.decimales, deviseEntree],
+  );
+
+  async function importerModeleDetecte() {
+    if (!detection) return;
+    setImportationEnCours(true);
+    try {
+      const rep = await api.post<{
+        data: {
+          marque_id: string;
+          gamme_id: string;
+          modele_id: string;
+          modele_stockage_id: string;
+          modele: Modele;
+        };
+      }>("/telephones/importer-modele-tac", {
+        marque: detection.marque,
+        gamme: detection.gamme,
+        modele: detection.modele,
+        stockage_defaut: detection.stockage_defaut,
+      });
+
+      const [resMarques, resModeles] = await Promise.all([
+        api.get<{ data: Marque[] }>("/marques"),
+        api.get<{ data: Modele[] }>("/modeles", { actifs_seulement: true }),
+      ]);
+      setMarques(resMarques.data);
+      setModeles(resModeles.data);
+
+      await appliquerSelection(rep.data);
+      setDetection((prev) => (prev ? { ...prev, deja_en_catalogue: true } : null));
+      toast.success(
+        lang === "en"
+          ? `Model "${detection.modele}" created and selected!`
+          : `Modèle « ${detection.modele} » créé et sélectionné !`,
+      );
+    } catch (e) {
+      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
+    } finally {
+      setImportationEnCours(false);
+    }
+  }
+
+  const nomCompletDetecte = useMemo(() => {
+    if (!detection) return "";
+    const marque = detection.marque ?? "";
+    const gamme = detection.gamme ?? "";
+    const modele = detection.modele ?? "";
+
+    if (gamme && modele.toLowerCase().includes(gamme.toLowerCase())) {
+      return `${marque} ${modele}`.trim();
+    }
+    if (marque && modele.toLowerCase().includes(marque.toLowerCase())) {
+      return modele.trim();
+    }
+    return [marque, gamme, modele].filter(Boolean).join(" ");
+  }, [detection]);
+
+  const [nonTrouve, setNonTrouve] = useState(false);
+
+  const lancerRecherche = useCallback(
+    async (saisie: string) => {
+      const chiffres = saisie.replace(/\D/g, "");
+      if (chiffres.length < 8) return;
+
+      if (!estPremium) {
+        return;
+      }
+
+      const tac = chiffres.substring(0, 8);
+      setDernierTacRecherche(tac);
+      setRechercheEnCours(true);
+      setNonTrouve(false);
+
+      try {
+        const res = await api.get<ResultatLookupImei>("/telephones/lookup-imei", {
+          imei: chiffres,
+        });
+
+        if (res.trouve) {
+          setDetection(res);
+          setNonTrouve(false);
+          if (res.deja_en_catalogue && res.selection) {
+            await appliquerSelection(res.selection);
+            toast.success(
+              lang === "en"
+                ? `Recognized & selected: ${res.marque} ${res.modele}`
+                : `Appareil reconnu et sélectionné : ${res.marque} ${res.modele}`,
+            );
+          } else {
+            toast.info(
+              lang === "en"
+                ? `Recognized: ${res.marque} ${res.modele}. Click "Add to catalog" to select it.`
+                : `Appareil détecté : ${res.marque} ${res.modele}. Cliquez sur « Ajouter au catalogue » pour le sélectionner.`,
+            );
+          }
+        } else {
+          setDetection(null);
+          setNonTrouve(true);
+        }
+      } catch (e) {
+        setDetection(null);
+        if (e instanceof ErreurApi) {
+          toast.error(e.resume());
+        }
+      } finally {
+        setRechercheEnCours(false);
+      }
+    },
+    [estPremium, lang, appliquerSelection],
+  );
+
+  useEffect(() => {
+    const chiffres = imei.replace(/\D/g, "");
+    if (chiffres.length < 8) {
+      setDetection(null);
+      setNonTrouve(false);
+      setDernierTacRecherche("");
+      return;
+    }
+
+    const tac = chiffres.substring(0, 8);
+    if (tac === dernierTacRecherche) return;
+
+    if (estPremium) {
+      void lancerRecherche(chiffres);
+    }
+  }, [imei, dernierTacRecherche, estPremium, lancerRecherche]);
 
   const enregistrer = useCallback(
     async (imeiScanne: string) => {
       if (!commun.modele_id) {
-        toast.error("Choisissez d'abord le modèle.");
+        toast.error(
+          lang === "en"
+            ? "Please select a model first."
+            : "Choisissez d'abord le modèle.",
+        );
+        return;
+      }
+
+      if (!stockageChoisi) {
+        toast.error(
+          lang === "en"
+            ? "Please select storage capacity first."
+            : "Choisissez d'abord le stockage.",
+        );
         return;
       }
 
@@ -124,6 +376,7 @@ export default function PageEntreeStock() {
           imei: imeiScanne,
           couleur: commun.couleur || null,
           etat: commun.etat,
+          modele_stockage_id: stockageChoisi,
           prix_achat: commun.prix_achat ? Number(commun.prix_achat) : null,
           prix_vente: commun.prix_vente ? Number(commun.prix_vente) : null,
           fournisseur: commun.fournisseur || null,
@@ -132,7 +385,10 @@ export default function PageEntreeStock() {
 
         setAjoutes((precedent) => [reponse.data, ...precedent]);
         setImei("");
-        toast.success("Appareil ajouté au stock.");
+        setDetection(null);
+        setNonTrouve(false);
+        setDernierTacRecherche("");
+        toast.success(t("telephones.appareilCree"));
       } catch (e) {
         if (e instanceof ErreurApi) {
           setErreurs(e.parChamp());
@@ -142,10 +398,28 @@ export default function PageEntreeStock() {
         setEnvoiEnCours(false);
       }
     },
-    [commun],
+    [commun, stockageChoisi, t, lang],
   );
 
-  const pret = Boolean(commun.modele_id) && imeiValide(imei);
+  async function gererScanImei(valeurScanne: string) {
+    setImei(valeurScanne);
+    if (commun.modele_id && stockageChoisi) {
+      await enregistrer(valeurScanne);
+    } else if (estPremium) {
+      await lancerRecherche(valeurScanne);
+    } else {
+      toast.error(
+        lang === "en"
+          ? "Please select a model first."
+          : "Choisissez d'abord le modèle.",
+      );
+    }
+  }
+
+  const pret =
+    Boolean(commun.modele_id) && Boolean(stockageChoisi) && imeiValide(imei);
+
+  const etats: EtatTelephone[] = ["neuf", "occasion", "reconditionne"];
 
   return (
     <>
@@ -157,71 +431,277 @@ export default function PageEntreeStock() {
         render={<Link href="/telephones" />}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Retour au parc
+        {lang === "en" ? "Back to inventory" : "Retour au parc"}
       </Button>
 
       <TitrePage
-        titre="Entrée de stock"
-        description="Scannez l'IMEI de chaque appareil. Les autres champs restent remplis pour le suivant."
+        titre={t("telephones.entreeStock")}
+        description={
+          lang === "en"
+            ? "Scan IMEI for each unit. Other fields stay populated for the next phone."
+            : "Scannez l'IMEI de chaque appareil. Les autres champs restent remplis pour le suivant."
+        }
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
         <Apparait>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">L&apos;appareil</CardTitle>
+              <CardTitle className="text-base">
+                {lang === "en" ? "The Device" : "L'appareil"}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
-              <ChampImei
-                valeur={imei}
-                onChange={setImei}
-                onScanValide={(valeur) => void enregistrer(valeur)}
-                erreur={erreurs.imei}
-              />
+              <div className="space-y-2">
+                <ChampImei
+                  valeur={imei}
+                  onChange={(val) => {
+                    setImei(val);
+                    setNonTrouve(false);
+                  }}
+                  onScanValide={(valeur) => void gererScanImei(valeur)}
+                  erreur={erreurs.imei}
+                />
+                {estPremium && imei.replace(/\D/g, "").length >= 8 && (
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-xs font-medium text-primary"
+                      onClick={() => void lancerRecherche(imei)}
+                      disabled={rechercheEnCours}
+                    >
+                      {rechercheEnCours ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Search className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      {lang === "en" ? "Identify device" : "Identifier l'appareil"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {!estPremium ? (
+                <div className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-muted/40 px-3.5 py-2.5 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">Premium :</span>
+                  <span>
+                    {lang === "en"
+                      ? "Automatic model detection by IMEI is reserved for Premium members."
+                      : "L'identification automatique du modèle par IMEI est réservée aux abonnés Premium."}
+                  </span>
+                </div>
+              ) : rechercheEnCours ? (
+                <div className="flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                  <span>
+                    {lang === "en"
+                      ? "Identifying device from IMEI..."
+                      : "Identification du modèle en cours..."}
+                  </span>
+                </div>
+              ) : nonTrouve ? (
+                <div className="flex items-center gap-2 rounded-lg border border-muted bg-muted/40 px-3.5 py-2.5 text-xs text-muted-foreground">
+                  <span className="text-base">ℹ️</span>
+                  <span>
+                    {lang === "en"
+                      ? "Device not recognized in TAC database for this IMEI. Please select brand and model manually below."
+                      : "Modèle non répertorié dans la base TAC pour cet IMEI. Vous pouvez sélectionner la marque et le modèle manuellement ci-dessous."}
+                  </span>
+                </div>
+              ) : detection && !detection.deja_en_catalogue ? (
+                <div className="rounded-lg border border-border/80 bg-muted/30 p-3.5 text-sm">
+                  <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="font-medium text-foreground">
+                        {lang === "en" ? "Identified device:" : "Appareil identifié :"} {nomCompletDetecte}
+                      </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {lang === "en"
+                          ? "This model is not yet in your catalog."
+                          : "Ce modèle n'est pas encore enregistré dans votre catalogue."}
+                        {detection.stockage_defaut ? ` (${detection.stockage_defaut})` : ""}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={importerModeleDetecte}
+                      disabled={importationEnCours}
+                      className="shrink-0"
+                    >
+                      {importationEnCours && (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                      )}
+                      {lang === "en"
+                        ? "Add to catalog"
+                        : "Ajouter au catalogue"}
+                    </Button>
+                  </div>
+                </div>
+              ) : detection && detection.deja_en_catalogue ? (
+                <div className="flex items-center gap-2 rounded-lg bg-muted/50 border border-border/60 px-3 py-2 text-xs font-medium text-foreground">
+                  <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>
+                    {lang === "en"
+                      ? `Selected model: ${nomCompletDetecte}`
+                      : `Modèle sélectionné : ${nomCompletDetecte}`}
+                  </span>
+                </div>
+              ) : null}
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>
+                    {t("modeles.marques")}
+                    <span className="ml-0.5 text-destructive">*</span>
+                  </Label>
+                  <Select
+                    items={Object.fromEntries(
+                      marques.map((m) => [m.id, m.nom]),
+                    )}
+                    value={marqueChoisie}
+                    onValueChange={(v) => choisirMarque(v ?? "")}
+                  >
+                    <SelectTrigger className="h-10 w-full">
+                      <SelectValue
+                        placeholder={
+                          lang === "en"
+                            ? "Choose brand"
+                            : "Choisir la marque"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {marques.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.nom}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>
+                    {t("modeles.gammes")}
+                    <span className="ml-0.5 text-destructive">*</span>
+                  </Label>
+                  <Select
+                    items={Object.fromEntries(gammes.map((g) => [g.id, g.nom]))}
+                    value={gammeChoisie}
+                    onValueChange={(v) => choisirGamme(v ?? "")}
+                    disabled={!marqueChoisie}
+                  >
+                    <SelectTrigger className="h-10 w-full">
+                      <SelectValue
+                        placeholder={
+                          marqueChoisie
+                            ? lang === "en"
+                              ? "Choose range"
+                              : "Choisir la gamme"
+                            : lang === "en"
+                              ? "Choose brand first"
+                              : "Choisissez d'abord la marque"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {gammes.map((g) => (
+                        <SelectItem key={g.id} value={g.id}>
+                          {g.nom}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
               <div className="space-y-2">
                 <Label>
-                  Modèle<span className="ml-0.5 text-destructive">*</span>
+                  {t("telephones.modele")}
+                  <span className="ml-0.5 text-destructive">*</span>
                 </Label>
                 <Select
                   items={Object.fromEntries(
-                    modeles.map((m) => [String(m.id), m.libelle]),
+                    modeles.map((m) => [String(m.id), m.nom]),
                   )}
                   value={commun.modele_id}
-                  onValueChange={(v) => choisirModele(v ?? "")}
+                  onValueChange={(v) => choisirModeleAvecStockage(v ?? "")}
+                  disabled={!gammeChoisie}
                 >
                   <SelectTrigger className="h-10 w-full">
-                    <SelectValue placeholder="Choisir dans le catalogue" />
+                    <SelectValue
+                      placeholder={
+                        gammeChoisie
+                          ? lang === "en"
+                            ? "Choose model"
+                            : "Choisir le modèle"
+                          : lang === "en"
+                            ? "Choose range first"
+                            : "Choisissez d'abord la gamme"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {modeles.map((modele) => (
-                      <SelectItem key={modele.id} value={String(modele.id)}>
-                        {modele.libelle}
+                    {modelesFiltres.map((m) => (
+                      <SelectItem key={m.id} value={String(m.id)}>
+                        {m.nom}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {modeles.length === 0 && (
+              </div>
+
+              <div className="space-y-2">
+                <Label>
+                  {t("telephones.stockage")}
+                  <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                <Select
+                  items={Object.fromEntries(
+                    stockagesDisponibles.map((s) => [s.id, s.valeur]),
+                  )}
+                  value={stockageChoisi}
+                  onValueChange={(v) => setStockageChoisi(v ?? "")}
+                  disabled={!commun.modele_id}
+                >
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue
+                      placeholder={
+                        commun.modele_id
+                          ? lang === "en"
+                            ? "Choose storage"
+                            : "Choisir le stockage"
+                          : lang === "en"
+                            ? "Choose model first"
+                            : "Choisissez d'abord le modèle"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stockagesDisponibles.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.valeur}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {stockagesDisponibles.length === 0 && commun.modele_id && (
                   <p className="text-xs text-muted-foreground">
-                    Votre catalogue est vide.{" "}
-                    <Link
-                      href="/modeles"
-                      className="font-medium text-primary underline underline-offset-4"
-                    >
-                      Ajoutez un modèle
-                    </Link>{" "}
-                    avant d&apos;enregistrer un appareil.
+                    {lang === "en"
+                      ? "No storage capacity configured for this model. Add one in the catalog."
+                      : "Aucun stockage configuré pour ce modèle. Ajoutez-en un depuis le catalogue."}
                   </p>
-                )}
-                {erreurs.modele_id && (
-                  <p className="text-xs text-destructive">{erreurs.modele_id}</p>
                 )}
               </div>
 
               {boutiques.length > 1 && (
                 <div className="space-y-2">
                   <Label>
-                    Boutique<span className="ml-0.5 text-destructive">*</span>
+                    {t("telephones.boutique")}
+                    <span className="ml-0.5 text-destructive">*</span>
                   </Label>
                   <Select
                     items={Object.fromEntries(
@@ -231,11 +711,20 @@ export default function PageEntreeStock() {
                     onValueChange={(v) => modifier("boutique_id", v ?? "")}
                   >
                     <SelectTrigger className="h-10 w-full">
-                      <SelectValue placeholder="Où entre cet appareil ?" />
+                      <SelectValue
+                        placeholder={
+                          lang === "en"
+                            ? "Where is this unit entering?"
+                            : "Où entre cet appareil ?"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
                       {boutiques.map((boutique) => (
-                        <SelectItem key={boutique.id} value={String(boutique.id)}>
+                        <SelectItem
+                          key={boutique.id}
+                          value={String(boutique.id)}
+                        >
                           {boutique.nom}
                         </SelectItem>
                       ))}
@@ -251,20 +740,24 @@ export default function PageEntreeStock() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="couleur">Couleur</Label>
+                  <Label htmlFor="couleur">{t("telephones.couleur")}</Label>
                   <Input
                     id="couleur"
                     className="h-10"
                     value={commun.couleur}
                     onChange={(e) => modifier("couleur", e.target.value)}
-                    placeholder="Noir, Bleu…"
+                    placeholder={
+                      lang === "en" ? "Black, Blue..." : "Noir, Bleu…"
+                    }
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>État</Label>
+                  <Label>{t("commun.etat")}</Label>
                   <Select
-                    items={libellesEtats}
+                    items={Object.fromEntries(
+                      etats.map((e) => [e, libelleEtat(e)]),
+                    )}
                     value={commun.etat}
                     onValueChange={(v) =>
                       modifier("etat", (v ?? "neuf") as EtatTelephone)
@@ -274,9 +767,9 @@ export default function PageEntreeStock() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(libellesEtats).map(([valeur, libelle]) => (
+                      {etats.map((valeur) => (
                         <SelectItem key={valeur} value={valeur}>
-                          {libelle}
+                          {libelleEtat(valeur)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -284,7 +777,9 @@ export default function PageEntreeStock() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="prix-achat">Prix d&apos;achat</Label>
+                  <Label htmlFor="prix-achat">
+                    {t("telephones.prixAchat")} ({deviseEntree})
+                  </Label>
                   <Input
                     id="prix-achat"
                     type="number"
@@ -296,7 +791,9 @@ export default function PageEntreeStock() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="prix-vente">Prix de vente</Label>
+                  <Label htmlFor="prix-vente">
+                    {t("telephones.prixVente")} ({deviseEntree})
+                  </Label>
                   <Input
                     id="prix-vente"
                     type="number"
@@ -309,23 +806,28 @@ export default function PageEntreeStock() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="fournisseur">Fournisseur</Label>
+                <Label htmlFor="fournisseur">{t("telephones.fournisseur")}</Label>
                 <Input
                   id="fournisseur"
                   className="h-10"
                   value={commun.fournisseur}
                   onChange={(e) => modifier("fournisseur", e.target.value)}
-                  placeholder="Import Dubaï, grossiste local…"
+                  placeholder={
+                    lang === "en"
+                      ? "Dubai Import, local supplier..."
+                      : "Import Dubaï, grossiste local…"
+                  }
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes">{t("telephones.notes")}</Label>
                 <Textarea
                   id="notes"
                   rows={2}
                   value={commun.notes}
                   onChange={(e) => modifier("notes", e.target.value)}
+                  placeholder={t("telephones.notesPlaceholder")}
                 />
               </div>
 
@@ -341,11 +843,12 @@ export default function PageEntreeStock() {
                 ) : (
                   <PackagePlus className="mr-2 h-4 w-4" />
                 )}
-                Ajouter au stock
+                {lang === "en" ? "Add to inventory" : "Ajouter au stock"}
               </Button>
               <p className="text-center text-xs text-muted-foreground">
-                Avec une douchette, l&apos;enregistrement se fait tout seul au
-                scan.
+                {lang === "en"
+                  ? "With a barcode scanner, saving is automatic upon scan."
+                  : "Avec une douchette, l'enregistrement se fait tout seul au scan."}
               </p>
             </CardContent>
           </Card>
@@ -356,7 +859,9 @@ export default function PageEntreeStock() {
           <Card className="h-full">
             <CardHeader>
               <CardTitle className="text-base">
-                Enregistrés dans cette session
+                {lang === "en"
+                  ? "Registered in this session"
+                  : "Enregistrés dans cette session"}
                 {ajoutes.length > 0 && (
                   <span className="chiffres ml-2 text-muted-foreground">
                     {ajoutes.length}
@@ -367,7 +872,9 @@ export default function PageEntreeStock() {
             <CardContent>
               {ajoutes.length === 0 ? (
                 <p className="py-10 text-center text-sm text-muted-foreground">
-                  Les appareils ajoutés apparaîtront ici au fur et à mesure.
+                  {lang === "en"
+                    ? "Added devices will appear here progressively."
+                    : "Les appareils ajoutés apparaîtront ici au fur et à mesure."}
                 </p>
               ) : (
                 <ul className="divide-y">

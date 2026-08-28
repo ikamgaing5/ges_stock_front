@@ -13,6 +13,7 @@
 
 import { Check, ChevronsUpDown, Store } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -26,6 +27,7 @@ import {
 
 export function SelecteurBoutique() {
   const { boutiques, boutiqueActive, changerBoutique, utilisateur } = useAuth();
+  const { t } = useI18n();
 
   if (boutiques.length === 0) return null;
 
@@ -48,7 +50,7 @@ export function SelecteurBoutique() {
       >
         <Store className="h-4 w-4 shrink-0" />
         <span className="truncate">
-          {boutiqueActive?.nom ?? "Toutes mes boutiques"}
+          {boutiqueActive?.nom ?? t("selecteurBoutique.toutes")}
         </span>
         <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
       </DropdownMenuTrigger>
@@ -63,15 +65,15 @@ export function SelecteurBoutique() {
         <DropdownMenuGroup>
           <DropdownMenuLabel className="font-normal">
             {estProprietaire
-              ? "Choisissez le point de vente à consulter"
-              : "Vos boutiques"}
+              ? t("selecteurBoutique.labelProprietaire")
+              : t("selecteurBoutique.labelEmploye")}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
 
           {estProprietaire && (
             <>
               <DropdownMenuItem onClick={() => changerBoutique(null)}>
-                <span className="flex-1">Toutes mes boutiques</span>
+                <span className="flex-1">{t("selecteurBoutique.toutes")}</span>
                 {boutiqueActive === null && <Check className="h-4 w-4" />}
               </DropdownMenuItem>
               <DropdownMenuSeparator />

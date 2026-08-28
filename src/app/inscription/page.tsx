@@ -2,14 +2,6 @@
 
 /**
  * Inscription d'un propriétaire de boutique (/inscription).
- *
- * Deux étapes :
- *   1. le formulaire ; à la validation, un code à 6 chiffres part par email
- *   2. la saisie de ce code, qui déclenche la création du compte
- *
- * Le compte n'existe qu'à la fin : tant que le code n'est pas confirmé,
- * rien n'est enregistré. C'est ce qui garantit que l'adresse saisie
- * appartient bien à la personne.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -20,17 +12,15 @@ import { toast } from "sonner";
 import { api, ErreurApi, enregistrerToken } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { BasculeTheme } from "@/components/bascule-theme";
+import { BasculeLangue } from "@/components/bascule-langue";
 import { ChampCode } from "@/components/champ-code";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IconeTelora } from "@/components/ui/logo-telora";
+import { PiedDePageLegal } from "@/components/layout/pied-de-page-legal";
 import type { Utilisateur } from "@/types";
-
-const argumentaire = [
-  "Chaque appareil suivi par son IMEI, de l'arrivage à la vente",
-  "Plusieurs boutiques, un seul compte",
-  "Vos vendeuses ne voient que leur point de vente",
-];
 
 /** Délai imposé par le serveur entre deux envois de code, en secondes. */
 const DELAI_RENVOI = 60;
@@ -38,6 +28,7 @@ const DELAI_RENVOI = 60;
 export default function PageInscription() {
   const router = useRouter();
   const { rafraichir } = useAuth();
+  const { t, lang } = useI18n();
 
   const [etape, setEtape] = useState<"formulaire" | "code">("formulaire");
 
@@ -78,7 +69,12 @@ export default function PageInscription() {
     evenement.preventDefault();
 
     if (champs.password !== champs.password_confirmation) {
-      setErreurs({ password_confirmation: "Les deux mots de passe diffèrent." });
+      setErreurs({
+        password_confirmation:
+          lang === "en"
+            ? "The two passwords do not match."
+            : "Les deux mots de passe diffèrent.",
+      });
       return;
     }
 
@@ -94,14 +90,14 @@ export default function PageInscription() {
 
       setEtape("code");
       setSecondesAvantRenvoi(DELAI_RENVOI);
-      toast.success("Code envoyé. Regardez votre boîte mail.");
+      toast.success(t("auth.codeEnvoye"));
     } catch (e) {
       if (e instanceof ErreurApi) {
         const parChamp = e.parChamp();
         setErreurs(parChamp);
         if (Object.keys(parChamp).length === 0) setErreurGenerale(e.message);
       } else {
-        setErreurGenerale("Une erreur inattendue est survenue.");
+        setErreurGenerale(t("commun.erreur"));
       }
     } finally {
       setEnvoiEnCours(false);
@@ -129,21 +125,18 @@ export default function PageInscription() {
           const parChamp = e.parChamp();
           setErreurs(parChamp);
 
-          // Une erreur sur un champ du formulaire (email déjà pris, par
-          // exemple) ne se corrige pas depuis l'écran du code : on revient
-          // en arrière plutôt que de laisser la personne bloquée.
           const horsCode = Object.keys(parChamp).filter((c) => c !== "code");
           if (horsCode.length > 0) {
             setEtape("formulaire");
             toast.error(parChamp[horsCode[0]]);
           }
         } else {
-          setErreurGenerale("Une erreur inattendue est survenue.");
+          setErreurGenerale(t("commun.erreur"));
         }
         setEnvoiEnCours(false);
       }
     },
-    [champs, rafraichir, router],
+    [champs, rafraichir, router, t],
   );
 
   async function renvoyerCode() {
@@ -157,11 +150,10 @@ export default function PageInscription() {
       });
       setCode("");
       setSecondesAvantRenvoi(DELAI_RENVOI);
-      toast.success("Nouveau code envoyé.");
+      toast.success(t("auth.codeEnvoye"));
     } catch (e) {
       if (e instanceof ErreurApi) {
         toast.error(e.resume());
-        // Le serveur indique le temps restant quand on insiste trop tôt.
         const reste = e.nombre("secondes_restantes");
         if (reste !== undefined) setSecondesAvantRenvoi(reste);
       }
@@ -170,26 +162,40 @@ export default function PageInscription() {
     }
   }
 
+  const argumentaire =
+    lang === "en"
+      ? [
+          "Every device tracked by IMEI, from intake to customer sale",
+          "Multiple store locations under one unified account",
+          "Sales associates only see their designated store location",
+        ]
+      : [
+          "Chaque appareil suivi par son IMEI, de l'arrivage à la vente",
+          "Plusieurs boutiques, un seul compte",
+          "Vos vendeuses ne voient que leur point de vente",
+        ];
+
   return (
     <div className="grid min-h-[100dvh] lg:grid-cols-[1fr_1.1fr]">
       {/* Colonne de présentation, masquée sur petit écran */}
       <aside className="hidden flex-col justify-between bg-primary p-10 text-primary-foreground lg:flex">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-foreground/15">
-            <Smartphone className="h-[18px] w-[18px]" />
-          </div>
-          <span className="font-heading text-[15px] font-semibold">
-            Parc Mobile
+        <div className="flex items-center gap-3">
+          <IconeTelora size={36} />
+          <span className="font-heading text-lg font-bold tracking-tight">
+            TELORA
           </span>
         </div>
 
         <div className="max-w-md">
           <h2 className="font-heading text-3xl font-semibold leading-tight tracking-tight">
-            Vous savez toujours où est chaque téléphone.
+            {lang === "en"
+              ? "Always know where every single phone is."
+              : "Vous savez toujours où est chaque téléphone."}
           </h2>
           <p className="mt-4 text-[15px] leading-relaxed text-primary-foreground/75">
-            Un appareil, un IMEI, une ligne. Scannez à l&apos;arrivage, scannez
-            à la vente.
+            {lang === "en"
+              ? "One device, one IMEI, one entry. Scan at intake, scan upon sale."
+              : "Un appareil, un IMEI, une ligne. Scannez à l'arrivage, scannez à la vente."}
           </p>
 
           <ul className="mt-8 space-y-3">
@@ -203,12 +209,15 @@ export default function PageInscription() {
         </div>
 
         <p className="text-sm text-primary-foreground/60">
-          30 jours d&apos;essai, sans engagement.
+          {lang === "en"
+            ? "14-day free trial, no commitment."
+            : "14 jours d'essai gratuit, sans engagement."}
         </p>
       </aside>
 
       <main className="relative flex items-center justify-center p-6 sm:p-10">
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 flex items-center gap-1">
+          <BasculeLangue />
           <BasculeTheme />
         </div>
 
@@ -216,34 +225,43 @@ export default function PageInscription() {
           <div className="anim-apparait w-full max-w-md">
             <div className="mb-8">
               <h1 className="font-heading text-2xl font-semibold tracking-tight">
-                Créer votre compte
+                {t("auth.inscriptionTitre")}
               </h1>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                Votre première boutique est créée en même temps. Vous pourrez en
-                ajouter d&apos;autres ensuite.
+                {t("auth.inscriptionDesc")}
               </p>
             </div>
 
             <form onSubmit={demanderCode} className="space-y-5">
               <section className="space-y-4">
-                <h2 className="text-sm font-medium">Vous</h2>
+                <h2 className="text-sm font-medium">
+                  {lang === "en" ? "Personal Details" : "Vous"}
+                </h2>
 
-                <Champ label="Nom complet" erreur={erreurs.name} obligatoire>
+                <Champ
+                  label={t("auth.nomComplet")}
+                  erreur={erreurs.name}
+                  obligatoire
+                >
                   <Input
                     required
                     className="h-10"
                     autoComplete="name"
                     value={champs.name}
                     onChange={(e) => modifier("name", e.target.value)}
-                    placeholder="Ariane Mbarga"
+                    placeholder={t("auth.nomPlaceholder")}
                   />
                 </Champ>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Champ
-                    label="Adresse email"
+                    label={t("auth.email")}
                     erreur={erreurs.email}
-                    aide="Un code de vérification y sera envoyé"
+                    aide={
+                      lang === "en"
+                        ? "A code will be sent here"
+                        : "Un code de vérification y sera envoyé"
+                    }
                     obligatoire
                   >
                     <Input
@@ -253,11 +271,14 @@ export default function PageInscription() {
                       autoComplete="username"
                       value={champs.email}
                       onChange={(e) => modifier("email", e.target.value)}
-                      placeholder="vous@boutique.cm"
+                      placeholder={t("auth.emailPlaceholder")}
                     />
                   </Champ>
 
-                  <Champ label="Téléphone" erreur={erreurs.telephone}>
+                  <Champ
+                    label={t("monCompte.telephone")}
+                    erreur={erreurs.telephone}
+                  >
                     <Input
                       className="h-10"
                       autoComplete="tel"
@@ -270,9 +291,9 @@ export default function PageInscription() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Champ
-                    label="Mot de passe"
+                    label={t("auth.motDePasse")}
                     erreur={erreurs.password}
-                    aide="8 caractères minimum"
+                    aide={lang === "en" ? "8 characters min" : "8 caractères minimum"}
                     obligatoire
                   >
                     <Input
@@ -287,7 +308,7 @@ export default function PageInscription() {
                   </Champ>
 
                   <Champ
-                    label="Confirmation"
+                    label={t("auth.confirmationMotDePasse")}
                     erreur={erreurs.password_confirmation}
                     obligatoire
                   >
@@ -306,11 +327,15 @@ export default function PageInscription() {
               </section>
 
               <section className="space-y-4 border-t pt-5">
-                <h2 className="text-sm font-medium">Votre première boutique</h2>
+                <h2 className="text-sm font-medium">
+                  {lang === "en"
+                    ? "Your First Store"
+                    : "Votre première boutique"}
+                </h2>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Champ
-                    label="Nom de la boutique"
+                    label={t("auth.nomBoutique")}
                     erreur={erreurs.boutique_nom}
                     obligatoire
                   >
@@ -323,7 +348,10 @@ export default function PageInscription() {
                     />
                   </Champ>
 
-                  <Champ label="Ville" erreur={erreurs.boutique_ville}>
+                  <Champ
+                    label={t("auth.villeBoutique")}
+                    erreur={erreurs.boutique_ville}
+                  >
                     <Input
                       className="h-10"
                       value={champs.boutique_ville}
@@ -354,17 +382,17 @@ export default function PageInscription() {
                 {envoiEnCours && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Continuer
+                {lang === "en" ? "Continue" : "Continuer"}
               </Button>
             </form>
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              Vous avez déjà un compte ?{" "}
+              {t("auth.dejaCompte")}{" "}
               <Link
                 href="/connexion"
                 className="font-medium text-primary underline underline-offset-4"
               >
-                Se connecter
+                {t("auth.seConnecter")}
               </Link>
             </p>
           </div>
@@ -376,14 +404,10 @@ export default function PageInscription() {
                 <MailCheck className="h-6 w-6" />
               </div>
               <h1 className="font-heading text-2xl font-semibold tracking-tight">
-                Vérifiez votre email
+                {lang === "en" ? "Check your email" : "Vérifiez votre email"}
               </h1>
               <p className="mt-1.5 text-sm text-muted-foreground">
-                Nous avons envoyé un code à 6 chiffres à
-                <br />
-                <span className="font-medium text-foreground">
-                  {champs.email}
-                </span>
+                {t("auth.codeInstructions", { email: champs.email })}
               </p>
             </div>
 
@@ -401,11 +425,13 @@ export default function PageInscription() {
                 ) : envoiEnCours ? (
                   <span className="inline-flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Vérification…
+                    {t("commun.validerEnCours")}
                   </span>
                 ) : (
                   <span className="text-muted-foreground">
-                    Le code est valable 15 minutes.
+                    {lang === "en"
+                      ? "Code is valid for 15 minutes."
+                      : "Le code est valable 15 minutes."}
                   </span>
                 )}
               </p>
@@ -419,7 +445,7 @@ export default function PageInscription() {
                 {envoiEnCours && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Créer mon compte
+                {t("auth.sInscrire")}
               </Button>
 
               <div className="flex items-center justify-between gap-3 border-t pt-5 text-sm">
@@ -433,7 +459,9 @@ export default function PageInscription() {
                   className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  Modifier mes informations
+                  {lang === "en"
+                    ? "Edit information"
+                    : "Modifier mes informations"}
                 </button>
 
                 <button
@@ -443,13 +471,15 @@ export default function PageInscription() {
                   className="font-medium text-primary underline underline-offset-4 disabled:text-muted-foreground disabled:no-underline"
                 >
                   {secondesAvantRenvoi > 0
-                    ? `Renvoyer dans ${secondesAvantRenvoi} s`
-                    : "Renvoyer le code"}
+                    ? `${t("auth.renvoyerCode")} (${secondesAvantRenvoi}s)`
+                    : t("auth.renvoyerCode")}
                 </button>
               </div>
             </div>
           </div>
         )}
+
+        {/* <PiedDePageLegal className="mt-8 pt-4 w-full" /> */}
       </main>
     </div>
   );

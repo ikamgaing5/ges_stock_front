@@ -1,0 +1,46 @@
+<svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    {/* Fond du disque : Bleu saphir riche & lumineux */}
+    <linearGradient id="telora-favicon-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#0B1B3D" />
+      <stop offset="50%" stopColor="#07122A" />
+      <stop offset="100%" stopColor="#030814" />
+    </linearGradient>
+
+    {/* Ondes : Dégradé cyan néon électrique vibrant */}
+    <linearGradient id="telora-favicon-waves" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stopColor="#00F5FF" />
+      <stop offset="50%" stopColor="#00D2FF" />
+      <stop offset="100%" stopColor="#0088FF" />
+    </linearGradient>
+
+    <clipPath id="telora-favicon-clip">
+      <circle cx="50" cy="50" r="48" />
+    </clipPath>
+  </defs>
+
+  {/* Cercle de base */}
+  <circle cx="50" cy="50" r="48" fill="url(#telora-favicon-bg)" />
+
+  {/* Les 3 ondes colorées épaisses et bien visibles */}
+  <g clipPath="url(#telora-favicon-clip)">
+    {/* Onde 1 */}
+    <path
+      d="M -10 52 C 18 45, 36 12, 65 16 C 84 19, 96 34, 110 32 L 110 18 C 94 20, 80 5, 60 3 C 32 0, 15 32, -10 38 Z"
+      fill="url(#telora-favicon-waves)"
+    />
+    {/* Onde 2 */}
+    <path
+      d="M -10 74 C 18 67, 36 34, 65 38 C 84 41, 96 56, 110 54 L 110 40 C 94 42, 80 27, 60 25 C 32 22, 15 54, -10 60 Z"
+      fill="url(#telora-favicon-waves)"
+    />
+    {/* Onde 3 */}
+    <path
+      d="M -10 96 C 18 89, 36 56, 65 60 C 84 63, 96 78, 110 76 L 110 62 C 94 64, 80 49, 60 47 C 32 44, 15 76, -10 82 Z"
+      fill="url(#telora-favicon-waves)"
+    />
+  </g>
+
+  {/* Anneau extérieur lumineux */}
+  <circle cx="50" cy="50" r="47.5" stroke="#00D2FF" stroke-opacity="0.3" stroke-width="1.5" fill="none" />
+</svg>

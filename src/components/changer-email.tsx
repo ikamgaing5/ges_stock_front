@@ -2,13 +2,6 @@
 
 /**
  * Changement d'adresse email, en deux temps.
- *
- * 1. On demande la nouvelle adresse ET le mot de passe actuel. Sans ce
- *    mot de passe, quelqu'un qui trouverait un poste resté connecté
- *    pourrait détourner le compte en changeant l'adresse.
- * 2. Un code part à la NOUVELLE adresse. Le saisir prouve qu'elle
- *    appartient bien à la personne : le changement ne prend effet qu'à
- *    ce moment-là.
  */
 
 import { useEffect, useState } from "react";
@@ -16,6 +9,7 @@ import { Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
 import { ChampCode } from "@/components/champ-code";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +20,7 @@ const DELAI_RENVOI = 60;
 
 export function ChangerEmail() {
   const { utilisateur, rafraichir } = useAuth();
+  const { t } = useI18n();
 
   const [ouvert, setOuvert] = useState(false);
   const [etape, setEtape] = useState<"saisie" | "code">("saisie");
@@ -64,7 +59,7 @@ export function ChangerEmail() {
 
       setEtape("code");
       setSecondesAvantRenvoi(DELAI_RENVOI);
-      toast.success(`Code envoyé à ${nouvelEmail}.`);
+      toast.success(t("changerEmail.codeEnvoye"));
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
@@ -88,7 +83,7 @@ export function ChangerEmail() {
       });
 
       await rafraichir();
-      toast.success("Adresse email modifiée.");
+      toast.success(t("changerEmail.emailModifie"));
       reinitialiser();
     } catch (e) {
       if (e instanceof ErreurApi) {
@@ -103,7 +98,7 @@ export function ChangerEmail() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Adresse email</CardTitle>
+        <CardTitle className="text-base">{t("changerEmail.titre")}</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -117,7 +112,7 @@ export function ChangerEmail() {
 
           {!ouvert && (
             <Button variant="outline" size="sm" onClick={() => setOuvert(true)}>
-              Changer
+              {t("commun.modifier")}
             </Button>
           )}
         </div>
@@ -125,7 +120,9 @@ export function ChangerEmail() {
         {ouvert && etape === "saisie" && (
           <form onSubmit={demanderCode} className="space-y-4 border-t pt-4">
             <div className="space-y-2">
-              <Label htmlFor="nouvel-email">Nouvelle adresse</Label>
+              <Label htmlFor="nouvel-email">
+                {t("changerEmail.nouvelEmail")}
+              </Label>
               <Input
                 id="nouvel-email"
                 type="email"
@@ -142,7 +139,9 @@ export function ChangerEmail() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mdp-actuel-email">Votre mot de passe</Label>
+              <Label htmlFor="mdp-actuel-email">
+                {t("changerEmail.motDePasseActuel")}
+              </Label>
               <Input
                 id="mdp-actuel-email"
                 type="password"
@@ -158,8 +157,7 @@ export function ChangerEmail() {
                 </p>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  Demandé pour éviter qu&apos;un poste resté ouvert permette de
-                  détourner le compte.
+                  {t("changerEmail.description")}
                 </p>
               )}
             </div>
@@ -169,10 +167,10 @@ export function ChangerEmail() {
                 {envoiEnCours && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Envoyer le code
+                {t("changerEmail.envoyerCode")}
               </Button>
               <Button type="button" variant="ghost" onClick={reinitialiser}>
-                Annuler
+                {t("commun.annuler")}
               </Button>
             </div>
           </form>
@@ -181,9 +179,7 @@ export function ChangerEmail() {
         {ouvert && etape === "code" && (
           <div className="space-y-4 border-t pt-4">
             <p className="text-sm text-muted-foreground">
-              Un code a été envoyé à{" "}
-              <span className="font-medium text-foreground">{nouvelEmail}</span>.
-              Saisissez-le pour confirmer.
+              {t("changerEmail.instructionsCode", { email: nouvelEmail })}
             </p>
 
             <ChampCode
@@ -209,7 +205,7 @@ export function ChangerEmail() {
                   setErreurs({});
                 }}
               >
-                Modifier l&apos;adresse
+                {t("commun.modifier")}
               </Button>
 
               <button
@@ -219,8 +215,8 @@ export function ChangerEmail() {
                 className="text-sm font-medium text-primary underline underline-offset-4 disabled:text-muted-foreground disabled:no-underline"
               >
                 {secondesAvantRenvoi > 0
-                  ? `Renvoyer dans ${secondesAvantRenvoi} s`
-                  : "Renvoyer le code"}
+                  ? t("changerEmail.renvoyerDans", { secondes: secondesAvantRenvoi })
+                  : t("changerEmail.renvoyerCode")}
               </button>
             </div>
           </div>
