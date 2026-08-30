@@ -6,6 +6,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { I18nProvider } from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
 import { BandeauCookies } from "@/components/bandeau-cookies";
+import { SchemaOrg } from "@/components/seo/schema-org";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 
 /*
  * Les polices sont chargées par next/font : les fichiers sont téléchargés
@@ -29,15 +31,43 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Telora",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://telora.app"),
+  title: {
+    default: "Telora — Logiciel de Gestion de Stock & Caisse Téléphonie",
+    template: "%s | Telora",
+  },
   description:
-    "Système de gestion de stock et point de vente pour boutiques de téléphones.",
+    "Application professionnelle de traçabilité unitaire par IMEI, gestion de stock multi-boutiques et caisse pour magasins de téléphones et produits high-tech.",
+  keywords: [
+    "gestion de stock téléphone",
+    "suivi IMEI",
+    "caisse enregistreuse téléphone",
+    "logiciel boutique téléphonie",
+    "gestion multi-magasins",
+    "traçabilité smartphone",
+    "Telora",
+  ],
+  authors: [{ name: "Telora" }],
+  creator: "Impact Tech Solutions",
   icons: {
-    icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     shortcut: "/icon.svg",
     apple: "/icon.svg",
+  },
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    url: "/",
+    siteName: "Telora",
+    title: "Telora — Gestion de Stock & Caisse pour Boutiques de Téléphonie",
+    description:
+      "Chaque appareil suivi unitairement de l'arrivage à la vente. Zéro perte, réconciliation immédiate et scan ultra-rapide.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Telora — Gestion de Stock & Caisse Téléphonie",
+    description:
+      "La solution moderne pour sécuriser le stock et accélérer les encaissements de votre boutique de smartphones.",
   },
 };
 
@@ -59,6 +89,8 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
+        <SchemaOrg />
+        <GoogleAnalytics />
         <I18nProvider>
           <ThemeProvider>
             <AuthProvider>{children}</AuthProvider>

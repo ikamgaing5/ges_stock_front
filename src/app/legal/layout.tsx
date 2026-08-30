@@ -7,6 +7,7 @@ import { BasculeTheme } from "@/components/bascule-theme";
 import { BasculeLangue } from "@/components/bascule-langue";
 import { IconeTelora } from "@/components/ui/logo-telora";
 import { PiedDePageLegal } from "@/components/layout/pied-de-page-legal";
+import { FilAriane } from "@/components/layout/fil-ariane";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/components/auth-provider";
 
@@ -97,6 +98,23 @@ export default function LayoutLegal({
       {/* En-tête de section et navigation textuelle sobre */}
       <div className="border-b bg-muted/20">
         <div className="container mx-auto max-w-5xl px-4 pt-8 pb-0 sm:px-6">
+          <FilAriane
+            elements={[
+              {
+                label: lang === "en" ? "Legal Center" : "Centre Juridique",
+                href: "/legal/mentions-legales",
+              },
+              {
+                label:
+                  ONGLETS_LEGAUX.find((o) => o.href === pathname)?.[
+                    lang === "en" ? "labelEn" : "labelFr"
+                  ] || "Document",
+                actif: true,
+              },
+            ]}
+            className="mb-4"
+          />
+
           <div className="space-y-1 pb-6">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
               {lang === "en"

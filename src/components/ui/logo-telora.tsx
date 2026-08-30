@@ -36,16 +36,18 @@ export function IconeTelora({
       {...props}
     >
       <defs>
-        {/* Dégradé du disque de fond (Bleu nuit profond) */}
+        {/* Dégradé du disque de fond (Bleu saphir riche) */}
         <linearGradient id="telora-fond" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#0B132B" />
-          <stop offset="100%" stopColor="#1C2541" />
+          <stop offset="0%" stopColor="#0B1B3D" />
+          <stop offset="50%" stopColor="#07122A" />
+          <stop offset="100%" stopColor="#030814" />
         </linearGradient>
 
         {/* Dégradé électrique des 3 ondes (Cyan néon vers bleu azur) */}
         <linearGradient id="telora-ondes" x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#00E5FF" />
-          <stop offset="100%" stopColor="#00A3FF" />
+          <stop offset="0%" stopColor="#00F5FF" />
+          <stop offset="50%" stopColor="#00D2FF" />
+          <stop offset="100%" stopColor="#0088FF" />
         </linearGradient>
 
         {/* Masque circulaire pour découper les ondes aux bords du disque */}
@@ -61,30 +63,31 @@ export function IconeTelora({
       <g clipPath="url(#telora-cercle-clip)">
         {/* Onde 1 (Supérieure) */}
         <path
-          d="M -5 54 C 20 48, 38 18, 64 22 C 82 25, 94 38, 108 36 L 108 24 C 92 25, 80 12, 60 10 C 35 7, 18 36, -5 42 Z"
+          d="M -10 52 C 18 45, 36 12, 65 16 C 84 19, 96 34, 110 32 L 110 18 C 94 20, 80 5, 60 3 C 32 0, 15 32, -10 38 Z"
           fill="url(#telora-ondes)"
         />
 
         {/* Onde 2 (Centrale) */}
         <path
-          d="M -5 74 C 20 68, 38 38, 64 42 C 82 45, 94 58, 108 56 L 108 44 C 92 45, 80 32, 60 30 C 35 27, 18 56, -5 62 Z"
+          d="M -10 74 C 18 67, 36 34, 65 38 C 84 41, 96 56, 110 54 L 110 40 C 94 42, 80 27, 60 25 C 32 22, 15 54, -10 60 Z"
           fill="url(#telora-ondes)"
         />
 
         {/* Onde 3 (Inférieure) */}
         <path
-          d="M -5 94 C 20 88, 38 58, 64 62 C 82 65, 94 78, 108 76 L 108 64 C 92 65, 80 52, 60 50 C 35 47, 18 76, -5 82 Z"
+          d="M -10 96 C 18 89, 36 56, 65 60 C 84 63, 96 78, 110 76 L 110 62 C 94 64, 80 49, 60 47 C 32 44, 15 76, -10 82 Z"
           fill="url(#telora-ondes)"
         />
       </g>
 
-      {/* Bordure subtile extérieure */}
+      {/* Anneau extérieur lumineux */}
       <circle
         cx="50"
         cy="50"
         r="47.5"
-        stroke="rgba(255, 255, 255, 0.08)"
-        strokeWidth="1"
+        stroke="#00D2FF"
+        strokeOpacity="0.3"
+        strokeWidth="1.5"
         fill="none"
       />
     </svg>

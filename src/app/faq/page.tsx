@@ -20,6 +20,7 @@ import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { PiedDePageLegal } from "@/components/layout/pied-de-page-legal";
 import { IconeTelora } from "@/components/ui/logo-telora";
+import { FilAriane } from "@/components/layout/fil-ariane";
 import { BasculeLangue } from "@/components/bascule-langue";
 import { BasculeTheme } from "@/components/bascule-theme";
 
@@ -371,9 +372,9 @@ export default function PageFaq() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white selection:bg-neutral-800">
-      {/* En-tête sobre avec bouton retour */}
-      <header className="relative z-20 border-b border-white/5 bg-[#121212]/80 backdrop-blur-md">
+    <div className="min-h-screen flex flex-col justify-between bg-background text-foreground">
+      {/* En-tête sobre avec bouton retour et bascules */}
+      <header className="relative z-20 border-b border-border/50 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
           <button
             type="button"
@@ -384,63 +385,63 @@ export default function PageFaq() {
                 router.push(utilisateur ? "/mon-compte" : "/connexion");
               }
             }}
-            className="flex items-center gap-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>{t("commun.retour")}</span>
           </button>
 
-          <div className="flex items-center gap-2">
-            <IconeTelora size={22} />
-            <span className="text-xs font-bold tracking-wider text-white">TELORA</span>
-          </div>
-
           <div className="flex items-center gap-1">
-                      <BasculeLangue />
-                      <BasculeTheme />
-                    </div>
+            <BasculeLangue />
+            <BasculeTheme />
+          </div>
         </div>
       </header>
 
-      {/* Hero Section style Spotify Support avec lueur d'ambiance */}
-      <section className="relative overflow-hidden pt-16 pb-14 px-4 sm:px-6">
+      {/* Hero Section avec lueur d'ambiance adaptée */}
+      <section className="relative overflow-hidden pt-14 pb-12 px-4 sm:px-6">
         {/* Lueur d'ambiance subtile en arrière-plan */}
         <div
           aria-hidden="true"
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] bg-gradient-to-r from-emerald-600/15 via-teal-500/10 to-blue-600/15 blur-[120px] pointer-events-none rounded-full"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] bg-gradient-to-r from-primary/10 via-primary/5 to-transparent blur-[120px] pointer-events-none rounded-full"
         />
 
         <div className="relative z-10 mx-auto max-w-2xl text-center space-y-8">
-          {/* Titre imposant en typographie audacieuse sans fioriture */}
+          <FilAriane
+            elements={[{ label: "Assistance & FAQ", actif: true }]}
+            className="justify-center text-muted-foreground"
+          />
+
+          {/* Titre imposant adaptatif */}
           <div className="space-y-1">
-            <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
+            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-tight">
               {t("faq.titreLigne1")}
             </h1>
-            <h2 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
+            <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-foreground/80 leading-tight">
               {t("faq.titreLigne2")}
             </h2>
           </div>
 
-          {/* Boîte de recherche style Spotify Support */}
+          {/* Boîte de recherche adaptée au thème */}
           <div className="relative mx-auto max-w-xl text-left">
-            <div className="rounded-2xl bg-[#1e1e1e]/90 border border-white/10 p-4 shadow-2xl transition-all focus-within:border-white/20 focus-within:ring-1 focus-within:ring-white/20">
+            <div className="rounded-2xl bg-card border border-border/80 p-4 shadow-lg transition-all focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
               <div className="flex items-start gap-3">
-                <Search className="h-5 w-5 text-neutral-400 mt-1 shrink-0" />
+                <Search className="h-5 w-5 text-muted-foreground mt-1 shrink-0" />
                 <input
                   type="text"
                   value={recherche}
                   onChange={(e) => setRecherche(e.target.value)}
                   placeholder={t("faq.rechercherPlaceholder")}
-                  className="w-full bg-transparent text-white placeholder:text-neutral-400 text-base sm:text-lg outline-none border-none focus:ring-0 p-0"
+                  className="w-full bg-transparent text-foreground placeholder:text-muted-foreground text-base sm:text-lg outline-none border-none focus:ring-0 p-0"
                 />
               </div>
 
               {/* Bouton "Demander" aligné en bas à droite de la boîte */}
-              <div className="mt-4 flex items-center justify-between pt-2 border-t border-white/5">
+              <div className="mt-4 flex items-center justify-between pt-2 border-t border-border/40">
                 {recherche ? (
                   <button
                     onClick={() => setRecherche("")}
-                    className="text-xs text-neutral-400 hover:text-white transition-colors"
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   >
                     {t("faq.reinitialiserRecherche")}
                   </button>
@@ -450,7 +451,7 @@ export default function PageFaq() {
 
                 <button
                   type="button"
-                  className="rounded-full bg-white/10 hover:bg-white/20 text-neutral-200 text-xs sm:text-sm font-medium px-4 py-1.5 transition-colors"
+                  className="rounded-full bg-muted hover:bg-muted/80 text-foreground text-xs sm:text-sm font-medium px-4 py-1.5 transition-colors cursor-pointer"
                 >
                   {t("faq.boutonDemander")}
                 </button>
@@ -460,17 +461,17 @@ export default function PageFaq() {
         </div>
       </section>
 
-      {/* Navigation par catégories style Spotify */}
-      <main className="relative z-10 mx-auto max-w-3xl px-4 py-6 sm:px-6">
+      {/* Navigation par catégories adaptée */}
+      <main className="relative z-10 mx-auto max-w-3xl px-4 py-6 sm:px-6 flex-1 w-full">
         <div className="flex flex-wrap items-center justify-center gap-2 pb-8">
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setCategorieActive(cat.id)}
-              className={`rounded-full px-4 py-2 text-xs font-medium transition-all ${
+              className={`rounded-full px-4 py-2 text-xs font-medium transition-all cursor-pointer ${
                 categorieActive === cat.id
-                  ? "bg-white text-black font-semibold shadow"
-                  : "bg-[#1e1e1e] text-neutral-300 hover:bg-[#282828] hover:text-white border border-white/5"
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                  : "bg-card text-muted-foreground hover:bg-muted hover:text-foreground border border-border/60"
               }`}
             >
               {cat.libelle}
@@ -481,7 +482,7 @@ export default function PageFaq() {
         {/* Liste des questions / réponses */}
         {questionsFiltrees.length === 0 ? (
           <div className="py-16 text-center space-y-3">
-            <p className="text-sm text-neutral-400">{t("faq.aucunResultat")}</p>
+            <p className="text-sm text-muted-foreground">{t("faq.aucunResultat")}</p>
             <Button
               variant="outline"
               size="sm"
@@ -489,7 +490,7 @@ export default function PageFaq() {
                 setRecherche("");
                 setCategorieActive("toutes");
               }}
-              className="text-xs bg-transparent border-white/20 text-white hover:bg-white/10"
+              className="text-xs border-border text-foreground hover:bg-muted"
             >
               <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
               {t("faq.reinitialiserRecherche")}
@@ -506,30 +507,30 @@ export default function PageFaq() {
                   id={item.id.startsWith("cookies") ? "cookies" : undefined}
                   className={`rounded-2xl transition-all border ${
                     estOuverte
-                      ? "border-white/15 bg-[#1e1e1e]"
-                      : "border-white/5 bg-[#181818] hover:border-white/10 hover:bg-[#1a1a1a]"
+                      ? "border-primary/30 bg-card shadow-xs"
+                      : "border-border/60 bg-card/60 hover:border-border hover:bg-card"
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => basculerQuestion(item.id)}
-                    className="flex w-full items-center justify-between gap-4 p-5 text-left"
+                    className="flex w-full items-center justify-between gap-4 p-5 text-left cursor-pointer"
                     aria-expanded={estOuverte}
                   >
-                    <span className="text-sm sm:text-base font-semibold tracking-tight text-white">
+                    <span className="text-sm sm:text-base font-semibold tracking-tight text-foreground">
                       {lang === "en" ? item.questionEn : item.questionFr}
                     </span>
 
                     <ChevronDown
-                      className={`h-5 w-5 shrink-0 text-neutral-400 transition-transform duration-200 ${
-                        estOuverte ? "rotate-180 text-white" : ""
+                      className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200 ${
+                        estOuverte ? "rotate-180 text-primary" : ""
                       }`}
                     />
                   </button>
 
                   {estOuverte && (
-                    <div className="px-5 pb-5 pt-1 text-neutral-300 animate-in fade-in-50 duration-200">
-                      <div className="border-t border-white/5 pt-4">
+                    <div className="px-5 pb-5 pt-1 text-muted-foreground animate-in fade-in-50 duration-200">
+                      <div className="border-t border-border/40 pt-4 leading-relaxed text-sm">
                         {lang === "en" ? item.reponseEn : item.reponseFr}
                       </div>
                     </div>
@@ -540,13 +541,13 @@ export default function PageFaq() {
           </div>
         )}
 
-        {/* Section Contact & Assistance sobre */}
-        <div className="mt-16 text-center border-t border-white/5 pt-8 pb-12 space-y-2">
-          <h3 className="text-base font-semibold text-white flex items-center justify-center gap-2">
-            <PhoneCall className="h-4 w-4 text-neutral-400" />
+        {/* Section Contact & Assistance */}
+        <div className="mt-16 text-center border-t border-border/40 pt-8 pb-12 space-y-2">
+          <h3 className="text-base font-semibold text-foreground flex items-center justify-center gap-2">
+            <PhoneCall className="h-4 w-4 text-primary" />
             <span>{t("faq.besoinAide")}</span>
           </h3>
-          <p className="text-xs text-neutral-400 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
             {t("faq.contactSupport")}
           </p>
         </div>

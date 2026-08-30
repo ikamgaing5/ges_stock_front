@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SelecteurDevise } from "@/components/layout/selecteur-devise";
 
 export default function PageMonCompte() {
   const { utilisateur, rafraichir } = useAuth();
@@ -96,11 +97,15 @@ export default function PageMonCompte() {
           <Apparait>
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">{t("monCompte.abonnement")}</CardTitle>
+                <CardTitle className="text-base">
+                  {t("monCompte.abonnement")}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-muted-foreground">{t("monCompte.typeAbonnement")}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t("monCompte.typeAbonnement")}
+                  </span>
                   {abonnement.plan === "premium" || abonnement.est_premium ? (
                     <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
                       {t("monCompte.planPremiumBadge")}
@@ -113,7 +118,9 @@ export default function PageMonCompte() {
                 </div>
 
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-muted-foreground">{t("commun.statut")}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t("commun.statut")}
+                  </span>
                   <span
                     className={[
                       "rounded-full px-2.5 py-0.5 text-sm font-medium",
@@ -149,23 +156,45 @@ export default function PageMonCompte() {
         <Apparait index={1}>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{t("monCompte.preferences")}</CardTitle>
+              <CardTitle className="text-base">
+                {t("monCompte.preferences")}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium">{t("monCompte.langueLabel")}</p>
-                  <p className="text-xs text-muted-foreground">{t("nav.changerLangue")}</p>
+                  <p className="text-sm font-medium">
+                    {t("monCompte.langueLabel")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("nav.changerLangue")}
+                  </p>
                 </div>
                 <BasculeLangue afficheTexte />
               </div>
 
               <div className="flex items-center justify-between gap-4 border-t pt-4">
                 <div>
-                  <p className="text-sm font-medium">{t("monCompte.themeLabel")}</p>
-                  <p className="text-xs text-muted-foreground">{t("nav.apparence")}</p>
+                  <p className="text-sm font-medium">
+                    {t("monCompte.themeLabel")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("nav.apparence")}
+                  </p>
                 </div>
                 <BasculeTheme />
+              </div>
+
+              <div className="flex items-center justify-between gap-4 border-t pt-4">
+                <div>
+                  <p className="text-sm font-medium">
+                    {t("monCompte.monnaie")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("nav.monnaie")}
+                  </p>
+                </div>
+                <SelecteurDevise />
               </div>
             </CardContent>
           </Card>
@@ -174,7 +203,9 @@ export default function PageMonCompte() {
         <Apparait index={2}>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{t("monCompte.coordonnees")}</CardTitle>
+              <CardTitle className="text-base">
+                {t("monCompte.coordonnees")}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={enregistrerCoordonnees} className="space-y-4">
@@ -221,12 +252,16 @@ export default function PageMonCompte() {
         <Apparait index={5}>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">{t("monCompte.securite")}</CardTitle>
+              <CardTitle className="text-base">
+                {t("monCompte.securite")}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={changerMotDePasse} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="mdp-actuel">{t("monCompte.motDePasseActuel")}</Label>
+                  <Label htmlFor="mdp-actuel">
+                    {t("monCompte.motDePasseActuel")}
+                  </Label>
                   <Input
                     id="mdp-actuel"
                     type="password"
@@ -245,7 +280,9 @@ export default function PageMonCompte() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="mdp-nouveau">{t("monCompte.nouveauMotDePasse")}</Label>
+                    <Label htmlFor="mdp-nouveau">
+                      {t("monCompte.nouveauMotDePasse")}
+                    </Label>
                     <Input
                       id="mdp-nouveau"
                       type="password"
@@ -264,7 +301,9 @@ export default function PageMonCompte() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="mdp-confirmation">{t("monCompte.confirmationNouveau")}</Label>
+                    <Label htmlFor="mdp-confirmation">
+                      {t("monCompte.confirmationNouveau")}
+                    </Label>
                     <Input
                       id="mdp-confirmation"
                       type="password"

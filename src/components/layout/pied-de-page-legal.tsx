@@ -14,6 +14,16 @@ export function PiedDePageLegal({
 
   const liensLegaux = [
     {
+      href: "/etudes-de-cas",
+      labelFr: "Études de cas",
+      labelEn: "Case Studies",
+    },
+    {
+      href: "/faq",
+      labelFr: "Assistance",
+      labelEn: "Help",
+    },
+    {
       href: "/legal/mentions-legales",
       labelFr: "Mentions légales",
       labelEn: "Legal",

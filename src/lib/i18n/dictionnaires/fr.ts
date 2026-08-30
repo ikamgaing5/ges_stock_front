@@ -82,6 +82,7 @@ export const fr = {
     sombre: "Sombre",
     systeme: "Système",
     boutiquesCount: "{count} boutique | {count} boutiques",
+    monnaie: "Choisissez votre devise d'affichage.",
   },
   auth: {
     connexionTitre: "Connexion",
@@ -110,10 +111,12 @@ export const fr = {
     envoyerCode: "Envoyer le code",
     reinitialiserMotDePasse: "Réinitialiser le mot de passe",
     codeVerification: "Code de vérification",
-    codeInstructions: "Saisissez le code à 6 chiffres reçu à l'adresse {email}.",
+    codeInstructions:
+      "Saisissez le code à 6 chiffres reçu à l'adresse {email}.",
     entrerCode: "Entrez le code à 6 chiffres",
     deuxFacteursTitre: "Double authentification",
-    deuxFacteursDesc: "Saisissez le code généré par votre application d'authentification ou un code de secours.",
+    deuxFacteursDesc:
+      "Saisissez le code généré par votre application d'authentification ou un code de secours.",
     utiliserCodeSecours: "Utiliser un code de secours",
     utiliserAppAuth: "Utiliser l'application d'authentification",
     dejaCompte: "Vous avez déjà un compte ?",
@@ -123,15 +126,18 @@ export const fr = {
     renvoyerCode: "Renvoyer un code",
     codeEnvoye: "Code envoyé par email.",
     codeEnvoyeEmail: "Si un compte existe, un code vient d'être envoyé.",
-    motDePasseReinitialise: "Mot de passe réinitialisé. Vous pouvez vous connecter.",
+    motDePasseReinitialise:
+      "Mot de passe réinitialisé. Vous pouvez vous connecter.",
     motsDePasseDifferents: "Les deux mots de passe diffèrent.",
     huitCaracteresMin: "8 caractères minimum",
     autreEmail: "Autre adresse",
     compteActive: "Compte activé avec succès.",
     invitationInvalide: "Invitation invalide ou expirée",
-    invitationInvalideDesc: "Demandez à la personne qui vous a invité de renvoyer un lien.",
+    invitationInvalideDesc:
+      "Demandez à la personne qui vous a invité de renvoyer un lien.",
     activerCompte: "Activer mon compte",
-    compteDesactive: "Votre compte a été désactivé. Contactez votre administrateur.",
+    compteDesactive:
+      "Votre compte a été désactivé. Contactez votre administrateur.",
     accesRefuse: "Accès refusé.",
     votreEssai: "Votre période d'essai",
     votreAbonnement: "Votre abonnement",
@@ -154,7 +160,8 @@ export const fr = {
     mouvementsDesc: "Les dernières entrées, sorties et transferts d'appareils.",
     aucunMouvement: "Aucun mouvement enregistré pour le moment.",
     repartitionBoutiques: "Stock par boutique",
-    repartitionDesc: "Répartition des appareils physiques et valorisation par point de vente.",
+    repartitionDesc:
+      "Répartition des appareils physiques et valorisation par point de vente.",
     aujourdhui: "Aujourd'hui",
     ceMois: "Ce mois",
     entreesDuJour: "{count} entrée(s)",
@@ -180,7 +187,8 @@ export const fr = {
     tableauPrixVente: "Prix vente",
     tableauDateEntree: "Entré le",
     aucunAppareil: "Aucun appareil trouvé",
-    aucunAppareilDesc: "Aucun téléphone ne correspond à vos filtres de recherche.",
+    aucunAppareilDesc:
+      "Aucun téléphone ne correspond à vos filtres de recherche.",
     enregistrerAppareil: "Enregistrer un appareil",
     informationsPrincipales: "Informations principales",
     modele: "Modèle",
@@ -237,7 +245,8 @@ export const fr = {
   },
   modeles: {
     titre: "Catalogue",
-    description: "Gérez vos marques, gammes et modèles de téléphones avec leurs prix conseillés.",
+    description:
+      "Gérez vos marques, gammes et modèles de téléphones avec leurs prix conseillés.",
     ajouterModele: "Nouveau modèle",
     ajouterMarque: "Nouvelle marque",
     ajouterGamme: "Nouvelle gamme",
@@ -255,14 +264,16 @@ export const fr = {
     enStock: "En stock",
     total: "Total géré",
     aucunModele: "Aucun modèle dans le catalogue",
-    aucunModeleDesc: "Créez vos modèles pour pouvoir enregistrer des téléphones en stock.",
+    aucunModeleDesc:
+      "Créez vos modèles pour pouvoir enregistrer des téléphones en stock.",
     modeleCree: "Modèle créé avec succès.",
     marqueCreee: "Marque créée avec succès.",
     gammeCreee: "Gamme créée avec succès.",
   },
   mouvements: {
     titre: "Historique des mouvements",
-    description: "Traçabilité complète de chaque entrée, vente, transfert et intervention.",
+    description:
+      "Traçabilité complète de chaque entrée, vente, transfert et intervention.",
     recherchePlaceholder: "Rechercher par IMEI, modèle, client, utilisateur...",
     tousTypes: "Tous les types",
     tousLesTypes: "Tous les types",
@@ -274,12 +285,14 @@ export const fr = {
     tableauAuteur: "Enregistré par",
     tableauPrixClient: "Prix / Client",
     aucunMouvement: "Aucun mouvement trouvé",
-    aucunMouvementDesc: "Aucun événement ne correspond aux critères sélectionnés.",
+    aucunMouvementDesc:
+      "Aucun événement ne correspond aux critères sélectionnés.",
     totalMouvements: "{total} mouvement(s) enregistré(s)",
   },
   equipe: {
     titre: "Équipe & Accès",
-    description: "Gérez les collaborateurs ayant accès à vos boutiques et leurs permissions.",
+    description:
+      "Gérez les collaborateurs ayant accès à vos boutiques et leurs permissions.",
     inviterMembre: "Inviter un collaborateur",
     invitationsEnAttente: "Invitations en attente",
     membresActifs: "Membres de l'équipe",
@@ -294,7 +307,8 @@ export const fr = {
     desactiverAcces: "Désactiver l'accès",
     activerAcces: "Activer l'accès",
     aucunMembre: "Aucun membre d'équipe invité",
-    aucunMembreDesc: "Invitez vos vendeurs et collaborateurs à rejoindre votre espace.",
+    aucunMembreDesc:
+      "Invitez vos vendeurs et collaborateurs à rejoindre votre espace.",
     compteSupprime: "Compte supprimé avec succès.",
     compteModifie: "Compte mis à jour avec succès.",
     ajouterPersonne: "Ajouter un membre",
@@ -306,15 +320,19 @@ export const fr = {
     boutiquesRattachees: "Boutiques autorisées",
     modifierCompte: "Modifier le compte",
     laisserVideMdp: "Laissez le mot de passe vide pour ne pas le changer.",
-    invitationDesc: "Un email d'invitation sera envoyé pour configurer le compte.",
-    restrictionBoutiquesDesc: "Cette personne ne verra que le stock des boutiques cochées.",
+    invitationDesc:
+      "Un email d'invitation sera envoyé pour configurer le compte.",
+    restrictionBoutiquesDesc:
+      "Cette personne ne verra que le stock des boutiques cochées.",
     compteActif: "Compte actif (peut se connecter)",
     supprimerConfirmationTitre: "Supprimer le compte de {nom} ?",
-    supprimerConfirmationDesc: "Cette personne ne pourra plus se connecter. Les mouvements qu'elle a enregistrés restent dans l'historique.",
+    supprimerConfirmationDesc:
+      "Cette personne ne pourra plus se connecter. Les mouvements qu'elle a enregistrés restent dans l'historique.",
   },
   boutiques: {
     titre: "Boutiques",
-    description: "Configurez vos points de vente physiques et suivez leurs performances.",
+    description:
+      "Configurez vos points de vente physiques et suivez leurs performances.",
     nouvelleBoutique: "Nouvelle boutique",
     nom: "Nom du point de vente",
     ville: "Ville",
@@ -327,7 +345,8 @@ export const fr = {
     boutiqueModifiee: "Boutique mise à jour avec succès.",
     boutiqueSupprimee: "Boutique supprimée avec succès.",
     aucuneBoutique: "Aucune boutique enregistrée",
-    aucuneBoutiqueDesc: "Créez votre première boutique pour commencer à gérer votre stock.",
+    aucuneBoutiqueDesc:
+      "Créez votre première boutique pour commencer à gérer votre stock.",
     adresseNonRenseignee: "Adresse non renseignée",
     fermee: "Fermée",
     boutiqueOuverte: "Boutique ouverte",
@@ -335,8 +354,10 @@ export const fr = {
   },
   scanner: {
     titre: "Scanner d'IMEI & Code-barres",
-    description: "Utilisez la caméra de votre téléphone ou un lecteur pour identifier instantanément un appareil.",
-    instruction: "Pointez la caméra vers le code-barres ou le numéro IMEI de la boîte.",
+    description:
+      "Utilisez la caméra de votre téléphone ou un lecteur pour identifier instantanément un appareil.",
+    instruction:
+      "Pointez la caméra vers le code-barres ou le numéro IMEI de la boîte.",
     basculerCamera: "Changer de caméra",
     saisieManuelle: "Saisie manuelle de l'IMEI",
     saisiePlaceholder: "Saisir les 15 chiffres de l'IMEI...",
@@ -353,7 +374,8 @@ export const fr = {
   },
   monCompte: {
     titre: "Mon compte",
-    description: "Gérez vos informations personnelles, votre sécurité et vos préférences.",
+    description:
+      "Gérez vos informations personnelles, votre sécurité et vos préférences.",
     coordonnees: "Coordonnées",
     coordonneesDesc: "Modifiez votre nom et votre numéro de téléphone.",
     nom: "Nom complet",
@@ -369,29 +391,36 @@ export const fr = {
     deuxFacteurs: "Double authentification (2FA)",
     changerEmail: "Changer d'adresse email",
     preferences: "Préférences d'affichage",
-    preferencesDesc: "Personnalisez la langue et le thème visuel de votre interface.",
+    preferencesDesc:
+      "Personnalisez la langue et le thème visuel de votre interface.",
     langueLabel: "Langue de l'interface",
     themeLabel: "Thème d'affichage",
     abonnement: "Abonnement & Facturation",
     echeanceLe: "Se termine le {date}",
     joursRestants: "{count} jour restant | {count} jours restants",
-    abonnementExpire: "Votre abonnement n'est plus actif. Contactez-nous pour le renouveler.",
+    abonnementExpire:
+      "Votre abonnement n'est plus actif. Contactez-nous pour le renouveler.",
     abonnementActif: "Votre abonnement est actif et à jour.",
     typeAbonnement: "Type d'abonnement",
     planPremiumBadge: "Formule Premium",
     planStandardBadge: "Formule Standard",
     questionsTitre: "Avez-vous des questions ?",
-    questionsDesc: "Consultez notre foire aux questions pour tout comprendre sur la gestion du stock, le scan IMEI, les abonnements et la politique de confidentialité.",
+    questionsDesc:
+      "Consultez notre foire aux questions pour tout comprendre sur la gestion du stock, le scan IMEI, les abonnements et la politique de confidentialité.",
     questionsBouton: "Consulter la Foire Aux Questions (FAQ)",
+    monnaie: "Devise d'affichage.",
   },
   admin: {
     titre: "Administration de la plateforme",
     vueEnsemble: "Vue d'ensemble",
-    vueEnsembleDesc: "Les comptes clients et leurs abonnements. Les stocks ne sont pas accessibles depuis cet espace.",
+    vueEnsembleDesc:
+      "Les comptes clients et leurs abonnements. Les stocks ne sont pas accessibles depuis cet espace.",
     clients: "Clients",
-    clientsDesc: "Les propriétaires inscrits et leurs abonnements. Cliquez sur une ligne pour modifier l'accès.",
+    clientsDesc:
+      "Les propriétaires inscrits et leurs abonnements. Cliquez sur une ligne pour modifier l'accès.",
     proprietairesTitre: "Gestion des clients & abonnements",
-    proprietairesDesc: "Visualisez l'ensemble des propriétaires de boutiques inscrits sur la plateforme.",
+    proprietairesDesc:
+      "Visualisez l'ensemble des propriétaires de boutiques inscrits sur la plateforme.",
     totalProprietaires: "Propriétaires",
     totalBoutiques: "Boutiques ouvertes",
     totalAppareils: "Appareils enregistrés",
@@ -403,14 +432,16 @@ export const fr = {
     abonnementsActifs: "Abonnements actifs",
     comptesSuspendus: "Comptes suspendus",
     echeancesProches: "Échéances < 7 jours",
-    prochainesEcheancesDesc: "Comptes dont l'essai ou l'abonnement arrive à terme.",
+    prochainesEcheancesDesc:
+      "Comptes dont l'essai ou l'abonnement arrive à terme.",
     aucuneEcheance: "Aucune échéance dans les 7 prochains jours.",
     avecAccesOuvert: "{count} avec un accès ouvert",
     dansVilles: "dans {count} ville(s)",
     enStockActuellement: "en stock actuellement",
     enEssai: "{count} en essai gratuit",
     repartitionAbonnements: "Répartition des abonnements",
-    repartitionAbonnementsDesc: "État des accès pour l'ensemble des propriétaires.",
+    repartitionAbonnementsDesc:
+      "État des accès pour l'ensemble des propriétaires.",
     prochainesEcheances: "Prochaines échéances (7 jours)",
     tableauClient: "Client / Email",
     tableauNom: "Client",
@@ -441,7 +472,8 @@ export const fr = {
   },
   changerEmail: {
     titre: "Changer d'adresse email",
-    description: "Modifiez l'adresse utilisée pour vous connecter et recevoir les notifications.",
+    description:
+      "Modifiez l'adresse utilisée pour vous connecter et recevoir les notifications.",
     emailActuel: "Adresse actuelle",
     nouvelEmail: "Nouvelle adresse email",
     motDePasseActuel: "Mot de passe actuel",
@@ -449,7 +481,8 @@ export const fr = {
     envoyerCode: "Envoyer le code",
     etapeNouvelleAdresse: "Nouvelle adresse",
     etapeVerification: "Vérification de la nouvelle adresse",
-    instructionsCode: "Un code de confirmation a été envoyé à {email}. Saisissez-le pour finaliser le changement.",
+    instructionsCode:
+      "Un code de confirmation a été envoyé à {email}. Saisissez-le pour finaliser le changement.",
     validerChangement: "Valider le changement",
     codeEnvoye: "Code envoyé à la nouvelle adresse.",
     emailModifie: "Adresse email modifiée avec succès.",
@@ -460,26 +493,33 @@ export const fr = {
     titre: "Double authentification (2FA)",
     description: "Ajoute un niveau de sécurité supplémentaire à votre compte.",
     statutActif: "La double authentification est activée sur votre compte.",
-    statutActifDesc: "Un code de votre application est demandé à chaque connexion.",
+    statutActifDesc:
+      "Un code de votre application est demandé à chaque connexion.",
     statutInactif: "La double authentification n'est pas activée.",
     codesRestants: "{count} code(s) de secours restant(s).",
     pensezRegenerer: "Pensez à en générer de nouveaux.",
-    plusDeCodes: "Plus aucun code de secours. Si vous perdez votre téléphone, vous ne pourrez plus vous connecter.",
+    plusDeCodes:
+      "Plus aucun code de secours. Si vous perdez votre téléphone, vous ne pourrez plus vous connecter.",
     activer: "Activer la double authentification",
     desactiver: "Désactiver",
     genererNouveauxCodes: "Nouveaux codes de secours",
     confirmerDesactivationTitre: "Désactiver la double authentification ?",
-    confirmerDesactivationDesc: "Votre compte sera uniquement protégé par votre mot de passe.",
+    confirmerDesactivationDesc:
+      "Votre compte sera uniquement protégé par votre mot de passe.",
     confirmerMotDePasseTitre: "Confirmez votre mot de passe",
-    confirmerMotDePasseDesc: "Pour continuer, saisissez votre mot de passe actuel.",
+    confirmerMotDePasseDesc:
+      "Pour continuer, saisissez votre mot de passe actuel.",
     scannezQrTitre: "Scannez le QR code",
-    scannezQrDesc: "Scannez ce QR code avec Google Authenticator, Authy ou toute autre application d'authentification.",
+    scannezQrDesc:
+      "Scannez ce QR code avec Google Authenticator, Authy ou toute autre application d'authentification.",
     cleSecrete: "Impossible de scanner ? Saisir la clé à la main",
     entrerCode: "Saisissez le code affiché par l'application",
     codesSecoursTitre: "Vos codes de secours",
-    codesSecoursDesc: "Conservez ces codes précieusement. Ils vous permettront d'accéder à votre compte si vous perdez votre appareil.",
+    codesSecoursDesc:
+      "Conservez ces codes précieusement. Ils vous permettront d'accéder à votre compte si vous perdez votre appareil.",
     avertissementUsageUnique: "Chaque code ne fonctionne qu'une seule fois.",
-    avertissementCodes: "Notez ces codes maintenant : ils ne seront plus jamais affichés. Ils sont la seule façon de vous connecter si vous perdez votre téléphone.",
+    avertissementCodes:
+      "Notez ces codes maintenant : ils ne seront plus jamais affichés. Ils sont la seule façon de vous connecter si vous perdez votre téléphone.",
     telechargerCodes: "Télécharger les codes",
     copierCodes: "Copier",
     codesCopies: "Codes copiés dans le presse-papiers.",
@@ -493,8 +533,10 @@ export const fr = {
     placeholder: "Scannez ou saisissez les 15 chiffres",
     aideRaccourci: "Composez le *#06# sur le téléphone pour afficher son IMEI.",
     lectureCodeBarres: "Lecture du code-barres",
-    cadrezCodeBarres: "Cadrez le code-barres de la boîte. La lecture se fait toute seule.",
-    cameraErreur: "Impossible d'ouvrir la caméra. Autorisez-en l'accès dans le navigateur, ou saisissez l'IMEI au clavier.",
+    cadrezCodeBarres:
+      "Cadrez le code-barres de la boîte. La lecture se fait toute seule.",
+    cameraErreur:
+      "Impossible d'ouvrir la caméra. Autorisez-en l'accès dans le navigateur, ou saisissez l'IMEI au clavier.",
     fermer: "Fermer",
   },
   selecteurBoutique: {
@@ -569,6 +611,19 @@ export const fr = {
     retourApp: "Retour",
     connexion: "Se connecter",
     besoinAide: "Besoin d'aide supplémentaire ?",
-    contactSupport: "Notre équipe est disponible pour vous répondre et vous assister.",
+    contactSupport:
+      "Notre équipe est disponible pour vous répondre et vous assister.",
+  },
+  page404: {
+    badge: "Erreur 404",
+    titre: "Cette page n'existe pas",
+    description: "L'adresse que vous essayez d'ouvrir n'existe pas ou a été déplacée.",
+    retourPrecedent: "Retour à la page précédente",
+    centreAide: "Centre d'aide & FAQ",
+    titreDetaille: "Cet appareil ou cette page n'est pas répertorié en stock",
+    descriptionDetaillee: "L'URL demandée ne correspond à aucune référence active, ou la page a été déplacée lors d'une mise à jour de l'inventaire.",
+    tableauDeBord: "Retour au tableau de bord",
+    ouvrirScanner: "Ouvrir le scanner d'IMEI",
+    consulterFaq: "Consulter la FAQ",
   },
 };

@@ -119,7 +119,7 @@ export default function PageInscription() {
 
         enregistrerToken(reponse.token);
         await rafraichir();
-        router.push("/");
+        router.push("/merci");
       } catch (e) {
         if (e instanceof ErreurApi) {
           const parChamp = e.parChamp();
@@ -479,7 +479,6 @@ export default function PageInscription() {
           </div>
         )}
 
-        {/* <PiedDePageLegal className="mt-8 pt-4 w-full" /> */}
       </main>
     </div>
   );

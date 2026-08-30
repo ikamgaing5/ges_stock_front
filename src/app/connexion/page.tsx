@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, ShieldCheck, Smartphone } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
+import { useI18n } from "@/lib/i18n";
 import { BasculeTheme } from "@/components/bascule-theme";
 import { ChampCode } from "@/components/champ-code";
 import { ErreurApi } from "@/lib/api";
@@ -13,11 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IconeTelora } from "@/components/ui/logo-telora";
 import { PiedDePageLegal } from "@/components/layout/pied-de-page-legal";
+import { BasculeLangue } from "@/components/bascule-langue";
 
 /** Page de connexion (/connexion). */
 export default function PageConnexion() {
   const { utilisateur, chargement, connexion, connexionDeuxFacteurs } =
     useAuth();
+  const { lang } = useI18n();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -50,11 +53,21 @@ export default function PageConnexion() {
         setEnvoiEnCours(false);
       }
     } catch (e) {
-      setErreur(
-        e instanceof ErreurApi
-          ? (e.erreurDe("email") ?? e.message)
-          : "Une erreur inattendue est survenue.",
-      );
+      const messageDefaut =
+        lang === "en"
+          ? "An error occurred, please try again later."
+          : "Une erreur est survenue, veuillez réessayer plus tard.";
+
+      if (e instanceof ErreurApi) {
+        const msg = e.erreurDe("email") ?? e.message;
+        if (/sqlstate|pdoexception|connection refused|expressément refusée|syntax error/i.test(msg)) {
+          setErreur(messageDefaut);
+        } else {
+          setErreur(msg);
+        }
+      } else {
+        setErreur(messageDefaut);
+      }
       setEnvoiEnCours(false);
     }
   }
@@ -67,6 +80,11 @@ export default function PageConnexion() {
     try {
       await connexionDeuxFacteurs(jetonDefi!, codeSaisi);
     } catch (e) {
+      const messageDefaut =
+        lang === "en"
+          ? "An error occurred, please try again later."
+          : "Une erreur est survenue, veuillez réessayer plus tard.";
+
       if (e instanceof ErreurApi) {
         // Le défi expire au bout de cinq minutes : il faut alors
         // ressaisir le mot de passe.
@@ -75,11 +93,16 @@ export default function PageConnexion() {
           setCode("");
           setErreur(e.erreurDe("jeton_defi")!);
         } else {
-          setErreur(e.erreurDe("code") ?? e.message);
+          const msg = e.erreurDe("code") ?? e.message;
+          if (/sqlstate|pdoexception|connection refused|expressément refusée|syntax error/i.test(msg)) {
+            setErreur(messageDefaut);
+          } else {
+            setErreur(msg);
+          }
           setCode("");
         }
       } else {
-        setErreur("Une erreur inattendue est survenue.");
+        setErreur(messageDefaut);
       }
       setEnvoiEnCours(false);
     }
@@ -91,6 +114,7 @@ export default function PageConnexion() {
           on ouvre parfois l'application dans le noir. */}
       <div className="absolute top-4 right-4">
         <BasculeTheme />
+        {/* <BasculeLangue /> */}
       </div>
 
       <div className="flex-1 flex items-center justify-center w-full py-8">
@@ -241,20 +265,21 @@ export default function PageConnexion() {
         )}
 
         {!jetonDefi && (
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Vous gérez une boutique de téléphones ?{" "}
-            <Link
-              href="/inscription"
-              className="font-medium text-primary underline underline-offset-4"
-            >
-              Créer un compte
-            </Link>
-          </p>
+          <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
+            <p>
+              Vous gérez une boutique de téléphones ?{" "}
+              <Link
+                href="/inscription"
+                className="font-medium text-primary underline underline-offset-4"
+              >
+                Créer un compte
+              </Link>
+            </p>
+          </div>
         )}
       </div>
       </div>
 
-      {/* <PiedDePageLegal className="mt-auto pt-6" /> */}
     </div>
   );
 }

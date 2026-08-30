@@ -186,10 +186,13 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
       throw new RequeteAnnulee();
     }
 
-    throw new ErreurApi(
-      "Impossible de joindre le serveur. Vérifiez que le backend Laravel est démarré.",
-      0,
-    );
+    const lang = lireLangue();
+    const msg =
+      lang === "en"
+        ? "An error occurred, please try again later."
+        : "Une erreur est survenue, veuillez réessayer plus tard.";
+
+    throw new ErreurApi(msg, 0);
   }
 
   // 204 = succès sans contenu
@@ -222,10 +225,43 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
       window.location.href = "/connexion?desactive=1";
     }
 
+    let messageAffiche = donnees?.message ?? "Une erreur est survenue.";
+
+    // Détection et assainissement des messages d'erreurs techniques, SQL ou 500
+    const estErreurTechnique =
+      reponse.status >= 500 ||
+      /sqlstate|pdoexception|connection refused|expressément refusée|syntax error|database query/i.test(
+        String(messageAffiche),
+      );
+
+    if (estErreurTechnique) {
+      const lang = lireLangue();
+      messageAffiche =
+        lang === "en"
+          ? "An error occurred, please try again later."
+          : "Une erreur est survenue, veuillez réessayer plus tard.";
+    }
+
+    // Nettoyer également les messages par champ s'ils contiennent des traces SQL
+    const erreursAssainies: Record<string, string[]> = {};
+    if (donnees?.errors && typeof donnees.errors === "object") {
+      for (const [champ, liste] of Object.entries(
+        donnees.errors as Record<string, string[]>,
+      )) {
+        if (Array.isArray(liste)) {
+          erreursAssainies[champ] = liste.map((err) =>
+            /sqlstate|pdoexception|connection refused|expressément refusée/i.test(err)
+              ? messageAffiche
+              : err,
+          );
+        }
+      }
+    }
+
     throw new ErreurApi(
-      donnees?.message ?? "Une erreur est survenue.",
+      messageAffiche,
       reponse.status,
-      donnees?.errors ?? {},
+      erreursAssainies,
       donnees ?? {},
     );
   }

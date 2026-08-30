@@ -82,6 +82,7 @@ export const en = {
     sombre: "Dark",
     systeme: "System",
     boutiquesCount: "{count} store | {count} stores",
+    monnaie: "Choose your display currency."
   },
   auth: {
     connexionTitre: "Sign in",
@@ -383,6 +384,7 @@ export const en = {
     questionsTitre: "Have any questions?",
     questionsDesc: "Browse our frequently asked questions to learn everything about inventory management, IMEI scanning, subscriptions, and privacy policy.",
     questionsBouton: "View Frequently Asked Questions (FAQ)",
+    monnaie: "Display currency.",
   },
   admin: {
     titre: "Platform Administration",
@@ -570,5 +572,17 @@ export const en = {
     connexion: "Sign in",
     besoinAide: "Need more help?",
     contactSupport: "Our team is here to assist you with your day-to-day operations.",
+  },
+  page404: {
+    badge: "Error 404",
+    titre: "This page does not exist",
+    description: "The address you are trying to reach does not exist or has been moved.",
+    retourPrecedent: "Return to previous page",
+    centreAide: "Help Center & FAQ",
+    titreDetaille: "This device or page is not listed in inventory",
+    descriptionDetaillee: "The requested URL does not match any active reference, or the page was moved during an inventory update.",
+    tableauDeBord: "Back to Dashboard",
+    ouvrirScanner: "Open IMEI Scanner",
+    consulterFaq: "View FAQ",
   },
 };
