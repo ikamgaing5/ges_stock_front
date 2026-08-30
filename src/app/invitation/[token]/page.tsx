@@ -10,6 +10,7 @@ import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ChampTelephone } from "@/components/champ-telephone";
 import { Loader2 } from "lucide-react";
 
 export default function PageInvitation({
@@ -39,9 +40,26 @@ export default function PageInvitation({
       .finally(() => setChargement(false));
   }, [token]);
 
-  async function envoyer(e: React.FormEvent) {
-    e.preventDefault();
+  async function envoyer(evenement: React.FormEvent) {
+    evenement.preventDefault();
     setErreurs({});
+
+    const errs: Record<string, string> = {};
+    if (!nom.trim()) {
+      errs.name = t("commun.nomRequis");
+    }
+    if (!motDePasse) {
+      errs.password = t("commun.motDePasseRequis");
+    } else if (motDePasse.length < 8) {
+      errs.password =
+        lang === "en" ? "8 characters minimum" : "8 caractères minimum";
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setErreurs(errs);
+      return;
+    }
+
     setEnvoiEnCours(true);
 
     try {
@@ -92,7 +110,7 @@ export default function PageInvitation({
         <BasculeTheme />
       </div>
 
-      <form onSubmit={envoyer} className="w-full max-w-sm space-y-5">
+      <form noValidate onSubmit={envoyer} className="w-full max-w-sm space-y-5">
         <div>
           <h1 className="text-xl font-semibold">
             {t("auth.invitationTitre")}
@@ -104,9 +122,12 @@ export default function PageInvitation({
           <Label htmlFor="i-nom">{t("auth.nomComplet")}</Label>
           <Input
             id="i-nom"
-            required
+            className={`h-10 ${erreurs.name ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
             value={nom}
-            onChange={(e) => setNom(e.target.value)}
+            onChange={(e) => {
+              setNom(e.target.value);
+              if (erreurs.name) setErreurs((prev) => ({ ...prev, name: "" }));
+            }}
             placeholder={t("auth.nomPlaceholder")}
           />
           {erreurs.name && (
@@ -116,11 +137,10 @@ export default function PageInvitation({
 
         <div className="space-y-2">
           <Label htmlFor="i-tel">{t("monCompte.telephone")}</Label>
-          <Input
+          <ChampTelephone
             id="i-tel"
-            value={telephone}
-            onChange={(e) => setTelephone(e.target.value)}
-            placeholder="677 11 22 33"
+            valeur={telephone}
+            onChange={setTelephone}
           />
         </div>
 
@@ -129,11 +149,13 @@ export default function PageInvitation({
           <Input
             id="i-mdp"
             type="password"
-            required
-            minLength={8}
             autoComplete="new-password"
+            className={`h-10 ${erreurs.password ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
             value={motDePasse}
-            onChange={(e) => setMotDePasse(e.target.value)}
+            onChange={(e) => {
+              setMotDePasse(e.target.value);
+              if (erreurs.password) setErreurs((prev) => ({ ...prev, password: "" }));
+            }}
           />
           {erreurs.password && (
             <p className="text-xs text-destructive">{erreurs.password}</p>

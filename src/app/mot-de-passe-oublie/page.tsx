@@ -7,7 +7,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, KeyRound, Loader2, MailCheck } from "lucide-react";
+import { ArrowLeft, Loader2, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { api, enregistrerToken, ErreurApi } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
@@ -18,7 +18,7 @@ import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PiedDePageLegal } from "@/components/layout/pied-de-page-legal";
+import { IconeTelora } from "@/components/ui/logo-telora";
 import type { Utilisateur } from "@/types";
 
 const DELAI_RENVOI = 60;
@@ -38,6 +38,10 @@ export default function PageMotDePasseOublie() {
   const [secondesAvantRenvoi, setSecondesAvantRenvoi] = useState(0);
 
   useEffect(() => {
+    document.title = `${t("auth.motDePasseOublieTitre")} | Telora`;
+  }, [lang, t]);
+
+  useEffect(() => {
     if (secondesAvantRenvoi <= 0) return;
     const minuteur = setTimeout(() => setSecondesAvantRenvoi((s) => s - 1), 1000);
     return () => clearTimeout(minuteur);
@@ -46,6 +50,16 @@ export default function PageMotDePasseOublie() {
   async function demanderCode(evenement?: React.FormEvent) {
     evenement?.preventDefault();
     setErreurs({});
+
+    if (!email.trim()) {
+      setErreurs({ email: t("commun.emailRequis") });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setErreurs({ email: t("commun.emailInvalide") });
+      return;
+    }
+
     setEnvoiEnCours(true);
 
     try {
@@ -68,10 +82,26 @@ export default function PageMotDePasseOublie() {
   async function reinitialiser(evenement: React.FormEvent) {
     evenement.preventDefault();
 
-    if (motDePasse !== confirmation) {
-      setErreurs({
-        confirmation: t("auth.motsDePasseDifferents"),
-      });
+    const errs: Record<string, string> = {};
+    if (!code || code.replace(/\D/g, "").length < 6) {
+      errs.code = t("commun.codeRequis");
+    }
+    if (!motDePasse) {
+      errs.password = t("commun.motDePasseRequis");
+    } else if (motDePasse.length < 8) {
+      errs.password =
+        lang === "en"
+          ? "Password must be at least 8 characters long."
+          : "Le mot de passe doit comporter au moins 8 caractères.";
+    }
+    if (!confirmation) {
+      errs.confirmation = t("commun.confirmationRequise");
+    } else if (motDePasse !== confirmation) {
+      errs.confirmation = t("auth.motsDePasseDifferents");
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setErreurs(errs);
       return;
     }
 
@@ -103,7 +133,7 @@ export default function PageMotDePasseOublie() {
   }
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col items-center justify-between bg-muted/40 p-4">
+    <div className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-muted/40 p-4">
       <div className="absolute top-4 right-4 flex items-center gap-1">
         <BasculeLangue />
         <BasculeTheme />
@@ -112,13 +142,13 @@ export default function PageMotDePasseOublie() {
       <div className="flex-1 flex items-center justify-center w-full py-8">
         <div className="anim-apparait w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            {etape === "email" ? (
-              <KeyRound className="h-6 w-6" />
-            ) : (
+          {etape === "email" ? (
+            <IconeTelora size={52} />
+          ) : (
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <MailCheck className="h-6 w-6" />
-            )}
-          </div>
+            </div>
+          )}
           <div>
             <h1 className="font-heading text-xl font-semibold tracking-tight">
               {etape === "email"
@@ -135,6 +165,7 @@ export default function PageMotDePasseOublie() {
 
         {etape === "email" ? (
           <form
+            noValidate
             onSubmit={demanderCode}
             className="space-y-4 rounded-xl border bg-card p-6 shadow-sm"
           >
@@ -143,12 +174,14 @@ export default function PageMotDePasseOublie() {
               <Input
                 id="email"
                 type="email"
-                required
                 autoFocus
-                className="h-10"
+                className={`h-10 ${erreurs.email ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                 autoComplete="username"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (erreurs.email) setErreurs((prev) => ({ ...prev, email: "" }));
+                }}
                 placeholder={t("auth.emailPlaceholder")}
               />
               {erreurs.email && (
@@ -168,6 +201,7 @@ export default function PageMotDePasseOublie() {
           </form>
         ) : (
           <form
+            noValidate
             onSubmit={reinitialiser}
             className="space-y-5 rounded-xl border bg-card p-6 shadow-sm"
           >
@@ -175,7 +209,10 @@ export default function PageMotDePasseOublie() {
               <Label>{t("auth.codeVerification")}</Label>
               <ChampCode
                 valeur={code}
-                onChange={setCode}
+                onChange={(c) => {
+                  setCode(c);
+                  if (erreurs.code) setErreurs((prev) => ({ ...prev, code: "" }));
+                }}
                 erreur={Boolean(erreurs.code)}
               />
               {erreurs.code && (
@@ -190,12 +227,13 @@ export default function PageMotDePasseOublie() {
               <Input
                 id="mdp"
                 type="password"
-                required
-                minLength={8}
-                className="h-10"
+                className={`h-10 ${erreurs.password ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                 autoComplete="new-password"
                 value={motDePasse}
-                onChange={(e) => setMotDePasse(e.target.value)}
+                onChange={(e) => {
+                  setMotDePasse(e.target.value);
+                  if (erreurs.password) setErreurs((prev) => ({ ...prev, password: "" }));
+                }}
               />
               {erreurs.password ? (
                 <p className="text-xs text-destructive">{erreurs.password}</p>
@@ -211,11 +249,13 @@ export default function PageMotDePasseOublie() {
               <Input
                 id="mdp2"
                 type="password"
-                required
-                className="h-10"
+                className={`h-10 ${erreurs.confirmation ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                 autoComplete="new-password"
                 value={confirmation}
-                onChange={(e) => setConfirmation(e.target.value)}
+                onChange={(e) => {
+                  setConfirmation(e.target.value);
+                  if (erreurs.confirmation) setErreurs((prev) => ({ ...prev, confirmation: "" }));
+                }}
               />
               {erreurs.confirmation && (
                 <p className="text-xs text-destructive">
@@ -272,8 +312,6 @@ export default function PageMotDePasseOublie() {
         </p>
       </div>
       </div>
-
-      <PiedDePageLegal className="max-w-xl w-full" />
     </div>
   );
 }

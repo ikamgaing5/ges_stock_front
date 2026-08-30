@@ -19,11 +19,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ChampTelephone } from "@/components/champ-telephone";
 import { SelecteurDevise } from "@/components/layout/selecteur-devise";
 
 export default function PageMonCompte() {
   const { utilisateur, rafraichir } = useAuth();
-  const { t, formatDateCourte, libelleRole, libelleAbonnement } = useI18n();
+  const { t, formatDateCourte, libelleRole, libelleAbonnement, lang } = useI18n();
 
   const [nom, setNom] = useState("");
   const [telephone, setTelephone] = useState("");
@@ -33,6 +34,7 @@ export default function PageMonCompte() {
   const [nouveau, setNouveau] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [changementMdp, setChangementMdp] = useState(false);
+  const [erreurNom, setErreurNom] = useState<string | null>(null);
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -45,6 +47,12 @@ export default function PageMonCompte() {
 
   async function enregistrerCoordonnees(evenement: React.FormEvent) {
     evenement.preventDefault();
+
+    if (!nom.trim()) {
+      setErreurNom(t("commun.nomRequis"));
+      return;
+    }
+    setErreurNom(null);
     setEnregistrement(true);
 
     try {
@@ -61,6 +69,31 @@ export default function PageMonCompte() {
   async function changerMotDePasse(evenement: React.FormEvent) {
     evenement.preventDefault();
     setErreurs({});
+
+    const errs: Record<string, string> = {};
+    if (!ancien) {
+      errs.mot_de_passe_actuel = t("commun.motDePasseRequis");
+    }
+    if (!nouveau) {
+      errs.password = t("commun.motDePasseRequis");
+    } else if (nouveau.length < 8) {
+      errs.password =
+        lang === "en" ? "8 characters minimum" : "8 caractères minimum";
+    }
+    if (!confirmation) {
+      errs.confirmation = t("commun.confirmationRequise");
+    } else if (nouveau !== confirmation) {
+      errs.confirmation =
+        lang === "en"
+          ? "The two passwords do not match."
+          : "Les deux mots de passe diffèrent.";
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setErreurs(errs);
+      return;
+    }
+
     setChangementMdp(true);
 
     try {
@@ -208,25 +241,29 @@ export default function PageMonCompte() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={enregistrerCoordonnees} className="space-y-4">
+              <form noValidate onSubmit={enregistrerCoordonnees} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="c-nom">{t("monCompte.nom")}</Label>
                   <Input
                     id="c-nom"
-                    required
-                    className="h-10"
+                    className={`h-10 ${erreurNom ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                     value={nom}
-                    onChange={(e) => setNom(e.target.value)}
+                    onChange={(e) => {
+                      setNom(e.target.value);
+                      if (erreurNom) setErreurNom(null);
+                    }}
                   />
+                  {erreurNom && (
+                    <p className="text-xs text-destructive">{erreurNom}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="c-tel">{t("monCompte.telephone")}</Label>
-                  <Input
+                  <ChampTelephone
                     id="c-tel"
-                    className="h-10"
-                    value={telephone}
-                    onChange={(e) => setTelephone(e.target.value)}
+                    valeur={telephone}
+                    onChange={setTelephone}
                   />
                 </div>
 
@@ -257,7 +294,7 @@ export default function PageMonCompte() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={changerMotDePasse} className="space-y-4">
+              <form noValidate onSubmit={changerMotDePasse} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="mdp-actuel">
                     {t("monCompte.motDePasseActuel")}
@@ -265,11 +302,15 @@ export default function PageMonCompte() {
                   <Input
                     id="mdp-actuel"
                     type="password"
-                    required
-                    className="h-10"
+                    className={`h-10 ${erreurs.mot_de_passe_actuel ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                     autoComplete="current-password"
                     value={ancien}
-                    onChange={(e) => setAncien(e.target.value)}
+                    onChange={(e) => {
+                      setAncien(e.target.value);
+                      if (erreurs.mot_de_passe_actuel) {
+                        setErreurs((prev) => ({ ...prev, mot_de_passe_actuel: "" }));
+                      }
+                    }}
                   />
                   {erreurs.mot_de_passe_actuel && (
                     <p className="text-xs text-destructive">
@@ -286,12 +327,15 @@ export default function PageMonCompte() {
                     <Input
                       id="mdp-nouveau"
                       type="password"
-                      required
-                      minLength={8}
-                      className="h-10"
+                      className={`h-10 ${erreurs.password ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                       autoComplete="new-password"
                       value={nouveau}
-                      onChange={(e) => setNouveau(e.target.value)}
+                      onChange={(e) => {
+                        setNouveau(e.target.value);
+                        if (erreurs.password) {
+                          setErreurs((prev) => ({ ...prev, password: "" }));
+                        }
+                      }}
                     />
                     {erreurs.password && (
                       <p className="text-xs text-destructive">
@@ -307,12 +351,21 @@ export default function PageMonCompte() {
                     <Input
                       id="mdp-confirmation"
                       type="password"
-                      required
-                      className="h-10"
+                      className={`h-10 ${erreurs.confirmation ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                       autoComplete="new-password"
                       value={confirmation}
-                      onChange={(e) => setConfirmation(e.target.value)}
+                      onChange={(e) => {
+                        setConfirmation(e.target.value);
+                        if (erreurs.confirmation) {
+                          setErreurs((prev) => ({ ...prev, confirmation: "" }));
+                        }
+                      }}
                     />
+                    {erreurs.confirmation && (
+                      <p className="text-xs text-destructive">
+                        {erreurs.confirmation}
+                      </p>
+                    )}
                   </div>
                 </div>
 

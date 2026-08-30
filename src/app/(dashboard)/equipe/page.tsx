@@ -35,6 +35,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ChampTelephone } from "@/components/champ-telephone";
+import { formaterTelephoneVisuel } from "@/lib/pays";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -48,7 +50,7 @@ import type { Role, Utilisateur } from "@/types";
 
 export default function PageEquipe() {
   const { utilisateur: moi, parametresBoutique } = useAuth();
-  const { t, libelleRole, descriptionRole, lang } = useI18n();
+  const { t, libelleRole, descriptionRole } = useI18n();
 
   const [enEdition, setEnEdition] = useState<Partial<Utilisateur> | null>(null);
   const [aSupprimer, setASupprimer] = useState<Utilisateur | null>(null);
@@ -164,7 +166,7 @@ export default function PageEquipe() {
                           </div>
                         </TableCell>
                         <TableCell className="hidden text-muted-foreground lg:table-cell">
-                          {personne.telephone ?? "—"}
+                          {formaterTelephoneVisuel(personne.telephone) || "—"}
                         </TableCell>
                         <TableCell>
                           <span
@@ -263,7 +265,7 @@ function FenetreEmploye({
   onSucces: () => void;
 }) {
   const { boutiques } = useAuth();
-  const { t, libelleRole, descriptionRole, lang } = useI18n();
+  const { t, libelleRole, descriptionRole } = useI18n();
   const modification = Boolean(cible?.id);
 
   const [nom, setNom] = useState("");
@@ -299,6 +301,22 @@ function FenetreEmploye({
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
     setErreurs({});
+
+    const errs: Record<string, string> = {};
+    if (modification && !nom.trim()) {
+      errs.name = t("commun.nomRequis");
+    }
+    if (!email.trim()) {
+      errs.email = t("commun.emailRequis");
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      errs.email = t("commun.emailInvalide");
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setErreurs(errs);
+      return;
+    }
+
     setEnvoiEnCours(true);
 
     const corps: Record<string, unknown> = modification
@@ -341,7 +359,7 @@ function FenetreEmploye({
   return (
     <Dialog open={cible !== null} onOpenChange={(o) => !o && onFermer()}>
       <DialogContent className="sm:max-w-lg">
-        <form onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
+        <form noValidate onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
           <DialogHeader>
             <DialogTitle>
               {modification
@@ -357,22 +375,35 @@ function FenetreEmploye({
 
           <DialogCorps>
             {modification && (
-              <div className="space-y-2">
-                <Label htmlFor="e-nom">
-                  {t("auth.nomComplet")}
-                  <span className="ml-0.5 text-destructive">*</span>
-                </Label>
-                <Input
-                  id="e-nom"
-                  required
-                  className="h-10"
-                  value={nom}
-                  onChange={(e) => setNom(e.target.value)}
-                />
-                {erreurs.name && (
-                  <p className="text-xs text-destructive">{erreurs.name}</p>
-                )}
-              </div>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="e-nom">
+                    {t("auth.nomComplet")}
+                    <span className="ml-0.5 text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="e-nom"
+                    className={`h-10 ${erreurs.name ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
+                    value={nom}
+                    onChange={(e) => {
+                      setNom(e.target.value);
+                      if (erreurs.name) setErreurs((prev) => ({ ...prev, name: "" }));
+                    }}
+                  />
+                  {erreurs.name && (
+                    <p className="text-xs text-destructive">{erreurs.name}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="e-tel">{t("monCompte.telephone")}</Label>
+                  <ChampTelephone
+                    id="e-tel"
+                    valeur={telephone}
+                    onChange={setTelephone}
+                  />
+                </div>
+              </>
             )}
 
             <div className="grid gap-4">
@@ -384,10 +415,12 @@ function FenetreEmploye({
                 <Input
                   id="e-email"
                   type="email"
-                  required
-                  className="h-10"
+                  className={`h-10 ${erreurs.email ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (erreurs.email) setErreurs((prev) => ({ ...prev, email: "" }));
+                  }}
                 />
                 {erreurs.email && (
                   <p className="text-xs text-destructive">{erreurs.email}</p>

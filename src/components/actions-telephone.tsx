@@ -43,6 +43,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SelectRecherche } from "@/components/ui/select-recherche";
+import { ChampTelephone } from "@/components/champ-telephone";
 import { Textarea } from "@/components/ui/textarea";
 import type { StatutTelephone, Telephone } from "@/types";
 
@@ -391,11 +393,10 @@ function FenetreAction({
                       <Label htmlFor="client-tel">
                         {t("telephones.clientTelephone")}
                       </Label>
-                      <Input
+                      <ChampTelephone
                         id="client-tel"
-                        className="h-10"
-                        value={clientTelephone}
-                        onChange={(e) => setClientTelephone(e.target.value)}
+                        valeur={clientTelephone}
+                        onChange={setClientTelephone}
                       />
                     </div>
                   </div>
@@ -414,31 +415,21 @@ function FenetreAction({
                           : "Vous n'avez accès à aucune autre boutique."}
                       </p>
                     ) : (
-                      <Select
-                        items={Object.fromEntries(
-                          destinations.map((b) => [String(b.id), b.nom]),
-                        )}
-                        value={boutiqueId}
-                        onValueChange={(v) => setBoutiqueId(v ?? "")}
-                      >
-                        <SelectTrigger className="h-10 w-full">
-                          <SelectValue
-                            placeholder={
-                              lang === "en" ? "Select store" : "Choisir la boutique"
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {destinations.map((boutique) => (
-                            <SelectItem
-                              key={boutique.id}
-                              value={String(boutique.id)}
-                            >
-                              {boutique.nom}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SelectRecherche
+                        options={destinations.map((b) => ({
+                          valeur: String(b.id),
+                          libelle: b.nom,
+                          description: b.ville ?? undefined,
+                        }))}
+                        valeur={boutiqueId}
+                        onChange={(v) => setBoutiqueId(v)}
+                        placeholder={
+                          lang === "en" ? "Select store" : "Choisir la boutique"
+                        }
+                        placeholderRecherche={
+                          lang === "en" ? "Search store..." : "Rechercher une boutique…"
+                        }
+                      />
                     )}
                     {erreurs.boutique_destination_id && (
                       <p className="text-xs text-destructive">

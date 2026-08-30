@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 
 interface CtaMobileProps {
   className?: string;
@@ -13,18 +14,23 @@ interface CtaMobileProps {
  * Permet de convertir les visiteurs sans qu'ils aient besoin de faire défiler toute la page.
  */
 export function CtaMobile({ className = "" }: CtaMobileProps) {
+  const { lang } = useI18n();
+
   return (
     <div
       className={`fixed bottom-0 left-0 right-0 z-40 border-t border-border/80 bg-background/95 p-3 backdrop-blur-md shadow-2xl lg:hidden ${className}`}
     >
       <div className="container mx-auto max-w-lg flex items-center justify-between gap-2.5">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold text-foreground truncate flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
-            <span>Sécurisez votre stock</span>
+          <p className="text-xs font-semibold text-foreground truncate">
+            <span>
+              {lang === "en" ? "Secure your stock" : "Sécurisez votre stock"}
+            </span>
           </p>
           <p className="text-[10px] text-muted-foreground truncate">
-            Essai gratuit · Sans carte bancaire
+            {lang === "en"
+              ? "Free trial · No credit card required"
+              : "Essai gratuit · Sans carte bancaire"}
           </p>
         </div>
 
@@ -35,7 +41,7 @@ export function CtaMobile({ className = "" }: CtaMobileProps) {
             nativeButton={false}
             render={<Link href="/inscription" />}
           >
-            <span>Démarrer</span>
+            <span>{lang === "en" ? "Start" : "Démarrer"}</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </Button>
 
@@ -46,7 +52,7 @@ export function CtaMobile({ className = "" }: CtaMobileProps) {
             nativeButton={false}
             render={<Link href="/connexion" />}
           >
-            Connexion
+            {lang === "en" ? "Sign in" : "Connexion"}
           </Button>
         </div>
       </div>

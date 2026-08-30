@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SelectRecherche } from "@/components/ui/select-recherche";
 import { Textarea } from "@/components/ui/textarea";
 import type {
   EtatTelephone,
@@ -43,7 +44,7 @@ import type {
 } from "@/types";
 
 export default function PageEntreeStock() {
-  const { boutiques, boutiqueActive, utilisateur, devise, deviseBoutique } = useAuth();
+  const { boutiques, boutiqueActive, utilisateur, deviseBoutique } = useAuth();
   const { t, libelleEtat, lang } = useI18n();
 
   const estPremium = Boolean(
@@ -557,30 +558,20 @@ export default function PageEntreeStock() {
                     {t("modeles.marques")}
                     <span className="ml-0.5 text-destructive">*</span>
                   </Label>
-                  <Select
-                    items={Object.fromEntries(
-                      marques.map((m) => [m.id, m.nom]),
-                    )}
-                    value={marqueChoisie}
-                    onValueChange={(v) => choisirMarque(v ?? "")}
-                  >
-                    <SelectTrigger className="h-10 w-full">
-                      <SelectValue
-                        placeholder={
-                          lang === "en"
-                            ? "Choose brand"
-                            : "Choisir la marque"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {marques.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          {m.nom}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SelectRecherche
+                    options={marques.map((m) => ({
+                      valeur: m.id,
+                      libelle: m.nom,
+                    }))}
+                    valeur={marqueChoisie}
+                    onChange={(v) => choisirMarque(v)}
+                    placeholder={
+                      lang === "en" ? "Choose brand" : "Choisir la marque"
+                    }
+                    placeholderRecherche={
+                      lang === "en" ? "Search brand..." : "Rechercher une marque…"
+                    }
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -588,33 +579,27 @@ export default function PageEntreeStock() {
                     {t("modeles.gammes")}
                     <span className="ml-0.5 text-destructive">*</span>
                   </Label>
-                  <Select
-                    items={Object.fromEntries(gammes.map((g) => [g.id, g.nom]))}
-                    value={gammeChoisie}
-                    onValueChange={(v) => choisirGamme(v ?? "")}
+                  <SelectRecherche
+                    options={gammes.map((g) => ({
+                      valeur: g.id,
+                      libelle: g.nom,
+                    }))}
+                    valeur={gammeChoisie}
+                    onChange={(v) => choisirGamme(v)}
                     disabled={!marqueChoisie}
-                  >
-                    <SelectTrigger className="h-10 w-full">
-                      <SelectValue
-                        placeholder={
-                          marqueChoisie
-                            ? lang === "en"
-                              ? "Choose range"
-                              : "Choisir la gamme"
-                            : lang === "en"
-                              ? "Choose brand first"
-                              : "Choisissez d'abord la marque"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {gammes.map((g) => (
-                        <SelectItem key={g.id} value={g.id}>
-                          {g.nom}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder={
+                      marqueChoisie
+                        ? lang === "en"
+                          ? "Choose range"
+                          : "Choisir la gamme"
+                        : lang === "en"
+                          ? "Choose brand first"
+                          : "Choisissez d'abord la marque"
+                    }
+                    placeholderRecherche={
+                      lang === "en" ? "Search range..." : "Rechercher une gamme…"
+                    }
+                  />
                 </div>
               </div>
 
@@ -623,35 +608,28 @@ export default function PageEntreeStock() {
                   {t("telephones.modele")}
                   <span className="ml-0.5 text-destructive">*</span>
                 </Label>
-                <Select
-                  items={Object.fromEntries(
-                    modeles.map((m) => [String(m.id), m.nom]),
-                  )}
-                  value={commun.modele_id}
-                  onValueChange={(v) => choisirModeleAvecStockage(v ?? "")}
+                <SelectRecherche
+                  options={modelesFiltres.map((m) => ({
+                    valeur: String(m.id),
+                    libelle: m.nom,
+                    description: m.ram ? `RAM : ${m.ram}` : undefined,
+                  }))}
+                  valeur={commun.modele_id}
+                  onChange={(v) => choisirModeleAvecStockage(v)}
                   disabled={!gammeChoisie}
-                >
-                  <SelectTrigger className="h-10 w-full">
-                    <SelectValue
-                      placeholder={
-                        gammeChoisie
-                          ? lang === "en"
-                            ? "Choose model"
-                            : "Choisir le modèle"
-                          : lang === "en"
-                            ? "Choose range first"
-                            : "Choisissez d'abord la gamme"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {modelesFiltres.map((m) => (
-                      <SelectItem key={m.id} value={String(m.id)}>
-                        {m.nom}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder={
+                    gammeChoisie
+                      ? lang === "en"
+                        ? "Choose model"
+                        : "Choisir le modèle"
+                      : lang === "en"
+                        ? "Choose range first"
+                        : "Choisissez d'abord la gamme"
+                  }
+                  placeholderRecherche={
+                    lang === "en" ? "Search model..." : "Rechercher un modèle…"
+                  }
+                />
               </div>
 
               <div className="space-y-2">
@@ -659,35 +637,27 @@ export default function PageEntreeStock() {
                   {t("telephones.stockage")}
                   <span className="ml-0.5 text-destructive">*</span>
                 </Label>
-                <Select
-                  items={Object.fromEntries(
-                    stockagesDisponibles.map((s) => [s.id, s.valeur]),
-                  )}
-                  value={stockageChoisi}
-                  onValueChange={(v) => setStockageChoisi(v ?? "")}
+                <SelectRecherche
+                  options={stockagesDisponibles.map((s) => ({
+                    valeur: s.id,
+                    libelle: s.valeur,
+                  }))}
+                  valeur={stockageChoisi}
+                  onChange={(v) => setStockageChoisi(v)}
                   disabled={!commun.modele_id}
-                >
-                  <SelectTrigger className="h-10 w-full">
-                    <SelectValue
-                      placeholder={
-                        commun.modele_id
-                          ? lang === "en"
-                            ? "Choose storage"
-                            : "Choisir le stockage"
-                          : lang === "en"
-                            ? "Choose model first"
-                            : "Choisissez d'abord le modèle"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {stockagesDisponibles.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.valeur}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder={
+                    commun.modele_id
+                      ? lang === "en"
+                        ? "Choose storage"
+                        : "Choisir le stockage"
+                      : lang === "en"
+                        ? "Choose model first"
+                        : "Choisissez d'abord le modèle"
+                  }
+                  placeholderRecherche={
+                    lang === "en" ? "Search storage..." : "Rechercher un stockage…"
+                  }
+                />
                 {stockagesDisponibles.length === 0 && commun.modele_id && (
                   <p className="text-xs text-muted-foreground">
                     {lang === "en"
@@ -703,33 +673,24 @@ export default function PageEntreeStock() {
                     {t("telephones.boutique")}
                     <span className="ml-0.5 text-destructive">*</span>
                   </Label>
-                  <Select
-                    items={Object.fromEntries(
-                      boutiques.map((b) => [String(b.id), b.nom]),
-                    )}
-                    value={commun.boutique_id}
-                    onValueChange={(v) => modifier("boutique_id", v ?? "")}
-                  >
-                    <SelectTrigger className="h-10 w-full">
-                      <SelectValue
-                        placeholder={
-                          lang === "en"
-                            ? "Where is this unit entering?"
-                            : "Où entre cet appareil ?"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {boutiques.map((boutique) => (
-                        <SelectItem
-                          key={boutique.id}
-                          value={String(boutique.id)}
-                        >
-                          {boutique.nom}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SelectRecherche
+                    options={boutiques.map((b) => ({
+                      valeur: String(b.id),
+                      libelle: b.nom,
+                      description: b.ville ?? undefined,
+                    }))}
+                    valeur={commun.boutique_id}
+                    onChange={(v) => modifier("boutique_id", v)}
+                    erreur={Boolean(erreurs.boutique_id)}
+                    placeholder={
+                      lang === "en"
+                        ? "Where is this unit entering?"
+                        : "Où entre cet appareil ?"
+                    }
+                    placeholderRecherche={
+                      lang === "en" ? "Search store..." : "Rechercher une boutique…"
+                    }
+                  />
                   {erreurs.boutique_id && (
                     <p className="text-xs text-destructive">
                       {erreurs.boutique_id}

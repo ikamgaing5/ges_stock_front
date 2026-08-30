@@ -39,13 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectRecherche } from "@/components/ui/select-recherche";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -157,29 +151,25 @@ export default function PageCatalogue() {
             />
           </div>
 
-          <Select
-            items={Object.fromEntries(marques.map((m) => [m.id, m.nom]))}
-            value={marqueFiltre}
-            onValueChange={(v) => setMarqueFiltre(v ?? "")}
-          >
-            <SelectTrigger className="h-10 w-44">
-              <SelectValue
-                placeholder={
-                  lang === "en" ? "All brands" : "Toutes les marques"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">
-                {lang === "en" ? "All brands" : "Toutes les marques"}
-              </SelectItem>
-              {marques.map((m) => (
-                <SelectItem key={m.id} value={m.id}>
-                  {m.nom}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="w-48">
+            <SelectRecherche
+              options={[
+                {
+                  valeur: "",
+                  libelle: lang === "en" ? "All brands" : "Toutes les marques",
+                },
+                ...marques.map((m) => ({ valeur: m.id, libelle: m.nom })),
+              ]}
+              valeur={marqueFiltre}
+              onChange={(v) => setMarqueFiltre(v)}
+              placeholder={
+                lang === "en" ? "All brands" : "Toutes les marques"
+              }
+              placeholderRecherche={
+                lang === "en" ? "Search brand..." : "Rechercher une marque…"
+              }
+            />
+          </div>
 
           <div className="flex items-center gap-2.5">
             <Switch
@@ -454,6 +444,19 @@ function FenetreModele({
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
     setErreurs({});
+
+    const errs: Record<string, string> = {};
+    if (!champs.gamme_id) {
+      errs.gamme_id = lang === "en" ? "Please choose a range." : "Veuillez choisir une gamme.";
+    }
+    if (!champs.nom.trim()) {
+      errs.nom = lang === "en" ? "Please enter the model name." : "Veuillez renseigner le nom du modèle.";
+    }
+    if (Object.keys(errs).length > 0) {
+      setErreurs(errs);
+      return;
+    }
+
     setEnvoiEnCours(true);
 
     const corps = {
@@ -489,7 +492,7 @@ function FenetreModele({
   return (
     <Dialog open={modele !== null} onOpenChange={(o) => !o && onFermer()}>
       <DialogContent className="sm:max-w-lg">
-        <form onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
+        <form noValidate onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
           <DialogHeader>
             <DialogTitle>
               {modification
@@ -512,26 +515,17 @@ function FenetreModele({
                   {t("modeles.marques")}
                   <span className="ml-0.5 text-destructive">*</span>
                 </Label>
-                <Select
-                  items={Object.fromEntries(marques.map((m) => [m.id, m.nom]))}
-                  value={marqueId}
-                  onValueChange={(v) => choisirMarque(v ?? "")}
-                >
-                  <SelectTrigger className="h-10 w-full">
-                    <SelectValue
-                      placeholder={
-                        lang === "en" ? "Choose brand" : "Choisir la marque"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {marques.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.nom}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SelectRecherche
+                  options={marques.map((m) => ({ valeur: m.id, libelle: m.nom }))}
+                  valeur={marqueId}
+                  onChange={(v) => choisirMarque(v)}
+                  placeholder={
+                    lang === "en" ? "Choose brand" : "Choisir la marque"
+                  }
+                  placeholderRecherche={
+                    lang === "en" ? "Search brand..." : "Rechercher une marque…"
+                  }
+                />
               </div>
 
               <div className="space-y-2">
@@ -539,33 +533,34 @@ function FenetreModele({
                   {t("modeles.gammes")}
                   <span className="ml-0.5 text-destructive">*</span>
                 </Label>
-                <Select
-                  items={Object.fromEntries(gammes.map((g) => [g.id, g.nom]))}
-                  value={champs.gamme_id}
-                  onValueChange={(v) => modifier("gamme_id", v ?? "")}
+                <SelectRecherche
+                  options={gammes.map((g) => ({ valeur: g.id, libelle: g.nom }))}
+                  valeur={champs.gamme_id}
+                  onChange={(v) => {
+                    modifier("gamme_id", v);
+                    if (erreurs.gamme_id) {
+                      setErreurs((prev) => {
+                        const copy = { ...prev };
+                        delete copy.gamme_id;
+                        return copy;
+                      });
+                    }
+                  }}
                   disabled={!marqueId}
-                >
-                  <SelectTrigger className="h-10 w-full">
-                    <SelectValue
-                      placeholder={
-                        marqueId
-                          ? lang === "en"
-                            ? "Choose range"
-                            : "Choisir la gamme"
-                          : lang === "en"
-                            ? "Choose brand first"
-                            : "Choisissez d'abord la marque"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {gammes.map((g) => (
-                      <SelectItem key={g.id} value={g.id}>
-                        {g.nom}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  erreur={Boolean(erreurs.gamme_id)}
+                  placeholder={
+                    marqueId
+                      ? lang === "en"
+                        ? "Choose range"
+                        : "Choisir la gamme"
+                      : lang === "en"
+                        ? "Choose brand first"
+                        : "Choisissez d'abord la marque"
+                  }
+                  placeholderRecherche={
+                    lang === "en" ? "Search range..." : "Rechercher une gamme…"
+                  }
+                />
                 {erreurs.gamme_id && (
                   <p className="text-xs text-destructive">{erreurs.gamme_id}</p>
                 )}
@@ -578,10 +573,18 @@ function FenetreModele({
                 </Label>
                 <Input
                   id="nom"
-                  required
-                  className="h-10"
+                  className={`h-10 ${erreurs.nom ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                   value={champs.nom}
-                  onChange={(e) => modifier("nom", e.target.value)}
+                  onChange={(e) => {
+                    modifier("nom", e.target.value);
+                    if (erreurs.nom) {
+                      setErreurs((prev) => {
+                        const copy = { ...prev };
+                        delete copy.nom;
+                        return copy;
+                      });
+                    }
+                  }}
                   placeholder="14 Pro Max"
                 />
                 {erreurs.nom && (
@@ -811,6 +814,16 @@ function FenetreMarque({
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
     setErreur(null);
+
+    if (!nom.trim()) {
+      setErreur(
+        lang === "en"
+          ? "Please enter the brand name."
+          : "Veuillez renseigner le nom de la marque.",
+      );
+      return;
+    }
+
     setEnvoiEnCours(true);
 
     try {
@@ -829,7 +842,7 @@ function FenetreMarque({
   return (
     <Dialog open={ouverte} onOpenChange={(o) => !o && onFermer()}>
       <DialogContent className="sm:max-w-sm">
-        <form onSubmit={envoyer}>
+        <form noValidate onSubmit={envoyer}>
           <DialogHeader>
             <DialogTitle>{t("modeles.ajouterMarque")}</DialogTitle>
             <DialogDescription>
@@ -847,11 +860,13 @@ function FenetreMarque({
               </Label>
               <Input
                 id="nom-marque"
-                required
                 autoFocus
-                className="h-10"
+                className={`h-10 ${erreur ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                 value={nom}
-                onChange={(e) => setNom(e.target.value)}
+                onChange={(e) => {
+                  setNom(e.target.value);
+                  if (erreur) setErreur(null);
+                }}
                 placeholder="Samsung, Apple, Tecno…"
               />
               {erreur && <p className="text-xs text-destructive">{erreur}</p>}
@@ -903,6 +918,24 @@ function FenetreGamme({
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
     setErreur(null);
+
+    if (!marqueId) {
+      setErreur(
+        lang === "en"
+          ? "Please choose a brand."
+          : "Veuillez choisir une marque.",
+      );
+      return;
+    }
+    if (!nom.trim()) {
+      setErreur(
+        lang === "en"
+          ? "Please enter the range name."
+          : "Veuillez renseigner le nom de la gamme.",
+      );
+      return;
+    }
+
     setEnvoiEnCours(true);
 
     try {
@@ -921,7 +954,7 @@ function FenetreGamme({
   return (
     <Dialog open={ouverte} onOpenChange={(o) => !o && onFermer()}>
       <DialogContent className="sm:max-w-sm">
-        <form onSubmit={envoyer}>
+        <form noValidate onSubmit={envoyer}>
           <DialogHeader>
             <DialogTitle>{t("modeles.ajouterGamme")}</DialogTitle>
             <DialogDescription>
@@ -937,26 +970,20 @@ function FenetreGamme({
                 {t("modeles.marques")}
                 <span className="ml-0.5 text-destructive">*</span>
               </Label>
-              <Select
-                items={Object.fromEntries(marques.map((m) => [m.id, m.nom]))}
-                value={marqueId}
-                onValueChange={(v) => setMarqueId(v ?? "")}
-              >
-                <SelectTrigger className="h-10 w-full">
-                  <SelectValue
-                    placeholder={
-                      lang === "en" ? "Choose brand" : "Choisir la marque"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {marques.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.nom}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SelectRecherche
+                options={marques.map((m) => ({ valeur: m.id, libelle: m.nom }))}
+                valeur={marqueId}
+                onChange={(v) => {
+                  setMarqueId(v);
+                  if (erreur) setErreur(null);
+                }}
+                placeholder={
+                  lang === "en" ? "Choose brand" : "Choisir la marque"
+                }
+                placeholderRecherche={
+                  lang === "en" ? "Search brand..." : "Rechercher une marque…"
+                }
+              />
             </div>
 
             <div className="space-y-2">
@@ -966,10 +993,12 @@ function FenetreGamme({
               </Label>
               <Input
                 id="nom-gamme"
-                required
-                className="h-10"
+                className={`h-10 ${erreur ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                 value={nom}
-                onChange={(e) => setNom(e.target.value)}
+                onChange={(e) => {
+                  setNom(e.target.value);
+                  if (erreur) setErreur(null);
+                }}
                 placeholder="iPhone"
               />
               {erreur && <p className="text-xs text-destructive">{erreur}</p>}

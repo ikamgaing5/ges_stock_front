@@ -28,14 +28,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ChampTelephone } from "@/components/champ-telephone";
+import { formaterTelephoneVisuel } from "@/lib/pays";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectRecherche } from "@/components/ui/select-recherche";
 import { DEVISES } from "@/lib/devises";
 import type { Boutique } from "@/types";
 
@@ -147,8 +143,8 @@ export default function PageBoutiques() {
                   </dl>
 
                   {boutique.telephone && (
-                    <p className="chiffres text-sm text-muted-foreground">
-                      {boutique.telephone}
+                    <p className="chiffres text-sm text-muted-foreground flex items-center gap-1.5">
+                      <span>{formaterTelephoneVisuel(boutique.telephone)}</span>
                     </p>
                   )}
 
@@ -260,11 +256,24 @@ function FenetreBoutique({
     valeur: (typeof champs)[K],
   ) {
     setChamps((precedent) => ({ ...precedent, [champ]: valeur }));
+    if (erreurs[champ as string]) {
+      setErreurs((precedent) => {
+        const copie = { ...precedent };
+        delete copie[champ as string];
+        return copie;
+      });
+    }
   }
 
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
     setErreurs({});
+
+    if (!champs.nom.trim()) {
+      setErreurs({ nom: t("commun.boutiqueRequise") });
+      return;
+    }
+
     setEnvoiEnCours(true);
 
     const corps = {
@@ -298,7 +307,7 @@ function FenetreBoutique({
   return (
     <Dialog open={boutique !== null} onOpenChange={(o) => !o && onFermer()}>
       <DialogContent>
-        <form onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
+        <form noValidate onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
           <DialogHeader>
             <DialogTitle>
               {modification
@@ -317,8 +326,7 @@ function FenetreBoutique({
               </Label>
               <Input
                 id="b-nom"
-                required
-                className="h-10"
+                className={`h-10 ${erreurs.nom ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                 value={champs.nom}
                 onChange={(e) => modifier("nom", e.target.value)}
                 placeholder="Akwa Mobile"
@@ -341,24 +349,21 @@ function FenetreBoutique({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="b-devise">{t("boutiques.devise")}</Label>
-                <Select
-                  value={champs.devise}
-                  onValueChange={(v) => v && modifier("devise", v)}
-                >
-                  <SelectTrigger id="b-devise" className="h-10 w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DEVISES.map((d) => (
-                      <SelectItem key={d.code} value={d.code}>
-                        <span className="font-semibold mr-1.5">{d.code}</span>
-                        <span className="text-muted-foreground text-xs">
-                          {lang === "en" ? d.nomEn : d.nom} ({d.symbole})
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SelectRecherche
+                  id="b-devise"
+                  options={DEVISES.map((d) => ({
+                    valeur: d.code,
+                    libelle: `${d.code} (${d.symbole})`,
+                    description: lang === "en" ? d.nomEn : d.nom,
+                    badge: d.symbole,
+                  }))}
+                  valeur={champs.devise}
+                  onChange={(v) => v && modifier("devise", v)}
+                  placeholder={t("boutiques.devise")}
+                  placeholderRecherche={
+                    lang === "en" ? "Search currency..." : "Rechercher une devise…"
+                  }
+                />
               </div>
             </div>
 
@@ -374,11 +379,10 @@ function FenetreBoutique({
 
             <div className="space-y-2">
               <Label htmlFor="b-tel">{t("monCompte.telephone")}</Label>
-              <Input
+              <ChampTelephone
                 id="b-tel"
-                className="h-10"
-                value={champs.telephone}
-                onChange={(e) => modifier("telephone", e.target.value)}
+                valeur={champs.telephone}
+                onChange={(val) => modifier("telephone", val)}
               />
             </div>
 

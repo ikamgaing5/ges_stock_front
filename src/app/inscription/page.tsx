@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Loader2, MailCheck, Smartphone } from "lucide-react";
+import { ArrowLeft, Check, Loader2, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi, enregistrerToken } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
@@ -17,9 +17,9 @@ import { ChampCode } from "@/components/champ-code";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ChampTelephone } from "@/components/champ-telephone";
 import { Label } from "@/components/ui/label";
 import { IconeTelora } from "@/components/ui/logo-telora";
-import { PiedDePageLegal } from "@/components/layout/pied-de-page-legal";
 import type { Utilisateur } from "@/types";
 
 /** Délai imposé par le serveur entre deux envois de code, en secondes. */
@@ -50,6 +50,13 @@ export default function PageInscription() {
 
   function modifier(champ: keyof typeof champs, valeur: string) {
     setChamps((precedent) => ({ ...precedent, [champ]: valeur }));
+    if (erreurs[champ]) {
+      setErreurs((precedent) => {
+        const copie = { ...precedent };
+        delete copie[champ];
+        return copie;
+      });
+    }
   }
 
   // Compte à rebours du bouton « Renvoyer le code ».
@@ -68,13 +75,40 @@ export default function PageInscription() {
   async function demanderCode(evenement: React.FormEvent) {
     evenement.preventDefault();
 
-    if (champs.password !== champs.password_confirmation) {
-      setErreurs({
-        password_confirmation:
-          lang === "en"
-            ? "The two passwords do not match."
-            : "Les deux mots de passe diffèrent.",
-      });
+    const errs: Record<string, string> = {};
+
+    if (!champs.name.trim()) {
+      errs.name = t("commun.nomRequis");
+    }
+
+    if (!champs.email.trim()) {
+      errs.email = t("commun.emailRequis");
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(champs.email.trim())) {
+      errs.email = t("commun.emailInvalide");
+    }
+
+    if (!champs.password) {
+      errs.password = t("commun.motDePasseRequis");
+    } else if (champs.password.length < 8) {
+      errs.password =
+        lang === "en" ? "8 characters minimum" : "8 caractères minimum";
+    }
+
+    if (!champs.password_confirmation) {
+      errs.password_confirmation = t("commun.confirmationRequise");
+    } else if (champs.password !== champs.password_confirmation) {
+      errs.password_confirmation =
+        lang === "en"
+          ? "The two passwords do not match."
+          : "Les deux mots de passe diffèrent.";
+    }
+
+    if (!champs.boutique_nom.trim()) {
+      errs.boutique_nom = t("commun.boutiqueRequise");
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setErreurs(errs);
       return;
     }
 
@@ -232,7 +266,7 @@ export default function PageInscription() {
               </p>
             </div>
 
-            <form onSubmit={demanderCode} className="space-y-5">
+            <form noValidate onSubmit={demanderCode} className="space-y-5">
               <section className="space-y-4">
                 <h2 className="text-sm font-medium">
                   {lang === "en" ? "Personal Details" : "Vous"}
@@ -244,8 +278,7 @@ export default function PageInscription() {
                   obligatoire
                 >
                   <Input
-                    required
-                    className="h-10"
+                    className={`h-10 ${erreurs.name ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                     autoComplete="name"
                     value={champs.name}
                     onChange={(e) => modifier("name", e.target.value)}
@@ -266,8 +299,7 @@ export default function PageInscription() {
                   >
                     <Input
                       type="email"
-                      required
-                      className="h-10"
+                      className={`h-10 ${erreurs.email ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                       autoComplete="username"
                       value={champs.email}
                       onChange={(e) => modifier("email", e.target.value)}
@@ -279,12 +311,11 @@ export default function PageInscription() {
                     label={t("monCompte.telephone")}
                     erreur={erreurs.telephone}
                   >
-                    <Input
-                      className="h-10"
+                    <ChampTelephone
                       autoComplete="tel"
-                      value={champs.telephone}
-                      onChange={(e) => modifier("telephone", e.target.value)}
-                      placeholder="677 11 22 33"
+                      valeur={champs.telephone}
+                      onChange={(val) => modifier("telephone", val)}
+                      erreur={Boolean(erreurs.telephone)}
                     />
                   </Champ>
                 </div>
@@ -298,9 +329,7 @@ export default function PageInscription() {
                   >
                     <Input
                       type="password"
-                      required
-                      minLength={8}
-                      className="h-10"
+                      className={`h-10 ${erreurs.password ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                       autoComplete="new-password"
                       value={champs.password}
                       onChange={(e) => modifier("password", e.target.value)}
@@ -314,8 +343,7 @@ export default function PageInscription() {
                   >
                     <Input
                       type="password"
-                      required
-                      className="h-10"
+                      className={`h-10 ${erreurs.password_confirmation ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                       autoComplete="new-password"
                       value={champs.password_confirmation}
                       onChange={(e) =>
@@ -340,8 +368,7 @@ export default function PageInscription() {
                     obligatoire
                   >
                     <Input
-                      required
-                      className="h-10"
+                      className={`h-10 ${erreurs.boutique_nom ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                       value={champs.boutique_nom}
                       onChange={(e) => modifier("boutique_nom", e.target.value)}
                       placeholder="Akwa Mobile"

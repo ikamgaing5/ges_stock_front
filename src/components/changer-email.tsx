@@ -49,6 +49,22 @@ export function ChangerEmail() {
   async function demanderCode(evenement?: React.FormEvent) {
     evenement?.preventDefault();
     setErreurs({});
+
+    const errs: Record<string, string> = {};
+    if (!nouvelEmail.trim()) {
+      errs.email = t("commun.emailRequis");
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nouvelEmail.trim())) {
+      errs.email = t("commun.emailInvalide");
+    }
+    if (!motDePasse) {
+      errs.mot_de_passe_actuel = t("commun.motDePasseRequis");
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setErreurs(errs);
+      return;
+    }
+
     setEnvoiEnCours(true);
 
     try {
@@ -118,7 +134,7 @@ export function ChangerEmail() {
         </div>
 
         {ouvert && etape === "saisie" && (
-          <form onSubmit={demanderCode} className="space-y-4 border-t pt-4">
+          <form noValidate onSubmit={demanderCode} className="space-y-4 border-t pt-4">
             <div className="space-y-2">
               <Label htmlFor="nouvel-email">
                 {t("changerEmail.nouvelEmail")}
@@ -126,11 +142,13 @@ export function ChangerEmail() {
               <Input
                 id="nouvel-email"
                 type="email"
-                required
                 autoFocus
-                className="h-10"
+                className={`h-10 ${erreurs.email ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                 value={nouvelEmail}
-                onChange={(e) => setNouvelEmail(e.target.value)}
+                onChange={(e) => {
+                  setNouvelEmail(e.target.value);
+                  if (erreurs.email) setErreurs((prev) => ({ ...prev, email: "" }));
+                }}
                 placeholder="nouvelle@boutique.cm"
               />
               {erreurs.email && (
@@ -145,11 +163,15 @@ export function ChangerEmail() {
               <Input
                 id="mdp-actuel-email"
                 type="password"
-                required
-                className="h-10"
+                className={`h-10 ${erreurs.mot_de_passe_actuel ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
                 autoComplete="current-password"
                 value={motDePasse}
-                onChange={(e) => setMotDePasse(e.target.value)}
+                onChange={(e) => {
+                  setMotDePasse(e.target.value);
+                  if (erreurs.mot_de_passe_actuel) {
+                    setErreurs((prev) => ({ ...prev, mot_de_passe_actuel: "" }));
+                  }
+                }}
               />
               {erreurs.mot_de_passe_actuel ? (
                 <p className="text-xs text-destructive">

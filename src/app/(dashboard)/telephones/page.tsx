@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SelectRecherche } from "@/components/ui/select-recherche";
 import {
   Table,
   TableBody,
@@ -41,7 +42,7 @@ import type { Modele, Page, Telephone } from "@/types";
 
 export default function PageParc() {
   const { devise, deviseBoutique, boutiqueActive, parametresBoutique } = useAuth();
-  const { t, formatMontant, formatDate, libelleEtat } = useI18n();
+  const { t, formatMontant, formatDate, libelleEtat, lang } = useI18n();
   const parametresUrl = useSearchParams();
 
   const [modeles, setModeles] = useState<Modele[]>([]);
@@ -164,25 +165,23 @@ export default function PageParc() {
             </SelectContent>
           </Select>
 
-          <Select
-            items={optionsModeles}
-            value={modeleId}
-            onValueChange={(v) => {
-              setModeleId(v ?? "tous");
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="h-10 w-52">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(optionsModeles).map(([valeur, libelle]) => (
-                <SelectItem key={valeur} value={valeur}>
-                  {libelle}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="w-56">
+            <SelectRecherche
+              options={Object.entries(optionsModeles).map(([valeur, libelle]) => ({
+                valeur,
+                libelle,
+              }))}
+              valeur={modeleId}
+              onChange={(v) => {
+                setModeleId(v || "tous");
+                setPage(1);
+              }}
+              placeholder={t("telephones.tousLesModeles")}
+              placeholderRecherche={
+                lang === "en" ? "Search model..." : "Rechercher un modèle…"
+              }
+            />
+          </div>
         </CardContent>
       </Card>
 
