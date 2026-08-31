@@ -252,7 +252,7 @@ export default function PageAbonnement() {
                 : "border-emerald-500/30 bg-emerald-500/5"
           }`}
         >
-          <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-6">
+          <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 sm:p-6">
             <div className="flex items-start gap-3.5">
               <div
                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
@@ -643,7 +643,7 @@ export default function PageAbonnement() {
       <Dialog open={modalOuvert} onOpenChange={setModalOuvert}>
         <DialogContent className="sm:max-w-lg p-0 overflow-hidden border shadow-2xl">
           {/* En-tête fixe avec fond clair/sombre contrasté et typographie nette */}
-          <DialogHeader className="bg-muted/40 px-6 pt-6 pb-4 border-b">
+          <DialogHeader className="bg-muted/40 px-4 pt-4 pb-3 sm:px-6 sm:pt-6 sm:pb-4 border-b">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
                 <CreditCard className="h-5 w-5" />
@@ -661,7 +661,7 @@ export default function PageAbonnement() {
 
           {/* Corps défilable sans coupure avec DialogCorps */}
           {session && (
-            <DialogCorps className="px-6 py-5 space-y-5 overflow-y-auto max-h-[65vh]">
+            <DialogCorps className="px-4 py-3.5 sm:px-6 sm:py-5 space-y-4 sm:space-y-5 overflow-y-auto max-h-[65vh]">
               {/* Carte récapitulative haute visibilité */}
               <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex items-center justify-between">
                 <div className="space-y-1">
@@ -858,7 +858,7 @@ export default function PageAbonnement() {
           )}
 
           {/* Pied fixe de la modale */}
-          <DialogFooter className="px-6 py-3 border-t bg-muted/30 flex items-center justify-between sm:justify-between">
+          <DialogFooter className="px-4 py-2.5 sm:px-6 sm:py-3 border-t bg-muted/30 flex items-center justify-between sm:justify-between">
             <span className="text-xs text-muted-foreground flex items-center gap-1.5">
               <Lock className="h-3.5 w-3.5 text-emerald-600" />
               <span>Paiement certifié CinetPay</span>

@@ -62,7 +62,7 @@ export default function DashboardLayout({
       <div className="flex min-w-0 flex-1 flex-col">
         <Header />
         <BandeauAbonnement />
-        <main className="flex-1 p-4 sm:p-6">{children}</main>
+        <main className="flex-1 px-3 py-3.5 sm:p-6">{children}</main>
       </div>
     </div>
   );
@@ -109,8 +109,8 @@ function BandeauAbonnement() {
       role="status"
       className={
         bloque
-          ? "flex items-center gap-2.5 border-b border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm text-destructive"
-          : "flex items-center gap-2.5 border-b border-statut-attente/30 bg-statut-attente-fond px-4 py-2.5 text-sm text-statut-attente"
+          ? "flex items-center gap-2 border-b border-destructive/30 bg-destructive/10 px-3 py-2 text-xs sm:gap-2.5 sm:px-4 sm:py-2.5 sm:text-sm text-destructive"
+          : "flex items-center gap-2 border-b border-statut-attente/30 bg-statut-attente-fond px-3 py-2 text-xs sm:gap-2.5 sm:px-4 sm:py-2.5 sm:text-sm text-statut-attente"
       }
     >
       <TriangleAlert className="h-4 w-4 shrink-0" />

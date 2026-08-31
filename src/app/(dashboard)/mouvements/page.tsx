@@ -105,9 +105,9 @@ export default function PageHistorique() {
       />
 
       <Card className="mb-4">
-        <CardContent className="flex flex-wrap items-end gap-3 pt-6">
-          <div className="space-y-2">
-            <Label>{t("commun.actions")}</Label>
+        <CardContent className="flex flex-wrap items-end gap-2.5 p-3 sm:gap-3 sm:p-5">
+          <div className="w-full space-y-1.5 sm:w-44">
+            <Label className="text-xs sm:text-sm">{t("commun.actions")}</Label>
             <Select
               items={optionsType}
               value={type}
@@ -116,7 +116,7 @@ export default function PageHistorique() {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="h-10 w-44">
+              <SelectTrigger className="h-9 w-full sm:h-10 sm:w-44">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -129,12 +129,12 @@ export default function PageHistorique() {
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="du">{t("mouvements.filtreDu")}</Label>
+          <div className="w-[calc(50%-0.35rem)] space-y-1.5 sm:w-40">
+            <Label htmlFor="du" className="text-xs sm:text-sm">{t("mouvements.filtreDu")}</Label>
             <Input
               id="du"
               type="date"
-              className="chiffres h-10 w-40"
+              className="chiffres h-9 w-full sm:h-10 sm:w-40"
               value={du}
               onChange={(e) => {
                 setDu(e.target.value);
@@ -143,12 +143,12 @@ export default function PageHistorique() {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="au">{t("mouvements.filtreAu")}</Label>
+          <div className="w-[calc(50%-0.35rem)] space-y-1.5 sm:w-40">
+            <Label htmlFor="au" className="text-xs sm:text-sm">{t("mouvements.filtreAu")}</Label>
             <Input
               id="au"
               type="date"
-              className="chiffres h-10 w-40"
+              className="chiffres h-9 w-full sm:h-10 sm:w-40"
               value={au}
               onChange={(e) => {
                 setAu(e.target.value);

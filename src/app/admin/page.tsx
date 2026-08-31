@@ -101,9 +101,9 @@ export default function PageAdmin() {
             </Apparait>
           </div>
 
-          <Apparait index={4} className="mt-6">
+          <Apparait index={4} className="mt-4 sm:mt-6">
             <Card>
-              <CardContent className="flex flex-wrap gap-x-10 gap-y-4 pt-6">
+              <CardContent className="flex flex-wrap gap-x-6 sm:gap-x-10 gap-y-3 sm:gap-y-4 p-3.5 sm:p-5">
                 <Volume
                   libelle={t("admin.totalBoutiques")}
                   valeur={stats.nb_boutiques}
@@ -152,7 +152,7 @@ function Bloc({
 
   const contenu = (
     <Card className="h-full transition-colors hover:border-foreground/25">
-      <CardContent className="flex h-full flex-col justify-between gap-4 pt-6">
+      <CardContent className="flex h-full flex-col justify-between gap-4 p-3.5 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <p className="text-sm font-medium text-muted-foreground">{libelle}</p>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">

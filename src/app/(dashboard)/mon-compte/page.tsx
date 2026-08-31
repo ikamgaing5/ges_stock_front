@@ -125,7 +125,7 @@ export default function PageMonCompte() {
         description={`${libelleRole(utilisateur.role)} · ${utilisateur.email}`}
       />
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {abonnement?.statut && (
           <Apparait>
             <Card>

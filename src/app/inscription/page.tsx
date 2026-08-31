@@ -108,7 +108,7 @@ export default function PageInscription() {
         label: lang === "en" ? "Good" : "Bon",
         couleur: "bg-blue-500",
       };
-    }
+    } 
     return {
       score: 4,
       label: lang === "en" ? "Strong" : "Solide",
@@ -125,7 +125,7 @@ export default function PageInscription() {
     );
     return () => clearTimeout(minuteur);
   }, [secondesAvantRenvoi]);
-
+ 
   /** Étape 1 : vérification des coordonnées et envoi du code */
   async function demanderCode(evenement: React.FormEvent) {
     evenement.preventDefault();
@@ -302,14 +302,10 @@ export default function PageInscription() {
         <div className="max-w-md space-y-8">
           <div className="space-y-4">
             <h1 className="font-heading text-3xl font-semibold leading-[1.15] tracking-tight xl:text-4xl">
-              {lang === "en"
-                ? "Every phone accounted for, from the box to the sale."
-                : "Chaque téléphone à sa place, du carton à la vente."}
+              {t("auth.telephonePlace")}
             </h1>
             <p className="text-base leading-relaxed text-white/70">
-              {lang === "en"
-                ? "You scan the IMEI when the box arrives. Your staff sell without seeing your purchase prices. At closing, your till is already worked out."
-                : "Vous scannez l'IMEI à la réception. Vos vendeuses encaissent sans voir vos prix d'achat. Le soir, votre caisse est déjà calculée."}
+              {t("auth.message")}
             </p>
           </div>
 
@@ -327,11 +323,7 @@ export default function PageInscription() {
           </figure> */}
         </div>
 
-        <p className="text-xs text-white/55">
-          {lang === "en"
-            ? "Your data is encrypted and visible only to you."
-            : "Vos données sont chiffrées et visibles par vous seul."}
-        </p>
+        <p className="text-xs text-white/55">{t("auth.description")}</p>
       </aside>
 
       {/* Bascules langue et thème fixes au défilement */}
@@ -359,9 +351,7 @@ export default function PageInscription() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">
-                  {lang === "en"
-                    ? "Step 1 of 2: you and your store"
-                    : "Étape 1 sur 2 : vous et votre boutique"}
+                  {t("auth.etapeInscription")}
                 </span>
                 <span>50%</span>
               </div>
@@ -373,12 +363,10 @@ export default function PageInscription() {
             {/* Titre et accroche */}
             <div>
               <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                {lang === "en" ? "Welcome to Telora" : "Bienvenue sur Telora"}
+                {t("auth.bienvenuTelora")}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                {lang === "en"
-                  ? "It takes about 2 minutes. You can scan your first phones straight after."
-                  : "Comptez 2 minutes. Vous pourrez enregistrer vos premiers téléphones dans la foulée."}
+                {t("auth.DeuxMinutes")}
               </p>
             </div>
 
@@ -399,7 +387,7 @@ export default function PageInscription() {
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2.5">
                   <User className="h-4 w-4 text-primary" />
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {lang === "en" ? "1. You (store owner)" : "1. Vous (le propriétaire)"}
+                    {t("auth.Vous")}
                   </h3>
                 </div>
 
@@ -417,9 +405,7 @@ export default function PageInscription() {
                     autoComplete="name"
                     value={champs.name}
                     onChange={(e) => modifier("name", e.target.value)}
-                    placeholder={
-                      lang === "en" ? "e.g. David Miller" : "ex: Moussa Traoré"
-                    }
+                    placeholder={t("auth.PlaceHolderNom")}
                   />
                 </Champ>
 
@@ -427,11 +413,7 @@ export default function PageInscription() {
                   <Champ
                     label={t("auth.email")}
                     erreur={erreurs.email}
-                    aide={
-                      lang === "en"
-                        ? "We send your activation code here"
-                        : "Nous y enverrons votre code d'activation"
-                    }
+                    aide={t("auth.SendCode")}
                     obligatoire
                   >
                     <Input
@@ -449,17 +431,9 @@ export default function PageInscription() {
                   </Champ>
 
                   <Champ
-                    label={
-                      lang === "en"
-                        ? "Phone number (WhatsApp / Mobile)"
-                        : "Numéro de téléphone (WhatsApp / mobile)"
-                    }
+                    label={t("auth.PhoneNumber")}
                     erreur={erreurs.telephone}
-                    aide={
-                      lang === "en"
-                        ? "To secure your account"
-                        : "Pour sécuriser votre compte"
-                    }
+                    aide={t("auth.SecuriseCompte")}
                   >
                     <ChampTelephone
                       autoComplete="tel"
@@ -476,17 +450,16 @@ export default function PageInscription() {
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2.5">
                   <Lock className="h-4 w-4 text-primary" />
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {lang === "en" ? "2. Your password" : "2. Votre mot de passe"}
+                    {/* {lang === "en"
+                      ? "2. Your password"
+                      : "2. Votre mot de passe"} */}
+                    {t("auth.VotreMDP")}
                   </h3>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Champ
-                    label={
-                      lang === "en"
-                        ? "Choose a secure password"
-                        : "Choisissez votre mot de passe"
-                    }
+                    label={t("auth.MDPSure")}
                     erreur={erreurs.password}
                     obligatoire
                   >
@@ -553,9 +526,10 @@ export default function PageInscription() {
 
                   <Champ
                     label={
-                      lang === "en"
-                        ? "Confirm your password"
-                        : "Confirmez le mot de passe"
+                      // lang === "en"
+                      //   ? "Confirm your password"
+                      //   : "Confirmez le mot de passe"
+                      t("auth.MDPConfirm")
                     }
                     erreur={erreurs.password_confirmation}
                     obligatoire
@@ -600,9 +574,10 @@ export default function PageInscription() {
                       champs.password === champs.password_confirmation && (
                         <p className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
                           <CheckCircle2 className="h-3.5 w-3.5" />
-                          {lang === "en"
+                          {/* {lang === "en"
                             ? "Both passwords match"
-                            : "Les deux mots de passe sont identiques"}
+                            : "Les deux mots de passe sont identiques"} */}
+                          {t("auth.MPDPasIdentique")}
                         </p>
                       )}
                   </Champ>
@@ -614,24 +589,25 @@ export default function PageInscription() {
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2.5">
                   <Store className="h-4 w-4 text-primary" />
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {lang === "en"
+                    {/* {lang === "en"
                       ? "3. Your store"
-                      : "3. Votre point de vente"}
+                      : "3. Votre point de vente"} */}
+                    {t("auth.VotreBoutique")}
                   </h3>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Champ
                     label={
-                      lang === "en"
-                        ? "Store name"
-                        : "Nom de votre boutique"
+                      // lang === "en" ? "Store name" : "Nom de votre boutique"
+                      t("auth.NomBoutique")
                     }
                     erreur={erreurs.boutique_nom}
                     aide={
-                      lang === "en"
-                        ? "The name your customers and staff know"
-                        : "Le nom que vos clients et vendeuses connaissent"
+                      // lang === "en"
+                      //   ? "The name your customers and staff know"
+                      //   : "Le nom que vos clients et vendeuses connaissent"
+                      t("auth.NomBoutiqueConnu")
                     }
                     obligatoire
                   >
@@ -651,9 +627,10 @@ export default function PageInscription() {
                     label={t("auth.villeBoutique")}
                     erreur={erreurs.boutique_ville}
                     aide={
-                      lang === "en"
-                        ? "Where is this store located?"
-                        : "Où se situe cette première boutique ?"
+                      // lang === "en"
+                      //   ? "Where is this store located?"
+                      //   : "Où se situe cette première boutique ?"
+                      t("auth.PositionBoutique")
                     }
                   >
                     <Input
@@ -679,16 +656,18 @@ export default function PageInscription() {
                   {envoiEnCours ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {lang === "en"
+                      {/* {lang === "en"
                         ? "Sending your code…"
-                        : "Envoi de votre code en cours…"}
+                        : "Envoi de votre code en cours…"} */}
+                      {t("auth.EnvoieCode")}
                     </>
                   ) : (
                     <>
                       <span>
-                        {lang === "en"
+                        {/* {lang === "en"
                           ? "Create my store & receive my code"
-                          : "Créer ma boutique et recevoir mon code"}
+                          : "Créer ma boutique et recevoir mon code"} */}
+                        {t("auth.CreerBoutiqueCode")}
                       </span>
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </>
@@ -696,9 +675,10 @@ export default function PageInscription() {
                 </Button>
 
                 <p className="text-center text-xs text-muted-foreground">
-                  {lang === "en"
+                  {/* {lang === "en"
                     ? "Free for 14 days, no card required."
-                    : "Essai gratuit de 14 jours, sans carte bancaire."}
+                    : "Essai gratuit de 14 jours, sans carte bancaire."} */}
+                  {t("auth.EssaieGratuit")}
                 </p>
               </div>
             </form>
@@ -720,9 +700,10 @@ export default function PageInscription() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">
-                  {lang === "en"
+                  {/* {lang === "en"
                     ? "Step 2 of 2: confirm your email"
-                    : "Étape 2 sur 2 : confirmation de votre email"}
+                    : "Étape 2 sur 2 : confirmation de votre email"} */}
+                  {t("auth.DeuxiemeEtape")}
                 </span>
                 <span>100%</span>
               </div>
@@ -738,14 +719,16 @@ export default function PageInscription() {
 
               <div>
                 <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground">
-                  {lang === "en"
+                  {/* {lang === "en"
                     ? "Last step: check your inbox"
-                    : "Dernière étape : vérifiez vos messages"}
+                    : "Dernière étape : vérifiez vos messages"} */}
+                  {t("auth.DerniereEtape")}
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {lang === "en"
+                  {/* {lang === "en"
                     ? "We just sent a 6-digit confirmation code to:"
-                    : "Nous venons d'envoyer un code de validation à 6 chiffres à :"}
+                    : "Nous venons d'envoyer un code de validation à 6 chiffres à :"} */}
+                  {t("auth.CodeRecu")}
                 </p>
                 <div className="mt-2 inline-flex items-center rounded-lg bg-muted px-3 py-1 font-mono text-xs font-semibold text-foreground">
                   {champs.email}
@@ -781,9 +764,7 @@ export default function PageInscription() {
                     </span>
                   ) : (
                     <p className="text-xs text-muted-foreground">
-                      {lang === "en"
-                        ? "If the code has not arrived within a minute, check your spam folder."
-                        : "Si le code n'arrive pas dans la minute, regardez dans vos spams."}
+                      {t("auth.RegarderSpam")}
                     </p>
                   )}
                 </div>
@@ -799,10 +780,10 @@ export default function PageInscription() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       {t("commun.validerEnCours")}
                     </>
+                  ) : lang === "en" ? (
+                    "Activate my store"
                   ) : (
-                    lang === "en"
-                      ? "Activate my store"
-                      : "Activer ma boutique"
+                    "Activer ma boutique"
                   )}
                 </Button>
               </div>
@@ -818,9 +799,10 @@ export default function PageInscription() {
                   className="inline-flex items-center gap-1.5 font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  {lang === "en"
+                  {/* {lang === "en"
                     ? "Change my email or details"
-                    : "Corriger mon email ou mes informations"}
+                    : "Corriger mon email ou mes informations"} */}
+                  {t("auth.CorrigerInfo")}
                 </button>
 
                 <button
@@ -833,7 +815,9 @@ export default function PageInscription() {
                     ? lang === "en"
                       ? `Resend code in ${secondesAvantRenvoi}s`
                       : `Renvoyer un code dans ${secondesAvantRenvoi}s`
-                    : (lang === "en" ? "I didn't get it, resend" : "Je n'ai rien reçu, renvoyer un code")}
+                    : lang === "en"
+                      ? "I didn't get it, resend"
+                      : "Je n'ai rien reçu, renvoyer un code"}
                 </button>
               </div>
             </div>

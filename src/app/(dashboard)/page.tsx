@@ -101,7 +101,7 @@ function Contenu({
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Apparait index={0}>
           <Statistique
             libelle={t("dashboard.appareilsEnStock")}
@@ -140,8 +140,8 @@ function Contenu({
 
       {/* Ce qui n'est ni vendu ni disponible : à surveiller. */}
       {(s.nb_reserves > 0 || s.nb_sav > 0 || s.nb_perdus > 0) && (
-        <Apparait index={4} className="mt-4">
-          <div className="flex flex-wrap gap-x-8 gap-y-3 rounded-xl border bg-card px-5 py-4 text-sm">
+        <Apparait index={4} className="mt-3 sm:mt-4">
+          <div className="flex flex-wrap gap-x-5 gap-y-2.5 sm:gap-x-8 sm:gap-y-3 rounded-xl border bg-card px-3.5 py-3 sm:px-5 sm:py-4 text-sm">
             <Compteur
               libelle={t("dashboard.appareilsReserves")}
               valeur={s.nb_reserves}
@@ -162,7 +162,7 @@ function Contenu({
         </Apparait>
       )}
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-4 sm:mt-6 grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Modèles à recommander */}
         <Apparait index={5}>
           <Card className="h-full">
@@ -328,17 +328,17 @@ function Statistique({
   lien?: string;
 }) {
   const contenu = (
-    <Card className="h-full transition-colors hover:border-primary/40">
-      <CardContent className="flex items-start justify-between gap-3 pt-6">
+    <Card className="h-full mx-2 transition-colors hover:border-primary/40">
+      <CardContent className="flex items-start justify-between gap-3 p-3.5 sm:p-5">
         <div className="min-w-0">
-          <p className="text-sm text-muted-foreground">{libelle}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{libelle}</p>
           <p
-            className={`chiffres mt-1 text-2xl font-semibold ${accent ?? ""}`}
+            className={`chiffres mt-0.5 sm:mt-1 text-xl sm:text-2xl font-semibold ${accent ?? ""}`}
           >
             {valeur}
           </p>
           {detail && (
-            <p className="mt-1 truncate text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 truncate text-xs text-muted-foreground">
               {detail}
             </p>
           )}

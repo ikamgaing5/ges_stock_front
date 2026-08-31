@@ -93,6 +93,42 @@ export const fr = {
     monnaie: "Choisissez votre devise d'affichage.",
   },
   auth: {
+    description: "Vos données sont chiffrées et visibles par vous seul.",
+    message:
+      "Vous scannez l'IMEI à la réception. Vos vendeuses encaissent sans voir vos prix d'achat. Le soir, votre caisse est déjà calculée.",
+    telephonePlace: "Chaque téléphone à sa place, du carton à la vente.",
+
+    etapeInscription: "Étape 1 sur 2 : vous et votre boutique",
+    bienvenuTelora: "Bienvenue sur Telora",
+    DeuxMinutes:
+      "Comptez 2 minutes. Vous pourrez enregistrer vos premiers téléphones dans la foulée.",
+    Vous: "1. Vous (le propriétaire)",
+    PlaceHolderNom: "ex: Moussa Traoré",
+    SendCode: "Nous y enverrons votre code d'activation",
+    PhoneNumber: "Numéro de téléphone (WhatsApp / mobile)",
+    SecuriseCompte: "Pour sécuriser votre compte",
+    VotreMDP: "2. Votre mot de passe",
+    MDPSure: "Choisissez votre mot de passe",
+    MDPConfirm: "Confirmez votre mot de passe",
+    MDPPasIdentique: "Les deux mots de passe sont identiques",
+    VotreBoutique: "3. Votre boutique",
+    NomBoutique: "Nom de votre boutique",
+    NomBoutiqueConnu: "Le nom que connaissent vos clients et employés",
+    PositionBoutique: "Où se situe cette boutique ?",
+    EnvoieCode: "Envoi de votre code en cours…",
+    CreerBoutiqueCode: "Créer ma boutique et recevoir mon code",
+    EssaieGratuit: "Gratuit pendant 14 jours, aucune carte requise.",
+    DeuxiemeEtape: "Étape 2 sur 2 : confirmez votre email",
+    derniereEtape: "Dernière étape : vérifiez votre boîte de réception",
+    CodeRecu:
+      "Nous venons de vous envoyer un code de confirmation à 6 chiffres à :",
+    RegarderSpam:
+      "Si le code n'arrive pas dans la minute, regardez dans vos spams.",
+    ActiveBoutique: "Activer ma boutique",
+    CorrigerInfo: "Corriger mon email ou mes informations",
+    RenvoieCodeSeconde: "Renvoyer un code dans {secondesAvantRenvoi}s",
+    RenvoieCode: "Je n'ai rien reçu, renvoyer un code",
+
     connexionTitre: "Connexion",
     connexionDesc: "Connectez-vous pour gérer votre stock",
     inscriptionTitre: "Créer un compte",
@@ -126,7 +162,8 @@ export const fr = {
     deuxFacteursDesc:
       "Saisissez le code affiché par votre application d'authentification.",
     verificationDeuxEtapes: "Vérification en deux étapes",
-    codeAppInstructions: "Saisissez le code affiché par votre application d'authentification.",
+    codeAppInstructions:
+      "Saisissez le code affiché par votre application d'authentification.",
     codeSecoursPrompt: "Téléphone perdu ? Utilisez un code de secours",
     utiliserCodeSecours: "Utiliser un code de secours",
     utiliserAppAuth: "Utiliser l'application d'authentification",
@@ -570,7 +607,7 @@ export const fr = {
     labelEmploye: "Vos boutiques",
   },
   roles: {
-    admin: "Administrateur",
+    admin: "Administrate",
     proprietaire: "Propriétaire",
     vendeuse: "Vendeuse",
     secretaire: "Secrétaire",
@@ -642,11 +679,13 @@ export const fr = {
   page404: {
     badge: "Erreur 404",
     titre: "Cette page n'existe pas",
-    description: "L'adresse que vous essayez d'ouvrir n'existe pas ou a été déplacée.",
+    description:
+      "L'adresse que vous essayez d'ouvrir n'existe pas ou a été déplacée.",
     retourPrecedent: "Retour à la page précédente",
     centreAide: "Centre d'aide & FAQ",
     titreDetaille: "Cet appareil ou cette page n'est pas répertorié en stock",
-    descriptionDetaillee: "L'URL demandée ne correspond à aucune référence active, ou la page a été déplacée lors d'une mise à jour de l'inventaire.",
+    descriptionDetaillee:
+      "L'URL demandée ne correspond à aucune référence active, ou la page a été déplacée lors d'une mise à jour de l'inventaire.",
     tableauDeBord: "Retour au tableau de bord",
     ouvrirScanner: "Ouvrir le scanner d'IMEI",
     consulterFaq: "Consulter la FAQ",

@@ -60,7 +60,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-[100dvh]">
       <header className="border-b bg-card">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 sm:gap-6 px-3 sm:px-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background">
               <ShieldCheck className="h-4 w-4" />
@@ -111,7 +111,7 @@ export default function AdminLayout({
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl p-4 sm:p-6">{children}</main>
+      <main className="mx-auto max-w-6xl px-3 py-4 sm:p-6">{children}</main>
     </div>
   );
 }

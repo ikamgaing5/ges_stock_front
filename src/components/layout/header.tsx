@@ -37,7 +37,7 @@ export function Header() {
   if (!utilisateur) return null;
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur-sm">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-1.5 border-b bg-background/85 px-2.5 sm:px-4 sm:gap-3 backdrop-blur-sm">
       {/*
         Le menu en tiroir, uniquement sur petit écran. Sur grand écran, la
         sidebar est déjà affichée en permanence à gauche.

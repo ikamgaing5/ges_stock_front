@@ -106,7 +106,7 @@ export default function PageBoutiques() {
           {boutiques.map((boutique, index) => (
             <Apparait key={boutique.id} index={index}>
               <Card className="h-full">
-                <CardContent className="flex h-full flex-col gap-4 pt-6">
+                <CardContent className="flex h-full flex-col gap-4 p-3.5 sm:p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate font-medium">{boutique.nom}</p>

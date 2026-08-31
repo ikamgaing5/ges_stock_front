@@ -140,18 +140,18 @@ export default function PageCatalogue() {
       </TitrePage>
 
       <Card className="mb-4">
-        <CardContent className="flex flex-wrap items-center gap-4 pt-6">
-          <div className="relative min-w-56 flex-1">
+        <CardContent className="flex flex-wrap items-center gap-2.5 p-3 sm:gap-4 sm:p-5">
+          <div className="relative min-w-44 flex-1 basis-full sm:basis-auto">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="h-10 pl-9"
+              className="h-9 sm:h-10 pl-9"
               placeholder={lang === "en" ? "Brand or model..." : "Marque ou modèle…"}
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
             />
           </div>
 
-          <div className="w-48">
+          <div className="w-full sm:w-48">
             <SelectRecherche
               options={[
                 {
@@ -171,13 +171,13 @@ export default function PageCatalogue() {
             />
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 pt-1 sm:pt-0">
             <Switch
               id="alertes"
               checked={alertesSeules}
               onCheckedChange={setAlertesSeules}
             />
-            <Label htmlFor="alertes" className="font-normal">
+            <Label htmlFor="alertes" className="font-normal text-xs sm:text-sm">
               {lang === "en"
                 ? "Restock alerts only"
                 : "À réapprovisionner seulement"}
@@ -386,6 +386,7 @@ function FenetreModele({
 
   const [marqueId, setMarqueId] = useState("");
   const [gammes, setGammes] = useState<Gamme[]>([]);
+  const [chargementGammes, setChargementGammes] = useState(false);
 
   const [champs, setChamps] = useState({
     gamme_id: "",
@@ -404,12 +405,15 @@ function FenetreModele({
   useEffect(() => {
     if (!marqueId) {
       setGammes([]);
+      setChargementGammes(false);
       return;
     }
+    setChargementGammes(true);
     api
       .get<{ data: Gamme[] }>("/gammes", { marque_id: marqueId })
       .then((r) => setGammes(r.data))
-      .catch(() => setGammes([]));
+      .catch(() => setGammes([]))
+      .finally(() => setChargementGammes(false));
   }, [marqueId]);
 
   useEffect(() => {
@@ -503,8 +507,8 @@ function FenetreModele({
             </DialogTitle>
             <DialogDescription>
               {lang === "en"
-                ? "Full reference (brand, range, model) must be unique in your catalog."
-                : "La référence complète (marque, gamme, nom) doit être unique dans votre catalogue."}
+                ? "Full reference (brand, range, model) is unique and shared across all stores."
+                : "La référence complète (marque, gamme, nom) est unique et partagée par toutes les boutiques."}
             </DialogDescription>
           </DialogHeader>
 
@@ -546,7 +550,13 @@ function FenetreModele({
                       });
                     }
                   }}
-                  disabled={!marqueId}
+                  disabled={!marqueId || chargementGammes}
+                  chargement={chargementGammes}
+                  texteChargement={
+                    lang === "en"
+                      ? "Loading ranges for this brand..."
+                      : "Chargement des gammes de la marque…"
+                  }
                   erreur={Boolean(erreurs.gamme_id)}
                   placeholder={
                     marqueId
@@ -847,8 +857,8 @@ function FenetreMarque({
             <DialogTitle>{t("modeles.ajouterMarque")}</DialogTitle>
             <DialogDescription>
               {lang === "en"
-                ? "Available across all models in your catalog."
-                : "Elle sera disponible pour tous les modèles de votre catalogue."}
+                ? "Available across all stores and models."
+                : "Elle sera disponible pour toutes les boutiques et tous les modèles."}
             </DialogDescription>
           </DialogHeader>
 

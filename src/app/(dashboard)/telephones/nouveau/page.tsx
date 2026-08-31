@@ -59,7 +59,9 @@ export default function PageEntreeStock() {
 
   const [marques, setMarques] = useState<Marque[]>([]);
   const [gammes, setGammes] = useState<Gamme[]>([]);
+  const [chargementGammes, setChargementGammes] = useState(false);
   const [gammeChoisie, setGammeChoisie] = useState("");
+  const [chargementModeles, setChargementModeles] = useState(false);
   const [stockageChoisi, setStockageChoisi] = useState("");
   const [marqueChoisie, setMarqueChoisie] = useState("");
 
@@ -90,27 +92,35 @@ export default function PageEntreeStock() {
   useEffect(() => {
     if (!marqueChoisie) {
       setGammes([]);
+      setChargementGammes(false);
       return;
     }
+    setChargementGammes(true);
     api
       .get<{ data: Gamme[] }>("/gammes", { marque_id: marqueChoisie })
       .then((r) => setGammes(r.data))
-      .catch(() => setGammes([]));
+      .catch(() => setGammes([]))
+      .finally(() => setChargementGammes(false));
   }, [marqueChoisie]);
 
   useEffect(() => {
+    if (!gammeChoisie) {
+      setModeles([]);
+      setChargementModeles(false);
+      return;
+    }
+    setChargementModeles(true);
     api
-      .get<{ data: Modele[] }>("/modeles", { actifs_seulement: true })
+      .get<{ data: Modele[] }>("/modeles", {
+        gamme_id: gammeChoisie,
+        actifs_seulement: true,
+      })
       .then((r) => setModeles(r.data))
-      .catch(() => setModeles([]));
-  }, []);
+      .catch(() => setModeles([]))
+      .finally(() => setChargementModeles(false));
+  }, [gammeChoisie]);
 
-  const modelesFiltres = useMemo(() => {
-    if (!gammeChoisie) return [];
-    return modeles.filter(
-      (m) => m.gamme?.id === gammeChoisie || String(m.id) === commun.modele_id,
-    );
-  }, [modeles, gammeChoisie, commun.modele_id]);
+  const modelesFiltres = modeles;
 
   const modeleActuel = modeles.find((m) => String(m.id) === commun.modele_id);
   const stockagesDisponibles = modeleActuel?.stockages ?? [];
@@ -118,12 +128,15 @@ export default function PageEntreeStock() {
   function choisirMarque(id: string) {
     setMarqueChoisie(id);
     setGammeChoisie("");
+    setGammes([]);
+    setModeles([]);
     setCommun((p) => ({ ...p, modele_id: "" }));
     setStockageChoisi("");
   }
 
   function choisirGamme(id: string) {
     setGammeChoisie(id);
+    setModeles([]);
     setCommun((p) => ({ ...p, modele_id: "" }));
     setStockageChoisi("");
   }
@@ -444,7 +457,7 @@ export default function PageEntreeStock() {
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1.15fr_1fr]">
         <Apparait>
           <Card>
             <CardHeader>
@@ -452,7 +465,7 @@ export default function PageEntreeStock() {
                 {lang === "en" ? "The Device" : "L'appareil"}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-4 sm:space-y-5">
               <div className="space-y-2">
                 <ChampImei
                   valeur={imei}
@@ -586,7 +599,13 @@ export default function PageEntreeStock() {
                     }))}
                     valeur={gammeChoisie}
                     onChange={(v) => choisirGamme(v)}
-                    disabled={!marqueChoisie}
+                    disabled={!marqueChoisie || chargementGammes}
+                    chargement={chargementGammes}
+                    texteChargement={
+                      lang === "en"
+                        ? "Loading ranges for this brand..."
+                        : "Chargement des gammes de la marque…"
+                    }
                     placeholder={
                       marqueChoisie
                         ? lang === "en"
@@ -616,7 +635,13 @@ export default function PageEntreeStock() {
                   }))}
                   valeur={commun.modele_id}
                   onChange={(v) => choisirModeleAvecStockage(v)}
-                  disabled={!gammeChoisie}
+                  disabled={!gammeChoisie || chargementModeles}
+                  chargement={chargementModeles}
+                  texteChargement={
+                    lang === "en"
+                      ? "Loading models for this range..."
+                      : "Chargement des modèles de la gamme…"
+                  }
                   placeholder={
                     gammeChoisie
                       ? lang === "en"

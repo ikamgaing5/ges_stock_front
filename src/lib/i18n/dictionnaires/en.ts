@@ -90,9 +90,45 @@ export const en = {
     sombre: "Dark",
     systeme: "System",
     boutiquesCount: "{count} store | {count} stores",
-    monnaie: "Choose your display currency."
+    monnaie: "Choose your display currency.",
   },
   auth: {
+    description: "Your data is encrypted and visible only to you.",
+    message:
+      "You scan the IMEI when the box arrives. Your staff sell without seeing your purchase prices. At closing, your till is already worked out.",
+    telephonePlace: "Every phone accounted for, from the box to the sale.",
+
+    etapeInscription: "Step 1 of 2: you and your store",
+    bienvenuTelora: "Welcome to Telora",
+    DeuxMinutes:
+      "It takes about 2 minutes. You can scan your first phones straight after.",
+    Vous: "1. You (store owner)",
+    PlaceHolderNom: "e.g. David Miller",
+    SendCode: "We send your activation code here",
+    PhoneNumber: "Phone number (WhatsApp / Mobile)",
+    SecuriseCompte: "To secure your account",
+    VotreMDP:"2. Your password",
+    MDPSure:"Choose a secure password",
+    MDPConfirm: "Confirm your password",
+    MDPPasIdentique: "Both passwords match",
+    VotreBoutique: "3. Your store",
+    NomBoutique: "Store name",
+    NomBoutiqueConnu: "The name your customers and staff know",
+    PositionBoutique: "Where is this store located?",
+    EnvoieCode: "Sending your code…",
+    CreerBoutiqueCode: "Create my store & receive my code",
+    EssaieGratuit: "Free for 14 days, no card required.",
+    DeuxiemeEtape: "Step 2 of 2: confirm your email",
+    derniereEtape: "Last step: check your inbox",
+    CodeRecu :"We just sent a 6-digit confirmation code to:",
+    RegarderSpam: "If the code has not arrived within a minute, check your spam folder.",
+    ActiveBoutique: "Activate my store",
+    CorrigerInfo: "Change my email or details",
+    RenvoieCodeSeconde: "Resend code in {secondesAvantRenvoi}s",
+    RenvoieCode:"I didn't get it, resend",
+    
+    
+
     connexionTitre: "Sign in",
     connexionDesc: "Sign in to manage your stock",
     inscriptionTitre: "Create an account",
@@ -151,7 +187,8 @@ export const en = {
     invitationInvalide: "Invalid or expired invitation",
     invitationInvalideDesc: "Ask the person who invited you to resend a link.",
     activerCompte: "Activate my account",
-    compteDesactive: "Your account has been deactivated. Contact your administrator.",
+    compteDesactive:
+      "Your account has been deactivated. Contact your administrator.",
     compteBoutiqueDesactive:
       "This store's account is currently deactivated. Please contact the store owner for more information.",
     accesRefuse: "Access denied.",
@@ -170,13 +207,15 @@ export const en = {
     enReparation: "In repair",
     appareilsPerdus: "Lost / stolen",
     alertesStock: "Low stock alerts",
-    alertesDesc: "Models where stock quantity is at or below the warning threshold.",
+    alertesDesc:
+      "Models where stock quantity is at or below the warning threshold.",
     aucuneAlerte: "All models are currently above their warning threshold.",
     derniersMouvements: "Recent movements",
     mouvementsDesc: "The latest arrivals, sales, and transfers across devices.",
     aucunMouvement: "No movements recorded yet.",
     repartitionBoutiques: "Stock by store",
-    repartitionDesc: "Physical device distribution and valuation per retail location.",
+    repartitionDesc:
+      "Physical device distribution and valuation per retail location.",
     aujourdhui: "Today",
     ceMois: "This month",
     entreesDuJour: "{count} arrival(s)",
@@ -260,7 +299,8 @@ export const en = {
   },
   modeles: {
     titre: "Catalog",
-    description: "Manage your brands, series, and phone models along with recommended prices.",
+    description:
+      "Manage your brands, series, and phone models along with recommended prices.",
     ajouterModele: "New model",
     ajouterMarque: "New brand",
     ajouterGamme: "New series",
@@ -285,7 +325,8 @@ export const en = {
   },
   mouvements: {
     titre: "Movement History",
-    description: "Full audit trail of every arrival, sale, transfer, and service ticket.",
+    description:
+      "Full audit trail of every arrival, sale, transfer, and service ticket.",
     recherchePlaceholder: "Search by IMEI, model, customer, user...",
     tousTypes: "All types",
     tousLesTypes: "All types",
@@ -302,7 +343,8 @@ export const en = {
   },
   equipe: {
     titre: "Team & Access",
-    description: "Manage staff members with access to your stores and their assigned permissions.",
+    description:
+      "Manage staff members with access to your stores and their assigned permissions.",
     inviterMembre: "Invite staff member",
     invitationsEnAttente: "Pending invitations",
     membresActifs: "Team members",
@@ -317,7 +359,8 @@ export const en = {
     desactiverAcces: "Disable access",
     activerAcces: "Enable access",
     aucunMembre: "No staff members invited yet",
-    aucunMembreDesc: "Invite your sales associates and team members to your workspace.",
+    aucunMembreDesc:
+      "Invite your sales associates and team members to your workspace.",
     compteSupprime: "Account successfully deleted.",
     compteModifie: "Account updated successfully.",
     ajouterPersonne: "Add team member",
@@ -329,15 +372,19 @@ export const en = {
     boutiquesRattachees: "Authorized stores",
     modifierCompte: "Edit account",
     laisserVideMdp: "Leave password empty to keep it unchanged.",
-    invitationDesc: "An invitation email will be sent to configure their account.",
-    restrictionBoutiquesDesc: "This person will only view inventory for checked stores.",
+    invitationDesc:
+      "An invitation email will be sent to configure their account.",
+    restrictionBoutiquesDesc:
+      "This person will only view inventory for checked stores.",
     compteActif: "Active account (can sign in)",
     supprimerConfirmationTitre: "Delete account for {nom}?",
-    supprimerConfirmationDesc: "This person will no longer be able to log in. Stock movements recorded by them remain in the history.",
+    supprimerConfirmationDesc:
+      "This person will no longer be able to log in. Stock movements recorded by them remain in the history.",
   },
   boutiques: {
     titre: "Stores",
-    description: "Configure your physical retail locations and monitor their performance.",
+    description:
+      "Configure your physical retail locations and monitor their performance.",
     nouvelleBoutique: "New store",
     nom: "Store name",
     ville: "City",
@@ -358,8 +405,10 @@ export const en = {
   },
   scanner: {
     titre: "IMEI & Barcode Scanner",
-    description: "Scan with your barcode reader or type the 15 digits (or use the camera on mobile).",
-    instruction: "Point the camera at the barcode or IMEI label on the device packaging.",
+    description:
+      "Scan with your barcode reader or type the 15 digits (or use the camera on mobile).",
+    instruction:
+      "Point the camera at the barcode or IMEI label on the device packaging.",
     basculerCamera: "Switch camera",
     saisieManuelle: "Manual IMEI entry",
     saisiePlaceholder: "Type the 15 digits of the IMEI...",
@@ -378,7 +427,8 @@ export const en = {
   },
   monCompte: {
     titre: "My Account",
-    description: "Manage your personal profile, security settings, and preferences.",
+    description:
+      "Manage your personal profile, security settings, and preferences.",
     coordonnees: "Personal details",
     coordonneesDesc: "Update your full name and contact phone number.",
     nom: "Full name",
@@ -407,19 +457,23 @@ export const en = {
     planPremiumBadge: "Premium Plan",
     planStandardBadge: "Standard Plan",
     questionsTitre: "Have any questions?",
-    questionsDesc: "Browse our frequently asked questions to learn everything about inventory management, IMEI scanning, subscriptions, and privacy policy.",
+    questionsDesc:
+      "Browse our frequently asked questions to learn everything about inventory management, IMEI scanning, subscriptions, and privacy policy.",
     questionsBouton: "View Frequently Asked Questions (FAQ)",
     monnaie: "Display currency.",
   },
   admin: {
     titre: "Platform Administration",
     vueEnsemble: "Overview",
-    vueEnsembleDesc: "Customer accounts and their subscriptions. Inventories are not accessible from this area.",
+    vueEnsembleDesc:
+      "Customer accounts and their subscriptions. Inventories are not accessible from this area.",
     clients: "Clients",
     paiements: "Payments",
-    clientsDesc: "Registered business owners and their subscriptions. Click a row to modify access.",
+    clientsDesc:
+      "Registered business owners and their subscriptions. Click a row to modify access.",
     proprietairesTitre: "Client & Subscription Management",
-    proprietairesDesc: "View all store owners currently registered on the platform.",
+    proprietairesDesc:
+      "View all store owners currently registered on the platform.",
     totalProprietaires: "Owners",
     totalBoutiques: "Active stores",
     totalAppareils: "Registered devices",
@@ -431,14 +485,16 @@ export const en = {
     abonnementsActifs: "Active subscriptions",
     comptesSuspendus: "Suspended accounts",
     echeancesProches: "Expiring in < 7 days",
-    prochainesEcheancesDesc: "Accounts whose trial or subscription is expiring soon.",
+    prochainesEcheancesDesc:
+      "Accounts whose trial or subscription is expiring soon.",
     aucuneEcheance: "No expirations within the next 7 days.",
     avecAccesOuvert: "{count} with active access",
     dansVilles: "across {count} city/cities",
     enStockActuellement: "currently in stock",
     enEssai: "{count} on free trial",
     repartitionAbonnements: "Subscription breakdown",
-    repartitionAbonnementsDesc: "Access status across all registered business owners.",
+    repartitionAbonnementsDesc:
+      "Access status across all registered business owners.",
     prochainesEcheances: "Upcoming expirations (7 days)",
     tableauClient: "Client / Email",
     tableauNom: "Client",
@@ -454,7 +510,8 @@ export const en = {
     statutAbonnement: "Subscription status",
     echeance: "Expiration date",
     accesActif: "Active access",
-    accesActifDesc: "Disabling access will immediately cut access for the entire team.",
+    accesActifDesc:
+      "Disabling access will immediately cut access for the entire team.",
     actionsRapides: "Quick actions",
     prolongerEssai: "Extend trial (+14d)",
     prolonger14j: "Extend trial (+14d)",
@@ -469,7 +526,8 @@ export const en = {
   },
   changerEmail: {
     titre: "Change email address",
-    description: "Update the email address used to sign in and receive system notifications.",
+    description:
+      "Update the email address used to sign in and receive system notifications.",
     emailActuel: "Current address",
     nouvelEmail: "New email address",
     motDePasseActuel: "Current password",
@@ -477,7 +535,8 @@ export const en = {
     envoyerCode: "Send code",
     etapeNouvelleAdresse: "New address",
     etapeVerification: "Verify new address",
-    instructionsCode: "A confirmation code was sent to {email}. Enter it to finalize the change.",
+    instructionsCode:
+      "A confirmation code was sent to {email}. Enter it to finalize the change.",
     validerChangement: "Confirm email change",
     codeEnvoye: "Code sent to the new email address.",
     emailModifie: "Email address changed successfully.",
@@ -488,26 +547,33 @@ export const en = {
     titre: "Two-Factor Authentication (2FA)",
     description: "Add an extra layer of security to your account.",
     statutActif: "Two-factor authentication is active on your account.",
-    statutActifDesc: "A security code from your app will be asked at every login.",
+    statutActifDesc:
+      "A security code from your app will be asked at every login.",
     statutInactif: "Two-factor authentication is not active.",
     codesRestants: "{count} backup code(s) remaining.",
     pensezRegenerer: "Consider generating new ones.",
-    plusDeCodes: "No backup codes left. If you lose your phone, you will not be able to log in.",
+    plusDeCodes:
+      "No backup codes left. If you lose your phone, you will not be able to log in.",
     activer: "Enable two-factor authentication",
     desactiver: "Disable",
     genererNouveauxCodes: "New backup codes",
     confirmerDesactivationTitre: "Disable two-factor authentication?",
-    confirmerDesactivationDesc: "Your account will only be protected by your password.",
+    confirmerDesactivationDesc:
+      "Your account will only be protected by your password.",
     confirmerMotDePasseTitre: "Confirm your password",
-    confirmerMotDePasseDesc: "To proceed, please enter your current account password.",
+    confirmerMotDePasseDesc:
+      "To proceed, please enter your current account password.",
     scannezQrTitre: "Scan the QR code",
-    scannezQrDesc: "Scan this QR code with Google Authenticator, Authy, or another authenticator app.",
+    scannezQrDesc:
+      "Scan this QR code with Google Authenticator, Authy, or another authenticator app.",
     cleSecrete: "Can't scan? Enter secret key manually",
     entrerCode: "Enter the code displayed by your app",
     codesSecoursTitre: "Your backup recovery codes",
-    codesSecoursDesc: "Store these codes safely. They will allow you to regain access if you lose your phone.",
+    codesSecoursDesc:
+      "Store these codes safely. They will allow you to regain access if you lose your phone.",
     avertissementUsageUnique: "Each code can only be used once.",
-    avertissementCodes: "Save these codes now: they will never be displayed again. They are your only fallback if you lose your phone.",
+    avertissementCodes:
+      "Save these codes now: they will never be displayed again. They are your only fallback if you lose your phone.",
     telechargerCodes: "Download codes",
     copierCodes: "Copy",
     codesCopies: "Codes copied to clipboard.",
@@ -521,8 +587,10 @@ export const en = {
     placeholder: "Scan or enter the 15 digits",
     aideRaccourci: "Dial *#06# on the phone to display its IMEI.",
     lectureCodeBarres: "Barcode reader",
-    cadrezCodeBarres: "Frame the box barcode in the viewfinder. Scanning happens automatically.",
-    cameraErreur: "Unable to open camera. Please grant browser camera permissions or type the IMEI manually.",
+    cadrezCodeBarres:
+      "Frame the box barcode in the viewfinder. Scanning happens automatically.",
+    cameraErreur:
+      "Unable to open camera. Please grant browser camera permissions or type the IMEI manually.",
     fermer: "Close",
   },
   selecteurBoutique: {
@@ -597,16 +665,19 @@ export const en = {
     retourApp: "Back",
     connexion: "Sign in",
     besoinAide: "Need more help?",
-    contactSupport: "Our team is here to assist you with your day-to-day operations.",
+    contactSupport:
+      "Our team is here to assist you with your day-to-day operations.",
   },
   page404: {
     badge: "Error 404",
     titre: "This page does not exist",
-    description: "The address you are trying to reach does not exist or has been moved.",
+    description:
+      "The address you are trying to reach does not exist or has been moved.",
     retourPrecedent: "Return to previous page",
     centreAide: "Help Center & FAQ",
     titreDetaille: "This device or page is not listed in inventory",
-    descriptionDetaillee: "The requested URL does not match any active reference, or the page was moved during an inventory update.",
+    descriptionDetaillee:
+      "The requested URL does not match any active reference, or the page was moved during an inventory update.",
     tableauDeBord: "Back to Dashboard",
     ouvrirScanner: "Open IMEI Scanner",
     consulterFaq: "View FAQ",

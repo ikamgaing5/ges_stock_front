@@ -131,11 +131,11 @@ export default function PageParc() {
       </TitrePage>
 
       <Card className="mb-4">
-        <CardContent className="flex flex-wrap gap-3 pt-6">
-          <div className="relative min-w-56 flex-1">
+        <CardContent className="flex flex-wrap gap-2.5 p-3 sm:flex-row sm:gap-3 sm:p-5">
+          <div className="relative min-w-48 flex-1 basis-full sm:basis-auto">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              className="h-10 pl-9"
+              className="h-9 pl-9 sm:h-10"
               placeholder={t("telephones.recherchePlaceholder")}
               value={recherche}
               onChange={(e) => {
@@ -153,7 +153,7 @@ export default function PageParc() {
               setPage(1);
             }}
           >
-            <SelectTrigger className="h-10 w-44">
+            <SelectTrigger className="h-9 w-full sm:h-10 sm:w-44">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -165,7 +165,7 @@ export default function PageParc() {
             </SelectContent>
           </Select>
 
-          <div className="w-56">
+          <div className="w-full sm:w-56">
             <SelectRecherche
               options={Object.entries(optionsModeles).map(([valeur, libelle]) => ({
                 valeur,
@@ -178,7 +178,7 @@ export default function PageParc() {
               }}
               placeholder={t("telephones.tousLesModeles")}
               placeholderRecherche={
-                lang === "en" ? "Search model..." : "Rechercher un modèle…"
+                lang === "en" ? "Filter model..." : "Filtrer un modèle…"
               }
             />
           </div>

@@ -99,7 +99,7 @@ export default function PageScanner() {
 
       <Apparait>
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="p-3.5 sm:p-6">
             <ChampImei
               valeur={imei}
               onChange={setImei}
@@ -124,10 +124,10 @@ export default function PageScanner() {
       )}
 
 
-      <div className="mt-6">
+      <div className="mt-4 sm:mt-6">
         {recherche ? (
           <Card>
-            <CardContent className="space-y-3 pt-6">
+            <CardContent className="space-y-3 p-3.5 sm:p-6">
               <Skeleton className="h-5 w-56" />
               <Skeleton className="h-4 w-40" />
               <Skeleton className="h-9 w-full" />

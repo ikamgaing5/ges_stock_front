@@ -127,12 +127,12 @@ export default function PageAppareil({
         <PastilleStatut statut={appareil.statut} className="px-3 py-1 text-sm" />
       </TitrePage>
 
-      <p className="chiffres -mt-3 mb-6 font-mono text-sm text-muted-foreground">
+      <p className="chiffres -mt-2 mb-4 font-mono text-xs text-muted-foreground sm:-mt-3 sm:mb-6 sm:text-sm">
         {formaterImei(appareil.imei)}
       </p>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
-        <div className="space-y-6">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_1.4fr]">
+        <div className="space-y-4 sm:space-y-6">
           <Apparait>
             <Card>
               <CardHeader>

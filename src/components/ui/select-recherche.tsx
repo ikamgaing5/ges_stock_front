@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Popover } from "@base-ui/react/popover";
-import { Check, ChevronDown, Search, X } from "lucide-react";
+import { Check, ChevronDown, Loader2, Search, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,8 @@ export interface SelectRechercheProps {
   placeholderRecherche?: string;
   texteVide?: string;
   disabled?: boolean;
+  chargement?: boolean;
+  texteChargement?: string;
   className?: string;
   triggerClassName?: string;
   erreur?: boolean | string;
@@ -36,6 +38,8 @@ export function SelectRecherche({
   placeholderRecherche,
   texteVide,
   disabled = false,
+  chargement = false,
+  texteChargement,
   className = "",
   triggerClassName = "",
   erreur = false,
@@ -115,6 +119,9 @@ export function SelectRecherche({
     setOuvert(false);
   }
 
+  const libelleChargement =
+    texteChargement ??
+    (lang === "en" ? "Loading in progress..." : "Chargement en cours…");
   const textePlaceholder =
     placeholder ?? (lang === "en" ? "Select..." : "Sélectionner…");
   const texteRecherchePlaceholder =
@@ -124,42 +131,64 @@ export function SelectRecherche({
     texteVide ??
     (lang === "en" ? "No results found" : "Aucun résultat trouvé");
 
+  const estDesactive = disabled || chargement;
+
   return (
-    <Popover.Root open={ouvert} onOpenChange={setOuvert}>
+    <Popover.Root
+      open={ouvert && !chargement}
+      onOpenChange={(v) => {
+        if (!chargement) setOuvert(v);
+      }}
+    >
       <Popover.Trigger
         id={id}
-        disabled={disabled}
+        disabled={estDesactive}
         className={cn(
           "flex h-10 w-full items-center justify-between gap-2 rounded-lg border bg-transparent px-3 py-2 text-sm text-left shadow-xs transition-colors outline-none select-none cursor-pointer",
           erreur
             ? "border-destructive focus-visible:border-destructive focus-visible:ring-3 focus-visible:ring-destructive/30"
             : "border-input hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-          disabled && "cursor-not-allowed opacity-50 bg-muted/20",
+          estDesactive && "cursor-not-allowed opacity-60 bg-muted/20",
+          chargement && "border-primary/40 bg-primary/5",
           triggerClassName,
           className,
         )}
       >
         <span
           className={cn(
-            "truncate flex-1 min-w-0",
-            !optionActive && "text-muted-foreground",
+            "truncate flex-1 min-w-0 flex items-center gap-2",
+            chargement && "text-primary font-medium animate-pulse",
+            !optionActive && !chargement && "text-muted-foreground",
           )}
         >
-          {optionActive ? optionActive.libelle : textePlaceholder}
+          {chargement ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
+              <span className="truncate">{libelleChargement}</span>
+            </>
+          ) : optionActive ? (
+            optionActive.libelle
+          ) : (
+            textePlaceholder
+          )}
         </span>
 
-        {optionActive?.badge && (
+        {optionActive?.badge && !chargement && (
           <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground uppercase">
             {optionActive.badge}
           </span>
         )}
 
-        <ChevronDown
-          className={cn(
-            "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150",
-            ouvert && "rotate-180 text-foreground",
-          )}
-        />
+        {chargement ? (
+          <span className="h-4 w-4 shrink-0" />
+        ) : (
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150",
+              ouvert && "rotate-180 text-foreground",
+            )}
+          />
+        )}
       </Popover.Trigger>
 
       <Popover.Portal>
