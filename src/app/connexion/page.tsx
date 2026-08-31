@@ -42,6 +42,17 @@ export default function PageConnexion() {
   }, [chargement, utilisateur, router]);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("boutique_desactivee") === "1") {
+        setErreur(t("auth.compteBoutiqueDesactive"));
+      } else if (params.get("desactive") === "1") {
+        setErreur(t("auth.compteDesactive"));
+      }
+    }
+  }, [t]);
+
+  useEffect(() => {
     document.title = `${jetonDefi ? t("auth.titre2faOnglet") : t("auth.titreConnexionOnglet")} | Telora`;
   }, [lang, jetonDefi, t]);
 
@@ -56,6 +67,13 @@ export default function PageConnexion() {
       errMinuscule.includes("incorrect email or password")
     ) {
       return t("auth.identifiantsIncorrects");
+    }
+    if (
+      errMinuscule.includes("propriétaire de la boutique") ||
+      errMinuscule.includes("proprietaire de la boutique") ||
+      errMinuscule.includes("contact the store owner")
+    ) {
+      return t("auth.compteBoutiqueDesactive");
     }
     if (
       errMinuscule.includes("désactivé") ||

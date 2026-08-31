@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScannerCameraModal } from "@/components/scanner-camera-modal";
+import { estAppareilMobile } from "@/lib/utils";
 import type { ResultatImei, Telephone } from "@/types";
 
 export default function PageScanner() {
@@ -36,10 +37,11 @@ export default function PageScanner() {
   const [cameraDisponible, setCameraDisponible] = useState(false);
 
   useEffect(() => {
-    setCameraDisponible(
+    const mobile = estAppareilMobile();
+    const mediaSupporte =
       typeof navigator !== "undefined" &&
-        Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
-    );
+      Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    setCameraDisponible(mobile && mediaSupporte);
   }, []);
 
   const chercher = useCallback(

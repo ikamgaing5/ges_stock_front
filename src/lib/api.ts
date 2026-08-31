@@ -216,13 +216,14 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
       }
     }
 
-    if (
-      reponse.status === 403 &&
-      donnees?.message?.includes("accès a été désactivé") &&
-      typeof window !== "undefined"
-    ) {
-      effacerToken();
-      window.location.href = "/connexion?desactive=1";
+    if (reponse.status === 403 && typeof window !== "undefined") {
+      if (donnees?.message?.includes("propriétaire de la boutique") || donnees?.message?.includes("store owner")) {
+        effacerToken();
+        window.location.href = "/connexion?boutique_desactivee=1";
+      } else if (donnees?.message?.includes("accès a été désactivé") || donnees?.message?.includes("account has been deactivated")) {
+        effacerToken();
+        window.location.href = "/connexion?desactive=1";
+      }
     }
 
     // 402 = abonnement expiré : redirection vers la page de choix de formule

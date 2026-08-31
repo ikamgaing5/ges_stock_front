@@ -157,6 +157,8 @@ export const fr = {
     activerCompte: "Activer mon compte",
     compteDesactive:
       "Votre compte a été désactivé. Contactez votre administrateur.",
+    compteBoutiqueDesactive:
+      "Le compte de cette boutique est actuellement désactivé. Veuillez contacter le propriétaire de la boutique pour plus d'informations.",
     accesRefuse: "Accès refusé.",
     votreEssai: "Votre période d'essai",
     votreAbonnement: "Votre abonnement",
@@ -375,7 +377,7 @@ export const fr = {
   scanner: {
     titre: "Scanner d'IMEI & Code-barres",
     description:
-      "Utilisez la caméra de votre téléphone ou un lecteur pour identifier instantanément un appareil.",
+      "Scannez avec votre douchette ou saisissez les 15 chiffres (ou utilisez la caméra sur smartphone).",
     instruction:
       "Pointez la caméra vers le code-barres ou le numéro IMEI de la boîte.",
     basculerCamera: "Changer de caméra",
@@ -384,14 +386,14 @@ export const fr = {
     rechercher: "Rechercher l'appareil",
     rechercheEnCours: "Recherche de l'appareil...",
     appareilTrouve: "Appareil identifié",
-    nonTrouve: "Aucun appareil avec cet IMEI dans vos boutiques.",
+    nonTrouve: "Cet appareil n'est pas disponible.",
     searchFailed: "La recherche a échoué.",
     scannerAutre: "Scanner un autre appareil",
     scannerAvecCamera: "Scanner avec la caméra",
     ouvrirCamera: "Ouvrir la caméra",
     creerAvecImei: "Enregistrer cet appareil en stock",
     viewDetails: "Voir la fiche complète et l'historique",
-    appareilInconnu: "Appareil inconnu",
+    appareilInconnu: "Appareil non disponible",
     attenteScan: "En attente d'un scan ou d'une saisie...",
   },
   monCompte: {

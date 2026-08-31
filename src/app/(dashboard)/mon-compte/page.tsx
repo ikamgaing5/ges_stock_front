@@ -181,7 +181,7 @@ export default function PageMonCompte() {
                   </p>
                 )}
 
-                {utilisateur?.role === "proprietaire" && (
+                {/* {utilisateur?.role === "proprietaire" && (
                   <Button
                     size="sm"
                     className="w-full mt-2 font-semibold cursor-pointer"
@@ -191,7 +191,7 @@ export default function PageMonCompte() {
                     <CreditCard className="mr-2 h-4 w-4" />
                     {lang === "en" ? "Manage Subscription & Plans" : "Gérer mon abonnement & forfaits"}
                   </Button>
-                )}
+                )} */}
               </CardContent>
             </Card>
           </Apparait>

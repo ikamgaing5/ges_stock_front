@@ -22,7 +22,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, CircleCheck, Keyboard, ScanLine } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, estAppareilMobile } from "@/lib/utils";
 import { formaterImei, imeiValide, messageImei, nettoyerImei } from "@/lib/imei";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,12 +73,13 @@ export function ChampImei({
   const valide = imeiValide(chiffres);
   const avertissement = erreur ?? messageImei(valeur, lang);
 
-  // La caméra est disponible dès que getUserMedia existe dans le navigateur (mobile & desktop)
+  // La caméra n'est active que sur les smartphones mobiles (sur PC, on utilise la douchette ou le clavier)
   useEffect(() => {
-    const disponible =
+    const mobile = estAppareilMobile();
+    const mediaSupporte =
       typeof navigator !== "undefined" &&
       Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-    setCameraDisponible(disponible);
+    setCameraDisponible(mobile && mediaSupporte);
   }, []);
 
   /** Joue un bip court : en boutique, on entend mieux qu'on ne regarde. */
@@ -192,7 +193,7 @@ export function ChampImei({
               variant="outline"
               size="xs"
               onClick={() => setCameraOuverte(true)}
-              className="h-7 text-xs font-medium text-primary hover:bg-primary/5 hover:text-primary gap-1"
+              className="h-7 text-xs font-medium text-primary hover:bg-primary/5 hover:text-primary gap-1 md:hidden"
             >
               <Camera className="h-3.5 w-3.5" />
               <span>{t("imei.camera")}</span>
@@ -234,7 +235,7 @@ export function ChampImei({
             <button
               type="button"
               onClick={() => setCameraOuverte(true)}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95"
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95 md:hidden"
               title={t("imei.camera")}
               aria-label={t("imei.camera")}
             >
