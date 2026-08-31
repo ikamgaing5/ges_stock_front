@@ -133,10 +133,16 @@ function BandeauAbonnement() {
         )}
       </p>
       <Link
-        href="/mon-compte"
+        href="/mon-compte/abonnement"
         className="shrink-0 font-medium underline underline-offset-4"
       >
-        {t("nav.monCompte")}
+        {bloque
+          ? lang === "en"
+            ? "Choose a plan"
+            : "Choisir un forfait"
+          : lang === "en"
+            ? "Manage subscription"
+            : "Gérer l'abonnement"}
       </Link>
     </div>
   );

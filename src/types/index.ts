@@ -248,5 +248,81 @@ export interface ResultatImei {
   data?: Telephone;
 }
 
+export type StatutPaiement = "en_attente" | "valide" | "echec" | "annule";
+export type ModePaiement = "test" | "production";
+export type MoyenPaiement = "orange_money" | "mtn_momo" | "carte";
 
+export interface Paiement {
+  id: number;
+  user_id: number;
+  reference: string;
+  montant: number;
+  devise: string;
+  plan: PlanAbonnement;
+  duree_mois: number;
+  passerelle: string;
+  moyen_paiement: string | null;
+  statut: StatutPaiement;
+  mode: ModePaiement;
+  cinetpay_token?: string | null;
+  cinetpay_operator_id?: string | null;
+  donnees_reponse?: Record<string, unknown> | null;
+  paye_a?: string | null;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+    telephone: string | null;
+  };
+}
 
+export interface StatutAbonnementComplet {
+  statut: StatutAbonnement | null;
+  plan: PlanAbonnement;
+  echeance: string | null;
+  jours_restants: number;
+  est_expire: boolean;
+  est_essai: boolean;
+  est_actif: boolean;
+  est_premium: boolean;
+  mode_paiement: ModePaiement;
+  tarifs: {
+    standard: { mensuel: number; annuel: number };
+    premium: { mensuel: number; annuel: number };
+    devise: string;
+  };
+}
+
+export interface ConfigurationPaiementAdmin {
+  cinetpay_mode: ModePaiement;
+  cinetpay_site_id: string;
+  cinetpay_api_key: string;
+  cinetpay_secret_key: string;
+  cle_api_renseignee: boolean;
+  cle_secrete_renseignee: boolean;
+  site_id_renseigne: boolean;
+  tarifs: {
+    prix_standard_mensuel: number;
+    prix_standard_annuel: number;
+    prix_premium_mensuel: number;
+    prix_premium_annuel: number;
+  };
+  statistiques: {
+    total_valides: number;
+    total_montant: number;
+    devise: string;
+  };
+}
+
+export interface SessionPaiementReponse {
+  reference: string;
+  montant: number;
+  devise: string;
+  plan: PlanAbonnement;
+  duree_mois: number;
+  mode: ModePaiement;
+  payment_url: string;
+  payment_token: string | null;
+}

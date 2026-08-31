@@ -11,7 +11,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, LogOut, Loader2, ShieldCheck } from "lucide-react";
+import { Building2, CreditCard, LogOut, Loader2, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { BasculeTheme } from "@/components/bascule-theme";
 import { BasculeLangue } from "@/components/bascule-langue";
@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 const liens = [
   { href: "/admin", cleLibelle: "admin.vueEnsemble", icone: ShieldCheck },
   { href: "/admin/proprietaires", cleLibelle: "admin.clients", icone: Building2 },
+  { href: "/admin/paiements", cleLibelle: "admin.paiements", icone: CreditCard },
 ];
 
 export default function AdminLayout({

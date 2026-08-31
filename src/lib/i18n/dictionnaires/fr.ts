@@ -387,6 +387,8 @@ export const fr = {
     nonTrouve: "Aucun appareil avec cet IMEI dans vos boutiques.",
     searchFailed: "La recherche a échoué.",
     scannerAutre: "Scanner un autre appareil",
+    scannerAvecCamera: "Scanner avec la caméra",
+    ouvrirCamera: "Ouvrir la caméra",
     creerAvecImei: "Enregistrer cet appareil en stock",
     viewDetails: "Voir la fiche complète et l'historique",
     appareilInconnu: "Appareil inconnu",
@@ -419,7 +421,7 @@ export const fr = {
     echeanceLe: "Se termine le {date}",
     joursRestants: "{count} jour restant | {count} jours restants",
     abonnementExpire:
-      "Votre abonnement n'est plus actif. Contactez-nous pour le renouveler.",
+      "Votre période d'abonnement est arrivée à échéance. Choisissez votre forfait pour continuer à gérer votre stock en toute sérénité.",
     abonnementActif: "Votre abonnement est actif et à jour.",
     typeAbonnement: "Type d'abonnement",
     planPremiumBadge: "Formule Premium",
@@ -436,6 +438,7 @@ export const fr = {
     vueEnsembleDesc:
       "Les comptes clients et leurs abonnements. Les stocks ne sont pas accessibles depuis cet espace.",
     clients: "Clients",
+    paiements: "Paiements",
     clientsDesc:
       "Les propriétaires inscrits et leurs abonnements. Cliquez sur une ligne pour modifier l'accès.",
     proprietairesTitre: "Gestion des clients & abonnements",

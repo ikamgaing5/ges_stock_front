@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { HelpCircle, Loader2 } from "lucide-react";
+import { CreditCard, HelpCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { couleursAbonnements } from "@/lib/format";
@@ -179,6 +179,18 @@ export default function PageMonCompte() {
                   <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
                     {t("monCompte.abonnementExpire")}
                   </p>
+                )}
+
+                {utilisateur?.role === "proprietaire" && (
+                  <Button
+                    size="sm"
+                    className="w-full mt-2 font-semibold cursor-pointer"
+                    nativeButton={false}
+                    render={<Link href="/mon-compte/abonnement" />}
+                  >
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    {lang === "en" ? "Manage Subscription & Plans" : "Gérer mon abonnement & forfaits"}
+                  </Button>
                 )}
               </CardContent>
             </Card>

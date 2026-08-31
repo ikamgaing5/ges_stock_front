@@ -268,3 +268,18 @@
     animation: secousse 0.4s ease-in-out;
   }
 }
+
+@keyframes scanLaser {
+  0% {
+    top: 5%;
+    opacity: 0.7;
+  }
+  50% {
+    top: 90%;
+    opacity: 1;
+  }
+  100% {
+    top: 5%;
+    opacity: 0.7;
+  }
+}

@@ -225,6 +225,13 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
       window.location.href = "/connexion?desactive=1";
     }
 
+    // 402 = abonnement expiré : redirection vers la page de choix de formule
+    if (reponse.status === 402 && typeof window !== "undefined") {
+      if (!window.location.pathname.startsWith("/mon-compte/abonnement")) {
+        window.location.href = "/mon-compte/abonnement?expire=1";
+      }
+    }
+
     let messageAffiche = donnees?.message ?? "Une erreur est survenue.";
 
     // Détection et assainissement des messages d'erreurs techniques, SQL ou 500

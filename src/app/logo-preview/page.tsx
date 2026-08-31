@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function LogoPreviewPage() {
@@ -41,9 +41,8 @@ export default function LogoPreviewPage() {
         {/* En-tête */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
           <div>
-            <div className="flex items-center gap-2 text-primary text-xs font-semibold uppercase tracking-wider mb-1">
-              <Sparkles className="h-4 w-4" />
-              <span>Identité Visuelle Abstraite · Pure Géométrie</span>
+            <div className="text-primary text-xs font-semibold uppercase tracking-wider mb-1">
+              <span>Identité Visuelle · Pure Géométrie</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
               Logos Abstraits & Créatifs pour TELORA

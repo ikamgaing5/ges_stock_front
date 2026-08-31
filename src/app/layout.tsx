@@ -31,10 +31,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://telora.app"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://telora.app",
+  ),
   title: {
     default: "Telora — Logiciel de Gestion de Stock & Caisse Téléphonie",
-    template: "%s | Telora",
+    template: "%s — Telora",
   },
   description:
     "Application professionnelle de traçabilité unitaire par IMEI, gestion de stock multi-boutiques et caisse pour magasins de téléphones et produits high-tech.",

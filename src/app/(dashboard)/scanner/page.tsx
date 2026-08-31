@@ -8,9 +8,9 @@
  * plus court entre « un client se présente » et « la vente est saisie ».
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { PackagePlus, ScanLine, SearchX } from "lucide-react";
+import { Camera, PackagePlus, ScanLine, SearchX } from "lucide-react";
 import { api, ErreurApi } from "@/lib/api";
 import { formaterImei } from "@/lib/imei";
 import { useAuth } from "@/components/auth-provider";
@@ -21,6 +21,7 @@ import { Apparait, PastilleStatut, TitrePage } from "@/components/ui-commun";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScannerCameraModal } from "@/components/scanner-camera-modal";
 import type { ResultatImei, Telephone } from "@/types";
 
 export default function PageScanner() {
@@ -31,6 +32,15 @@ export default function PageScanner() {
   const [appareil, setAppareil] = useState<Telephone | null>(null);
   const [introuvable, setIntrouvable] = useState<string | null>(null);
   const [recherche, setRecherche] = useState(false);
+  const [cameraModalOuvert, setCameraModalOuvert] = useState(false);
+  const [cameraDisponible, setCameraDisponible] = useState(false);
+
+  useEffect(() => {
+    setCameraDisponible(
+      typeof navigator !== "undefined" &&
+        Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+    );
+  }, []);
 
   const chercher = useCallback(
     async (imeiScanne: string) => {
@@ -71,6 +81,20 @@ export default function PageScanner() {
         description={t("scanner.description")}
       />
 
+      {/* Raccourci caméra proéminent sur mobile */}
+      {cameraDisponible && (
+        <div className="mb-4 sm:hidden">
+          <Button
+            type="button"
+            className="h-12 w-full text-base font-semibold shadow-sm gap-2"
+            onClick={() => setCameraModalOuvert(true)}
+          >
+            <Camera className="h-5 w-5" />
+            <span>{t("scanner.scannerAvecCamera")}</span>
+          </Button>
+        </div>
+      )}
+
       <Apparait>
         <Card>
           <CardContent className="pt-6">
@@ -84,6 +108,19 @@ export default function PageScanner() {
           </CardContent>
         </Card>
       </Apparait>
+
+      {/* Modal de caméra déclenché par le bouton mobile */}
+      {cameraModalOuvert && (
+        <ScannerCameraModal
+          onDetecte={(code) => {
+            setCameraModalOuvert(false);
+            setImei(code);
+            void chercher(code);
+          }}
+          onFermer={() => setCameraModalOuvert(false)}
+        />
+      )}
+
 
       <div className="mt-6">
         {recherche ? (
