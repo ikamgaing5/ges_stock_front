@@ -23,6 +23,7 @@ import {
   Apparait,
   EtatErreur,
   EtatVide,
+  SquelettePageTableau,
   SquelettesTableau,
   TitrePage,
 } from "@/components/ui-commun";
@@ -62,8 +63,8 @@ export default function PageCatalogue() {
     parametresUrl.get("statut") === "alerte",
   );
   const [marqueFiltre, setMarqueFiltre] = useState("");
-
   const [marques, setMarques] = useState<Marque[]>([]);
+  const [chargementMarques, setChargementMarques] = useState(true);
   const [enEdition, setEnEdition] = useState<Partial<Modele> | null>(null);
   const [aSupprimer, setASupprimer] = useState<Modele | null>(null);
   const [marqueOuverte, setMarqueOuverte] = useState(false);
@@ -72,10 +73,12 @@ export default function PageCatalogue() {
   const boutiqueId = parametresBoutique.boutique_id;
 
   function chargerMarques() {
+    setChargementMarques(true);
     api
       .get<{ data: Marque[] }>("/marques")
       .then((r) => setMarques(r.data))
-      .catch(() => setMarques([]));
+      .catch(() => setMarques([]))
+      .finally(() => setChargementMarques(false));
   }
 
   useEffect(() => {
@@ -98,7 +101,7 @@ export default function PageCatalogue() {
   );
 
   const modeles = (donnees?.data ?? []).filter(
-    (m) => !marqueFiltre || m.gamme.marque.id === marqueFiltre,
+    (m) => !marqueFiltre || m.gamme?.marque?.id === marqueFiltre,
   );
 
   async function supprimer() {
@@ -115,10 +118,22 @@ export default function PageCatalogue() {
 
   const peutSupprimer = utilisateur && permissions.supprimer(utilisateur.role);
 
+  if (!donnees) {
+    return (
+      <SquelettePageTableau
+        lignes={8}
+        colonnes={5}
+        selectsFiltre={1}
+        avecBouton={true}
+      />
+    );
+  }
+
   return (
     <>
       <TitrePage
         titre={t("modeles.titre")}
+        chargement={chargement}
         description={t("modeles.description")}
       >
         {utilisateur?.role !== "vendeuse" && (
@@ -162,6 +177,11 @@ export default function PageCatalogue() {
               ]}
               valeur={marqueFiltre}
               onChange={(v) => setMarqueFiltre(v)}
+              disabled={chargementMarques}
+              chargement={chargementMarques}
+              texteChargement={
+                lang === "en" ? "Loading brands..." : "Chargement des marques…"
+              }
               placeholder={
                 lang === "en" ? "All brands" : "Toutes les marques"
               }
@@ -314,6 +334,7 @@ export default function PageCatalogue() {
         modele={enEdition}
         devise={devise}
         marques={marques}
+        chargementMarques={chargementMarques}
         onFermer={() => setEnEdition(null)}
         onSucces={() => {
           setEnEdition(null);
@@ -372,12 +393,14 @@ function FenetreModele({
   modele,
   devise,
   marques,
+  chargementMarques = false,
   onFermer,
   onSucces,
 }: {
   modele: Partial<Modele> | null;
   devise: string;
   marques: Marque[];
+  chargementMarques?: boolean;
   onFermer: () => void;
   onSucces: () => void;
 }) {
@@ -419,7 +442,7 @@ function FenetreModele({
   useEffect(() => {
     if (!modele) return;
 
-    setMarqueId(modele.gamme?.marque.id ?? "");
+    setMarqueId(modele.gamme?.marque?.id ?? "");
     setChamps({
       gamme_id: modele.gamme?.id ?? "",
       nom: modele.nom ?? "",
@@ -523,6 +546,13 @@ function FenetreModele({
                   options={marques.map((m) => ({ valeur: m.id, libelle: m.nom }))}
                   valeur={marqueId}
                   onChange={(v) => choisirMarque(v)}
+                  disabled={chargementMarques}
+                  chargement={chargementMarques}
+                  texteChargement={
+                    lang === "en"
+                      ? "Loading brands..."
+                      : "Chargement des marques…"
+                  }
                   placeholder={
                     lang === "en" ? "Choose brand" : "Choisir la marque"
                   }

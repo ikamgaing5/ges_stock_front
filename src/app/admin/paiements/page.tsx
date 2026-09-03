@@ -30,7 +30,7 @@ import {
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
-import { Apparait, TitrePage } from "@/components/ui-commun";
+import { Apparait, SquelettesTableau, TitrePage } from "@/components/ui-commun";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -607,9 +607,7 @@ export default function PageAdminPaiements() {
 
           <CardContent className="pt-1">
             {chargementTransactions ? (
-              <div className="flex min-h-[150px] items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
+              <SquelettesTableau lignes={5} colonnes={8} />
             ) : !transactions || transactions.data.length === 0 ? (
               <div className="py-10 text-center text-xs text-muted-foreground">
                 Aucun règlement enregistré pour le moment avec ces critères.

@@ -197,6 +197,10 @@ export const fr = {
     compteBoutiqueDesactive:
       "Le compte de cette boutique est actuellement désactivé. Veuillez contacter le propriétaire de la boutique pour plus d'informations.",
     accesRefuse: "Accès refusé.",
+    reessayerDans: "Réessayer dans {secondes}s",
+    patienter: "Patienter ({secondes}s)",
+    tropDeTentatives: "Trop de tentatives. Veuillez réessayer dans {secondes} secondes.",
+    delaiSecuriteActif: "Délai de sécurité actif ({secondes}s)",
     votreEssai: "Votre période d'essai",
     votreAbonnement: "Votre abonnement",
     seTermineLe: "se termine le",

@@ -14,6 +14,7 @@ import {
   SquelettesCartes,
   TitrePage,
 } from "@/components/ui-commun";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import type { StatistiquesAdmin } from "@/types";
 
@@ -48,7 +49,23 @@ export default function PageAdmin() {
       {erreur ? (
         <EtatErreur message={erreur} onReessayer={() => void charger()} />
       ) : chargement || !stats ? (
-        <SquelettesCartes />
+        <div className="space-y-4">
+          <SquelettesCartes nombre={4} />
+          <div className="rounded-xl border bg-card p-4 sm:p-5 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-8 w-8 rounded-lg" />
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 pt-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="space-y-1">
+                  <Skeleton className="h-3.5 w-20" />
+                  <Skeleton className="h-7 w-16" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

@@ -4,6 +4,8 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { api, ErreurApi, enregistrerToken } from "@/lib/api";
+import { useRateLimit } from "@/lib/useRateLimit";
+import { AlerteRateLimit } from "@/components/ui/alerte-rate-limit";
 import { BasculeTheme } from "@/components/bascule-theme";
 import { BasculeLangue } from "@/components/bascule-langue";
 import { useI18n } from "@/lib/i18n";
@@ -32,6 +34,9 @@ export default function PageInvitation({
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
+  // Rate limiting dynamique
+  const rateLimit = useRateLimit();
+
   useEffect(() => {
     api
       .get<{ data: { email: string; role: string } }>(`/invitations/${token}`)
@@ -42,6 +47,8 @@ export default function PageInvitation({
 
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
+    if (rateLimit.estBloque || envoiEnCours) return;
+
     setErreurs({});
 
     const errs: Record<string, string> = {};
@@ -77,6 +84,7 @@ export default function PageInvitation({
     } catch (err) {
       if (err instanceof ErreurApi) {
         setErreurs(err.parChamp());
+        rateLimit.gererErreur(err);
         toast.error(err.resume());
       }
     } finally {
@@ -162,9 +170,23 @@ export default function PageInvitation({
           )}
         </div>
 
-        <Button type="submit" className="w-full" disabled={envoiEnCours}>
+        {rateLimit.estBloque && (
+          <AlerteRateLimit
+            secondes={rateLimit.secondes}
+            message={rateLimit.message}
+            compact
+          />
+        )}
+
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={envoiEnCours || rateLimit.estBloque}
+        >
           {envoiEnCours && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {t("auth.activerCompte")}
+          {rateLimit.estBloque
+            ? t("auth.reessayerDans", { secondes: rateLimit.secondes })
+            : t("auth.activerCompte")}
         </Button>
       </form>
     </div>

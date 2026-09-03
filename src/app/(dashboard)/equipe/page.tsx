@@ -19,6 +19,7 @@ import {
   Apparait,
   EtatErreur,
   EtatVide,
+  SquelettePageTableau,
   SquelettesTableau,
   TitrePage,
 } from "@/components/ui-commun";
@@ -77,6 +78,17 @@ export default function PageEquipe() {
 
   const peutGerer = moi && permissions.gererEmployes(moi.role);
 
+  if (chargement && equipe.length === 0) {
+    return (
+      <SquelettePageTableau
+        lignes={6}
+        colonnes={6}
+        avecFiltres={false}
+        avecBouton={true}
+      />
+    );
+  }
+
   return (
     <>
       <TitrePage
@@ -94,7 +106,7 @@ export default function PageEquipe() {
       {erreur ? (
         <EtatErreur message={erreur} onReessayer={recharger} />
       ) : chargement ? (
-        <SquelettesTableau lignes={3} />
+        <SquelettesTableau lignes={5} colonnes={6} />
       ) : equipe.length === 0 ? (
         <EtatVide
           icone={<Users className="h-5 w-5" />}

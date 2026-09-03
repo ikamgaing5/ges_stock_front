@@ -1,9 +1,5 @@
 "use client";
 
-/**
- * Activation de la double authentification, dans « Mon compte ».
- */
-
 import { useState } from "react";
 import {
   Copy,
@@ -15,6 +11,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
+import { useRateLimit } from "@/lib/useRateLimit";
+import { AlerteRateLimit } from "@/components/ui/alerte-rate-limit";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
 import { ChampCode } from "@/components/champ-code";
@@ -40,6 +38,9 @@ export function DeuxFacteurs() {
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
   const [confirmeDesactivation, setConfirmeDesactivation] = useState(false);
 
+  // Rate limiting dynamique
+  const rateLimit2fa = useRateLimit();
+
   const actif = utilisateur?.deux_facteurs?.actif ?? false;
   const restants = utilisateur?.deux_facteurs?.codes_secours_restants ?? 0;
 
@@ -51,10 +52,13 @@ export function DeuxFacteurs() {
     setCodesSecours([]);
     setErreurs({});
     setConfirmeDesactivation(false);
+    rateLimit2fa.arreter();
   }
 
   async function preparer(evenement: React.FormEvent) {
     evenement.preventDefault();
+    if (rateLimit2fa.estBloque || envoiEnCours) return;
+
     setErreurs({});
     setEnvoiEnCours(true);
 
@@ -68,6 +72,7 @@ export function DeuxFacteurs() {
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
+        rateLimit2fa.gererErreur(e);
         toast.error(e.resume());
       }
     } finally {
@@ -76,6 +81,8 @@ export function DeuxFacteurs() {
   }
 
   async function confirmer(codeSaisi: string) {
+    if (rateLimit2fa.estBloque || envoiEnCours) return;
+
     setErreurs({});
     setEnvoiEnCours(true);
 
@@ -93,6 +100,7 @@ export function DeuxFacteurs() {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
         setCode("");
+        rateLimit2fa.gererErreur(e);
         toast.error(e.resume());
       }
     } finally {
@@ -102,6 +110,8 @@ export function DeuxFacteurs() {
 
   async function desactiver(evenement: React.FormEvent) {
     evenement.preventDefault();
+    if (rateLimit2fa.estBloque || envoiEnCours) return;
+
     setErreurs({});
     setEnvoiEnCours(true);
 
@@ -115,6 +125,7 @@ export function DeuxFacteurs() {
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
+        rateLimit2fa.gererErreur(e);
         toast.error(e.resume());
       }
     } finally {
@@ -124,6 +135,8 @@ export function DeuxFacteurs() {
 
   async function regenerer(evenement: React.FormEvent) {
     evenement.preventDefault();
+    if (rateLimit2fa.estBloque || envoiEnCours) return;
+
     setErreurs({});
     setEnvoiEnCours(true);
 
@@ -139,6 +152,7 @@ export function DeuxFacteurs() {
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
+        rateLimit2fa.gererErreur(e);
         toast.error(e.resume());
       }
     } finally {
@@ -161,40 +175,40 @@ export function DeuxFacteurs() {
       ...codesSecours,
     ].join("\n");
 
+    const blob = new Blob([contenu], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
     const lien = document.createElement("a");
-    lien.href = URL.createObjectURL(new Blob([contenu], { type: "text/plain" }));
-    lien.download = "codes-secours-parc-mobile.txt";
+    lien.href = url;
+    lien.download = `codes-secours-telora-${new Date().toISOString().slice(0, 10)}.txt`;
     lien.click();
-    URL.revokeObjectURL(lien.href);
+    URL.revokeObjectURL(url);
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          {actif ? (
-            <ShieldCheck className="h-4 w-4 text-statut-ok" />
-          ) : (
-            <ShieldOff className="h-4 w-4 text-muted-foreground" />
-          )}
-          {t("deuxFacteurs.titre")}
-        </CardTitle>
+        <CardTitle className="text-base">{t("deuxFacteurs.titre")}</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* ---------------- Écran des codes de secours ---------------- */}
         {etape === "codes" ? (
+          /* ---------------- Écran des codes de secours ---------------- */
           <div className="space-y-4">
-            <div className="flex gap-2.5 rounded-lg bg-statut-attente-fond px-3 py-2.5 text-sm text-statut-attente">
-              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-              <p>{t("deuxFacteurs.avertissementCodes")}</p>
+            <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200">
+              <TriangleAlert className="h-4 w-4 shrink-0 text-amber-500" />
+              <div>
+                <p className="font-semibold">{t("deuxFacteurs.gardezPrecieusement")}</p>
+                <p className="mt-0.5 text-amber-800 dark:text-amber-300">
+                  {t("deuxFacteurs.avertissementUsageUnique")}
+                </p>
+              </div>
             </div>
 
-            <ul className="grid grid-cols-2 gap-2 rounded-lg border p-3">
-              {codesSecours.map((c) => (
+            <ul className="grid grid-cols-2 gap-2 font-mono text-sm">
+              {codesSecours.map((c, i) => (
                 <li
-                  key={c}
-                  className="chiffres text-center font-mono text-sm tracking-wider"
+                  key={i}
+                  className="rounded-lg border bg-muted/40 p-2 text-center"
                 >
                   {c}
                 </li>
@@ -246,22 +260,38 @@ export function DeuxFacteurs() {
                 onComplet={(c) => void confirmer(c)}
                 erreur={Boolean(erreurs.code)}
               />
-              {erreurs.code && (
-                <p className="text-center text-xs text-destructive">
-                  {erreurs.code}
-                </p>
+              {rateLimit2fa.estBloque ? (
+                <AlerteRateLimit
+                  secondes={rateLimit2fa.secondes}
+                  message={rateLimit2fa.message}
+                  compact
+                />
+              ) : (
+                erreurs.code && (
+                  <p className="text-center text-xs text-destructive">
+                    {erreurs.code}
+                  </p>
+                )
               )}
             </div>
 
             <div className="flex gap-2">
               <Button
-                disabled={envoiEnCours || code.replace(/\D/g, "").length < 6}
+                disabled={
+                  envoiEnCours ||
+                  rateLimit2fa.estBloque ||
+                  code.replace(/\D/g, "").length < 6
+                }
                 onClick={() => void confirmer(code)}
               >
                 {envoiEnCours && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {t("deuxFacteurs.activer")}
+                {rateLimit2fa.estBloque
+                  ? t("auth.reessayerDans", {
+                      secondes: rateLimit2fa.secondes,
+                    })
+                  : t("deuxFacteurs.activer")}
               </Button>
               <Button variant="ghost" onClick={revenirAuRepos}>
                 {t("commun.annuler")}
@@ -288,10 +318,18 @@ export function DeuxFacteurs() {
                 value={motDePasse}
                 onChange={(e) => setMotDePasse(e.target.value)}
               />
-              {erreurs.mot_de_passe_actuel && (
-                <p className="text-xs text-destructive">
-                  {erreurs.mot_de_passe_actuel}
-                </p>
+              {rateLimit2fa.estBloque ? (
+                <AlerteRateLimit
+                  secondes={rateLimit2fa.secondes}
+                  message={rateLimit2fa.message}
+                  compact
+                />
+              ) : (
+                erreurs.mot_de_passe_actuel && (
+                  <p className="text-xs text-destructive">
+                    {erreurs.mot_de_passe_actuel}
+                  </p>
+                )
               )}
             </div>
 
@@ -299,16 +337,20 @@ export function DeuxFacteurs() {
               <Button
                 type="submit"
                 variant={confirmeDesactivation ? "destructive" : "default"}
-                disabled={envoiEnCours}
+                disabled={envoiEnCours || rateLimit2fa.estBloque}
               >
                 {envoiEnCours && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {confirmeDesactivation
-                  ? t("deuxFacteurs.desactiver")
-                  : actif
-                    ? t("deuxFacteurs.genererNouveauxCodes")
-                    : t("commun.suivant")}
+                {rateLimit2fa.estBloque
+                  ? t("auth.reessayerDans", {
+                      secondes: rateLimit2fa.secondes,
+                    })
+                  : confirmeDesactivation
+                    ? t("deuxFacteurs.desactiver")
+                    : actif
+                      ? t("deuxFacteurs.genererNouveauxCodes")
+                      : t("commun.suivant")}
               </Button>
               <Button type="button" variant="ghost" onClick={revenirAuRepos}>
                 {t("commun.annuler")}

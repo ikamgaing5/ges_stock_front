@@ -39,9 +39,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
+import { useRateLimit } from "@/lib/useRateLimit";
+import { AlerteRateLimit } from "@/components/ui/alerte-rate-limit";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
-import { Apparait, TitrePage } from "@/components/ui-commun";
+import { Apparait, SqueletteAbonnement, TitrePage } from "@/components/ui-commun";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -73,6 +75,9 @@ export default function PageAbonnement() {
 
   const [statut, setStatut] = useState<StatutAbonnementComplet | null>(null);
   const [chargement, setChargement] = useState(true);
+
+  // Rate limiting dynamique
+  const rateLimitPaiement = useRateLimit();
 
   // Choix de la formule
   const [duree, setDuree] = useState<1 | 12>(1); // 1 mois ou 12 mois
@@ -131,6 +136,8 @@ export default function PageAbonnement() {
    * Initialise la session de règlement
    */
   async function ouvrirModalPaiement(planChoisi: PlanAbonnement) {
+    if (rateLimitPaiement.estBloque || initialisationEnCours) return;
+
     setPlanSelectionne(planChoisi);
     setInitialisationEnCours(true);
 
@@ -145,7 +152,12 @@ export default function PageAbonnement() {
       setSession(reponse);
       setModalOuvert(true);
     } catch (e) {
-      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
+      if (e instanceof ErreurApi) {
+        rateLimitPaiement.gererErreur(e);
+        toast.error(e.resume());
+      } else {
+        toast.error(t("commun.erreur"));
+      }
     } finally {
       setInitialisationEnCours(false);
     }
@@ -194,11 +206,7 @@ export default function PageAbonnement() {
   }
 
   if (chargement || !statut) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
+    return <SqueletteAbonnement />;
   }
 
   const estModeTest = statut.mode_paiement === "test";
@@ -460,11 +468,19 @@ export default function PageAbonnement() {
                 </div>
               </div>
 
+              {rateLimitPaiement.estBloque && (
+                <AlerteRateLimit
+                  secondes={rateLimitPaiement.secondes}
+                  message={rateLimitPaiement.message}
+                  compact
+                />
+              )}
+
               <Button
                 type="button"
                 variant={planSelectionne === "standard" ? "default" : "outline"}
                 className="w-full font-semibold cursor-pointer py-5 text-sm"
-                disabled={initialisationEnCours}
+                disabled={initialisationEnCours || rateLimitPaiement.estBloque}
                 onClick={() => ouvrirModalPaiement("standard")}
               >
                 {initialisationEnCours && planSelectionne === "standard" ? (
@@ -472,7 +488,13 @@ export default function PageAbonnement() {
                 ) : (
                   <CreditCard className="mr-2 h-4 w-4" />
                 )}
-                {lang === "en" ? "Activate Standard Plan" : "Activer la Formule Standard"}
+                {rateLimitPaiement.estBloque
+                  ? t("auth.reessayerDans", {
+                      secondes: rateLimitPaiement.secondes,
+                    })
+                  : lang === "en"
+                    ? "Activate Standard Plan"
+                    : "Activer la Formule Standard"}
               </Button>
             </CardContent>
           </Card>
@@ -577,11 +599,19 @@ export default function PageAbonnement() {
                 </div>
               </div>
 
+              {rateLimitPaiement.estBloque && (
+                <AlerteRateLimit
+                  secondes={rateLimitPaiement.secondes}
+                  message={rateLimitPaiement.message}
+                  compact
+                />
+              )}
+
               <Button
                 type="button"
                 variant="default"
                 className="w-full font-semibold shadow-md cursor-pointer py-5 text-sm"
-                disabled={initialisationEnCours}
+                disabled={initialisationEnCours || rateLimitPaiement.estBloque}
                 onClick={() => ouvrirModalPaiement("premium")}
               >
                 {initialisationEnCours && planSelectionne === "premium" ? (
@@ -589,7 +619,13 @@ export default function PageAbonnement() {
                 ) : (
                   <CreditCard className="mr-2 h-4 w-4" />
                 )}
-                {lang === "en" ? "Activate Premium Plan" : "Activer la Formule Premium"}
+                {rateLimitPaiement.estBloque
+                  ? t("auth.reessayerDans", {
+                      secondes: rateLimitPaiement.secondes,
+                    })
+                  : lang === "en"
+                    ? "Activate Premium Plan"
+                    : "Activer la Formule Premium"}
               </Button>
             </CardContent>
           </Card>

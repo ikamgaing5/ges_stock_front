@@ -14,6 +14,7 @@ import {
   Apparait,
   EtatErreur,
   EtatVide,
+  SquelettePageTableau,
   SquelettesTableau,
   TitrePage,
 } from "@/components/ui-commun";
@@ -78,10 +79,22 @@ export default function PageClients() {
 
   const clients = donnees?.data ?? [];
 
+  if (!donnees) {
+    return (
+      <SquelettePageTableau
+        lignes={6}
+        colonnes={6}
+        selectsFiltre={1}
+        avecBouton={false}
+      />
+    );
+  }
+
   return (
     <>
       <TitrePage
         titre={t("admin.clients")}
+        chargement={chargement}
         description={t("admin.clientsDesc")}
       />
 
@@ -119,7 +132,7 @@ export default function PageClients() {
       {erreur ? (
         <EtatErreur message={erreur} onReessayer={recharger} />
       ) : chargement ? (
-        <SquelettesTableau />
+        <SquelettesTableau lignes={6} colonnes={6} />
       ) : clients.length === 0 ? (
         <EtatVide
           icone={<Building2 className="h-5 w-5" />}

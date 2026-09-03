@@ -15,6 +15,7 @@ import {
   EtatErreur,
   EtatVide,
   PastilleMouvement,
+  SquelettePageTableau,
   SquelettesTableau,
   TitrePage,
 } from "@/components/ui-commun";
@@ -97,10 +98,22 @@ export default function PageHistorique() {
 
   const filtreActif = type !== "tous" || du || au;
 
+  if (!donnees) {
+    return (
+      <SquelettePageTableau
+        lignes={8}
+        colonnes={6}
+        selectsFiltre={3}
+        avecBouton={false}
+      />
+    );
+  }
+
   return (
     <>
       <TitrePage
         titre={t("mouvements.titre")}
+        chargement={chargement}
         description={t("mouvements.totalMouvements", { total })}
       />
 
@@ -176,7 +189,7 @@ export default function PageHistorique() {
       {erreur ? (
         <EtatErreur message={erreur} onReessayer={recharger} />
       ) : chargement ? (
-        <SquelettesTableau />
+        <SquelettesTableau lignes={8} colonnes={6} />
       ) : mouvements.length === 0 ? (
         <EtatVide
           icone={<ArrowLeftRight className="h-5 w-5" />}

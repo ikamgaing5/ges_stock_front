@@ -38,6 +38,18 @@ type ReponseConnexion = {
 
 const CLE_BOUTIQUE = "gestion-stock-boutique";
 const CLE_DEVISE = "gestion-stock-devise-affichage";
+const CLE_RETOUR = "gestion-stock-dernier-chemin";
+
+function obtenirCookie(nom: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp("(?:^|; )" + nom + "=([^;]*)"));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function definirCookie(nom: string, valeur: string, jours: number = 7) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${nom}=${encodeURIComponent(valeur)}; path=/; max-age=${jours * 24 * 60 * 60}; SameSite=Lax`;
+}
 
 type ContexteAuth = {
   utilisateur: Utilisateur | null;
@@ -135,12 +147,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  /** Enregistre le token et redirige selon le rôle. */
+  // Mémorisation en continu du chemin actif
+  useEffect(() => {
+    if (typeof window === "undefined" || !utilisateur) return;
+
+    const cheminActuel = window.location.pathname + window.location.search;
+    if (
+      cheminActuel &&
+      cheminActuel.startsWith("/") &&
+      !cheminActuel.startsWith("/connexion") &&
+      !cheminActuel.startsWith("/inscription") &&
+      !cheminActuel.startsWith("/mot-de-passe-oublie") &&
+      !cheminActuel.startsWith("/merci")
+    ) {
+      window.localStorage.setItem(CLE_RETOUR, cheminActuel);
+      definirCookie(CLE_RETOUR, cheminActuel, 7);
+    }
+  });
+
+  /** Enregistre le token et redirige automatiquement sur la dernière page consultée. */
   const ouvrirSession = useCallback(
-    (token: string, user: Utilisateur) => {
+    (token: string, user: Utilisateur, urlRetourExplicite?: string) => {
       enregistrerToken(token);
       setUtilisateur(user);
-      router.push(user.role === "admin" ? "/admin" : "/");
+
+      // Résolution de l'URL de destination :
+      // 1. Paramètre explicite transmis à ouvrirSession
+      // 2. Paramètre ?retour= dans l'URL de connexion
+      // 3. Dernier chemin mémorisé localement (localStorage / cookie)
+      // 4. Dernier chemin synchronisé depuis le compte utilisateur (multi-appareils)
+      // 5. Par défaut : /admin pour les admins, / pour les commerçants
+
+      let destination = urlRetourExplicite;
+
+      if (!destination && typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        destination = params.get("retour") || undefined;
+      }
+
+      if (!destination && typeof window !== "undefined") {
+        destination =
+          window.localStorage.getItem(CLE_RETOUR) ||
+          obtenirCookie(CLE_RETOUR) ||
+          undefined;
+      }
+
+      // Nettoyer la trace de retour locale
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(CLE_RETOUR);
+        definirCookie(CLE_RETOUR, "", 0);
+      }
+
+      // Validation de sécurité sur la destination
+      if (
+        destination &&
+        destination.startsWith("/") &&
+        !destination.startsWith("/connexion") &&
+        !destination.startsWith("/inscription") &&
+        !destination.startsWith("/mot-de-passe-oublie") &&
+        !destination.startsWith("/merci")
+      ) {
+        if (user.role === "admin" && !destination.startsWith("/admin")) {
+          router.push("/admin");
+        } else if (user.role !== "admin" && destination.startsWith("/admin")) {
+          router.push("/");
+        } else {
+          router.push(destination);
+        }
+      } else {
+        router.push(user.role === "admin" ? "/admin" : "/");
+      }
     },
     [router],
   );

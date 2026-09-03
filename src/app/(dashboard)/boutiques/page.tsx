@@ -12,7 +12,7 @@ import {
   Apparait,
   EtatErreur,
   EtatVide,
-  SquelettesCartes,
+  SqueletteGrilleBoutiques,
   TitrePage,
 } from "@/components/ui-commun";
 import { Button } from "@/components/ui/button";
@@ -74,6 +74,8 @@ export default function PageBoutiques() {
     }
   }
 
+  if (chargement) return <SqueletteGrilleBoutiques />;
+
   return (
     <>
       <TitrePage
@@ -88,8 +90,6 @@ export default function PageBoutiques() {
 
       {erreur ? (
         <EtatErreur message={erreur} onReessayer={() => void charger()} />
-      ) : chargement ? (
-        <SquelettesCartes nombre={2} />
       ) : boutiques.length === 0 ? (
         <EtatVide
           icone={<Store className="h-5 w-5" />}

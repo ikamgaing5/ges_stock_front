@@ -192,6 +192,10 @@ export const en = {
     compteBoutiqueDesactive:
       "This store's account is currently deactivated. Please contact the store owner for more information.",
     accesRefuse: "Access denied.",
+    reessayerDans: "Retry in {secondes}s",
+    patienter: "Wait ({secondes}s)",
+    tropDeTentatives: "Too many attempts. Please retry in {secondes} seconds.",
+    delaiSecuriteActif: "Security cooldown active ({secondes}s)",
     votreEssai: "Your free trial",
     votreAbonnement: "Your subscription",
     seTermineLe: "ends on",

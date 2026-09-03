@@ -27,11 +27,17 @@ export function lireToken(): string | null {
 }
 
 export function enregistrerToken(token: string) {
-  window.localStorage.setItem(CLE_TOKEN, token);
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(CLE_TOKEN, token);
+    document.cookie = `${CLE_TOKEN}=${encodeURIComponent(token)}; path=/; max-age=${60 * 60 * 24 * 30}; SameSite=Lax`;
+  }
 }
 
 export function effacerToken() {
-  window.localStorage.removeItem(CLE_TOKEN);
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem(CLE_TOKEN);
+    document.cookie = `${CLE_TOKEN}=; path=/; max-age=0; SameSite=Lax`;
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -52,18 +58,53 @@ export class ErreurApi extends Error {
    * secondes à attendre avant de pouvoir redemander un code.
    */
   donnees: Record<string, unknown>;
+  /** Secondes restantes imposées par le rate-limiting ou le serveur. */
+  retryApres?: number;
 
   constructor(
     message: string,
     statut: number,
     erreurs: Record<string, string[]> = {},
     donnees: Record<string, unknown> = {},
+    retryApres?: number,
   ) {
     super(message);
     this.name = "ErreurApi";
     this.statut = statut;
     this.erreurs = erreurs;
     this.donnees = donnees;
+
+    // Déduction des secondes restantes
+    if (typeof retryApres === "number" && !isNaN(retryApres)) {
+      this.retryApres = retryApres;
+    } else if (typeof donnees?.retry_after === "number") {
+      this.retryApres = donnees.retry_after;
+    } else if (typeof donnees?.secondes_restantes === "number") {
+      this.retryApres = donnees.secondes_restantes;
+    }
+  }
+
+  /** Indique si cette erreur correspond à un blocage par limitation de débit (429). */
+  estRateLimit(): boolean {
+    return this.statut === 429 || this.retryApres !== undefined;
+  }
+
+  /** Retourne le nombre de secondes restantes (ou un repli par défaut). */
+  secondesRestantes(defaut: number = 60): number {
+    if (typeof this.retryApres === "number" && this.retryApres > 0) {
+      return this.retryApres;
+    }
+    const depuisDonnees = this.nombre("retry_after") ?? this.nombre("secondes_restantes");
+    if (depuisDonnees !== undefined && depuisDonnees > 0) {
+      return depuisDonnees;
+    }
+    // Tentative d'extraction par regex dans le message si présent
+    const match = String(this.message).match(/(\d+)\s*(?:secondes?|seconds?|s\b)/i);
+    if (match) {
+      const sec = parseInt(match[1], 10);
+      if (!isNaN(sec) && sec > 0) return sec;
+    }
+    return defaut;
   }
 
   /** Lit un champ supplémentaire du corps de la réponse. */
@@ -204,15 +245,14 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
   const donnees = texte ? JSON.parse(texte) : null;
 
   if (!reponse.ok) {
-    // 401 = token invalide ou expiré : on déconnecte et on renvoie au login.
+    // 401 = token invalide ou expiré : on déconnecte et on renvoie au login en conservant la page active.
     if (reponse.status === 401 && typeof window !== "undefined") {
       effacerToken();
       if (!window.location.pathname.startsWith("/connexion")) {
-        // Rechargement complet volontaire : ce fichier n'est pas un composant
-        // React, il n'a donc pas accès à useRouter(). Et repartir d'une page
-        // vierge garantit qu'aucune donnée de l'ancienne session ne subsiste.
-        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-        window.location.href = "/connexion";
+        const cheminActuel = window.location.pathname + window.location.search;
+        window.localStorage.setItem("gestion-stock-dernier-chemin", cheminActuel);
+        document.cookie = `gestion-stock-dernier-chemin=${encodeURIComponent(cheminActuel)}; path=/; max-age=604800; SameSite=Lax`;
+        window.location.href = `/connexion?retour=${encodeURIComponent(cheminActuel)}`;
       }
     }
 
@@ -266,11 +306,35 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
       }
     }
 
+    // Extraction du délai de Rate Limiting
+    let delaiAttente: number | undefined;
+    const headerRetryAfter = reponse.headers.get("Retry-After") || reponse.headers.get("retry-after");
+    if (headerRetryAfter) {
+      const parsed = parseInt(headerRetryAfter, 10);
+      if (!isNaN(parsed) && parsed > 0) delaiAttente = parsed;
+    }
+    if (delaiAttente === undefined && typeof donnees?.retry_after === "number") {
+      delaiAttente = donnees.retry_after;
+    }
+    if (delaiAttente === undefined && typeof donnees?.secondes_restantes === "number") {
+      delaiAttente = donnees.secondes_restantes;
+    }
+    if (delaiAttente === undefined && reponse.status === 429) {
+      const match = String(messageAffiche).match(/(\d+)\s*(?:secondes?|seconds?|s\b)/i);
+      if (match) {
+        const sec = parseInt(match[1], 10);
+        if (!isNaN(sec) && sec > 0) delaiAttente = sec;
+      } else {
+        delaiAttente = 60;
+      }
+    }
+
     throw new ErreurApi(
       messageAffiche,
       reponse.status,
       erreursAssainies,
       donnees ?? {},
+      delaiAttente,
     );
   }
 

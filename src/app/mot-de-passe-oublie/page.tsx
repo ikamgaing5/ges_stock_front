@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { api, enregistrerToken, ErreurApi } from "@/lib/api";
+import { useRateLimit } from "@/lib/useRateLimit";
+import { AlerteRateLimit } from "@/components/ui/alerte-rate-limit";
 import { useAuth } from "@/components/auth-provider";
 import { BasculeTheme } from "@/components/bascule-theme";
 import { BasculeLangue } from "@/components/bascule-langue";
@@ -35,20 +37,22 @@ export default function PageMotDePasseOublie() {
   const [confirmation, setConfirmation] = useState("");
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
-  const [secondesAvantRenvoi, setSecondesAvantRenvoi] = useState(0);
+
+  // Rate limiting dynamique
+  const rateLimitEmail = useRateLimit();
+  const rateLimitRenvoi = useRateLimit();
+  const rateLimitReset = useRateLimit();
 
   useEffect(() => {
     document.title = `${t("auth.motDePasseOublieTitre")} | Telora`;
   }, [lang, t]);
 
-  useEffect(() => {
-    if (secondesAvantRenvoi <= 0) return;
-    const minuteur = setTimeout(() => setSecondesAvantRenvoi((s) => s - 1), 1000);
-    return () => clearTimeout(minuteur);
-  }, [secondesAvantRenvoi]);
-
   async function demanderCode(evenement?: React.FormEvent) {
     evenement?.preventDefault();
+    if (rateLimitEmail.estBloque || rateLimitRenvoi.estBloque || envoiEnCours) {
+      return;
+    }
+
     setErreurs({});
 
     if (!email.trim()) {
@@ -65,13 +69,14 @@ export default function PageMotDePasseOublie() {
     try {
       await api.post("/mot-de-passe/code", { email });
       setEtape("code");
-      setSecondesAvantRenvoi(DELAI_RENVOI);
+      rateLimitRenvoi.demarrer(DELAI_RENVOI);
       toast.success(t("auth.codeEnvoyeEmail"));
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
-        const reste = e.nombre("secondes_restantes");
-        if (reste !== undefined) setSecondesAvantRenvoi(reste);
+        const sec = e.secondesRestantes(DELAI_RENVOI);
+        rateLimitEmail.demarrer(sec, e.message);
+        rateLimitRenvoi.demarrer(sec, e.message);
         toast.error(e.resume());
       }
     } finally {
@@ -81,6 +86,7 @@ export default function PageMotDePasseOublie() {
 
   async function reinitialiser(evenement: React.FormEvent) {
     evenement.preventDefault();
+    if (rateLimitReset.estBloque || envoiEnCours) return;
 
     const errs: Record<string, string> = {};
     if (!code || code.replace(/\D/g, "").length < 6) {
@@ -126,6 +132,7 @@ export default function PageMotDePasseOublie() {
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
+        rateLimitReset.gererErreur(e);
         toast.error(e.resume());
       }
       setEnvoiEnCours(false);
@@ -189,14 +196,24 @@ export default function PageMotDePasseOublie() {
               )}
             </div>
 
+            {rateLimitEmail.estBloque && (
+              <AlerteRateLimit
+                secondes={rateLimitEmail.secondes}
+                message={rateLimitEmail.message}
+                compact
+              />
+            )}
+
             <Button
               type="submit"
               size="lg"
               className="w-full"
-              disabled={envoiEnCours}
+              disabled={envoiEnCours || rateLimitEmail.estBloque}
             >
               {envoiEnCours && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {t("auth.envoyerCode")}
+              {rateLimitEmail.estBloque
+                ? t("auth.reessayerDans", { secondes: rateLimitEmail.secondes })
+                : t("auth.envoyerCode")}
             </Button>
           </form>
         ) : (
@@ -264,14 +281,28 @@ export default function PageMotDePasseOublie() {
               )}
             </div>
 
+            {rateLimitReset.estBloque && (
+              <AlerteRateLimit
+                secondes={rateLimitReset.secondes}
+                message={rateLimitReset.message}
+                compact
+              />
+            )}
+
             <Button
               type="submit"
               size="lg"
               className="w-full"
-              disabled={envoiEnCours || code.replace(/\D/g, "").length < 6}
+              disabled={
+                envoiEnCours ||
+                rateLimitReset.estBloque ||
+                code.replace(/\D/g, "").length < 6
+              }
             >
               {envoiEnCours && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {t("monCompte.changerMotDePasse")}
+              {rateLimitReset.estBloque
+                ? t("auth.reessayerDans", { secondes: rateLimitReset.secondes })
+                : t("monCompte.changerMotDePasse")}
             </Button>
 
             <div className="flex items-center justify-between gap-3 border-t pt-4 text-sm">
@@ -281,6 +312,7 @@ export default function PageMotDePasseOublie() {
                   setEtape("email");
                   setCode("");
                   setErreurs({});
+                  rateLimitReset.arreter();
                 }}
                 className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
               >
@@ -290,12 +322,12 @@ export default function PageMotDePasseOublie() {
 
               <button
                 type="button"
-                disabled={secondesAvantRenvoi > 0 || envoiEnCours}
+                disabled={rateLimitRenvoi.estBloque || envoiEnCours}
                 onClick={() => void demanderCode()}
                 className="font-medium text-primary underline underline-offset-4 disabled:text-muted-foreground disabled:no-underline"
               >
-                {secondesAvantRenvoi > 0
-                  ? `${t("auth.renvoyerCode")} (${secondesAvantRenvoi}s)`
+                {rateLimitRenvoi.estBloque
+                  ? `${t("auth.renvoyerCode")} (${rateLimitRenvoi.secondes}s)`
                   : t("auth.renvoyerCode")}
               </button>
             </div>

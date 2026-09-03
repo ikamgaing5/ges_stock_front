@@ -15,7 +15,7 @@ import {
   EtatErreur,
   PastilleMouvement,
   PastilleStatut,
-  SquelettesTableau,
+  SqueletteFicheDetail,
   TitrePage,
 } from "@/components/ui-commun";
 import { Button } from "@/components/ui/button";
@@ -78,7 +78,7 @@ export default function PageAppareil({
     void charger();
   }, [charger]);
 
-  if (chargement) return <SquelettesTableau />;
+  if (chargement) return <SqueletteFicheDetail />;
 
   if (nonTrouve || nonAutorise) {
     return (

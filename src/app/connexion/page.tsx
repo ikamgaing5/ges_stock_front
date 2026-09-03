@@ -10,6 +10,8 @@ import { BasculeTheme } from "@/components/bascule-theme";
 import { BasculeLangue } from "@/components/bascule-langue";
 import { ChampCode } from "@/components/champ-code";
 import { ErreurApi } from "@/lib/api";
+import { useRateLimit } from "@/lib/useRateLimit";
+import { AlerteRateLimit } from "@/components/ui/alerte-rate-limit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,13 +33,52 @@ export default function PageConnexion() {
   }>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
+  // Rate limiting dynamique avec décompte en direct sur la vue
+  const rateLimitLogin = useRateLimit({
+    auDeblocage: () => {
+      setErreur(null);
+    },
+  });
+
+  const rateLimit2fa = useRateLimit({
+    auDeblocage: () => {
+      setErreur(null);
+    },
+  });
+
   // Renseigné seulement quand le compte a la double authentification.
   const [jetonDefi, setJetonDefi] = useState<string | null>(null);
   const [code, setCode] = useState("");
 
   useEffect(() => {
     if (!chargement && utilisateur) {
-      router.replace(utilisateur.role === "admin" ? "/admin" : "/");
+      const params =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search)
+          : null;
+      const retour = params?.get("retour");
+
+      if (
+        retour &&
+        retour.startsWith("/") &&
+        !retour.startsWith("/connexion") &&
+        !retour.startsWith("/inscription") &&
+        !retour.startsWith("/mot-de-passe-oublie") &&
+        !retour.startsWith("/merci")
+      ) {
+        if (utilisateur.role === "admin" && !retour.startsWith("/admin")) {
+          router.replace("/admin");
+        } else if (
+          utilisateur.role !== "admin" &&
+          retour.startsWith("/admin")
+        ) {
+          router.replace("/");
+        } else {
+          router.replace(retour);
+        }
+      } else {
+        router.replace(utilisateur.role === "admin" ? "/admin" : "/");
+      }
     }
   }, [chargement, utilisateur, router]);
 
@@ -107,6 +148,8 @@ export default function PageConnexion() {
 
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
+    if (rateLimitLogin.estBloque || envoiEnCours) return;
+
     setErreur(null);
 
     const nouvellesErreurs: { email?: string; motDePasse?: string } = {};
@@ -140,8 +183,12 @@ export default function PageConnexion() {
       }
     } catch (e) {
       if (e instanceof ErreurApi) {
+        const estRateLimite = rateLimitLogin.gererErreur(e);
         const msg = e.erreurDe("email") ?? e.message;
         setErreur(msg);
+        if (estRateLimite) {
+          // Décompte activé automatiquement via rateLimitLogin
+        }
       } else {
         setErreur(t("commun.erreur"));
       }
@@ -151,6 +198,8 @@ export default function PageConnexion() {
 
   /** Deuxième étape : code de l'application, ou code de secours. */
   async function validerCode(codeSaisi: string) {
+    if (rateLimit2fa.estBloque || envoiEnCours) return;
+
     setErreur(null);
     setEnvoiEnCours(true);
 
@@ -158,6 +207,7 @@ export default function PageConnexion() {
       await connexionDeuxFacteurs(jetonDefi!, codeSaisi);
     } catch (e) {
       if (e instanceof ErreurApi) {
+        const estRateLimite = rateLimit2fa.gererErreur(e);
         // Le défi expire au bout de cinq minutes : il faut alors
         // ressaisir le mot de passe.
         if (e.erreurDe("jeton_defi")) {
@@ -216,27 +266,41 @@ export default function PageConnexion() {
                 erreur={Boolean(erreur)}
               />
 
-              {erreur && (
-                <p
-                  role="alert"
-                  className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
-                >
-                  {formaterErreur(erreur)}
-                </p>
+              {rateLimit2fa.estBloque ? (
+                <AlerteRateLimit
+                  secondes={rateLimit2fa.secondes}
+                  message={erreur}
+                  compact
+                />
+              ) : (
+                erreur && (
+                  <p
+                    role="alert"
+                    className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                  >
+                    {formaterErreur(erreur)}
+                  </p>
+                )
               )}
 
               <Button
                 size="lg"
                 className="w-full"
-                disabled={envoiEnCours || code.replace(/\D/g, "").length < 6}
+                disabled={
+                  envoiEnCours ||
+                  rateLimit2fa.estBloque ||
+                  code.replace(/\D/g, "").length < 6
+                }
                 onClick={() => void validerCode(code)}
               >
                 {envoiEnCours && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {envoiEnCours
-                  ? t("commun.validerEnCours")
-                  : t("commun.valider")}
+                {rateLimit2fa.estBloque
+                  ? t("auth.reessayerDans", { secondes: rateLimit2fa.secondes })
+                  : envoiEnCours
+                    ? t("commun.validerEnCours")
+                    : t("commun.valider")}
               </Button>
 
               {/* Le champ à 6 cases n'accepte que des chiffres ; un code de
@@ -251,8 +315,9 @@ export default function PageConnexion() {
                     className="chiffres h-10 font-mono uppercase"
                     placeholder="XXXX-XXXX"
                     autoComplete="off"
+                    disabled={rateLimit2fa.estBloque}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
+                      if (e.key === "Enter" && !rateLimit2fa.estBloque) {
                         e.preventDefault();
                         void validerCode(e.currentTarget.value);
                       }
@@ -267,6 +332,7 @@ export default function PageConnexion() {
                   setJetonDefi(null);
                   setCode("");
                   setErreur(null);
+                  rateLimit2fa.arreter();
                 }}
                 className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
               >
@@ -329,27 +395,37 @@ export default function PageConnexion() {
                 )}
               </div>
 
-              {erreur && (
-                <p
-                  role="alert"
-                  className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
-                >
-                  {formaterErreur(erreur)}
-                </p>
+              {rateLimitLogin.estBloque ? (
+                <AlerteRateLimit
+                  secondes={rateLimitLogin.secondes}
+                  message={erreur}
+                  compact
+                />
+              ) : (
+                erreur && (
+                  <p
+                    role="alert"
+                    className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                  >
+                    {formaterErreur(erreur)}
+                  </p>
+                )
               )}
 
               <Button
                 type="submit"
                 size="lg"
                 className="w-full"
-                disabled={envoiEnCours}
+                disabled={envoiEnCours || rateLimitLogin.estBloque}
               >
                 {envoiEnCours && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {envoiEnCours
-                  ? t("auth.connexionEnCours")
-                  : t("auth.seConnecter")}
+                {rateLimitLogin.estBloque
+                  ? t("auth.reessayerDans", { secondes: rateLimitLogin.secondes })
+                  : envoiEnCours
+                    ? t("auth.connexionEnCours")
+                    : t("auth.seConnecter")}
               </Button>
             </form>
           )}

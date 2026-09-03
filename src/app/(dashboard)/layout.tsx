@@ -12,10 +12,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, TriangleAlert } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { SqueletteShellDashboard } from "@/components/ui-commun";
 import { useI18n } from "@/lib/i18n";
 
 export default function DashboardLayout({
@@ -31,7 +32,15 @@ export default function DashboardLayout({
     if (chargement) return;
 
     if (!utilisateur) {
-      router.replace("/connexion");
+      const cheminActuel =
+        typeof window !== "undefined"
+          ? window.location.pathname + window.location.search
+          : "";
+      const destination =
+        cheminActuel && cheminActuel !== "/"
+          ? `/connexion?retour=${encodeURIComponent(cheminActuel)}`
+          : "/connexion";
+      router.replace(destination);
       return;
     }
 
@@ -42,12 +51,7 @@ export default function DashboardLayout({
   }, [chargement, utilisateur, router]);
 
   if (chargement || !utilisateur || utilisateur.role === "admin") {
-    return (
-      <div className="flex min-h-[100dvh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <span className="sr-only">{t("commun.chargement")}</span>
-      </div>
-    );
+    return <SqueletteShellDashboard />;
   }
 
   return (

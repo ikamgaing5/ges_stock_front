@@ -54,10 +54,10 @@ export function useListe<T>(
 
   useEffect(() => {
     const controleur = new AbortController();
+    setChargement(true);
+    setErreur(null);
 
     const lancer = async () => {
-      setErreur(null);
-
       try {
         const resultat = await fonction.current(controleur.signal);
         setDonnees(resultat);

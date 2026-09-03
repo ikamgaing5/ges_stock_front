@@ -127,10 +127,29 @@ export default function PageScanner() {
       <div className="mt-4 sm:mt-6">
         {recherche ? (
           <Card>
-            <CardContent className="space-y-3 p-3.5 sm:p-6">
-              <Skeleton className="h-5 w-56" />
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-9 w-full" />
+            <CardHeader className="flex-row items-start justify-between gap-3">
+              <div className="min-w-0 space-y-2">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-3.5 w-36 font-mono" />
+              </div>
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="space-y-1">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                ))}
+              </div>
+              <div className="border-t pt-5 space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  <Skeleton className="h-9 w-28 rounded-lg" />
+                  <Skeleton className="h-9 w-28 rounded-lg" />
+                  <Skeleton className="h-9 w-28 rounded-lg" />
+                </div>
+              </div>
             </CardContent>
           </Card>
         ) : appareil ? (

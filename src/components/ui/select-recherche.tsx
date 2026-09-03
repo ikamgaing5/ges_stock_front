@@ -149,7 +149,7 @@ export function SelectRecherche({
             ? "border-destructive focus-visible:border-destructive focus-visible:ring-3 focus-visible:ring-destructive/30"
             : "border-input hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
           estDesactive && "cursor-not-allowed opacity-60 bg-muted/20",
-          chargement && "border-primary/40 bg-primary/5",
+          chargement && "border-primary/40 bg-primary/5 cursor-wait opacity-80 pointer-events-none",
           triggerClassName,
           className,
         )}

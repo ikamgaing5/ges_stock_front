@@ -20,7 +20,7 @@ import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
 import { convertirMontant, obtenirDevise } from "@/lib/devises";
 import { ChampImei } from "@/components/champ-imei";
-import { Apparait, TitrePage } from "@/components/ui-commun";
+import { Apparait, SqueletteFormulaire, TitrePage } from "@/components/ui-commun";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -58,6 +58,7 @@ export default function PageEntreeStock() {
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
   const [marques, setMarques] = useState<Marque[]>([]);
+  const [chargementMarques, setChargementMarques] = useState(true);
   const [gammes, setGammes] = useState<Gamme[]>([]);
   const [chargementGammes, setChargementGammes] = useState(false);
   const [gammeChoisie, setGammeChoisie] = useState("");
@@ -83,10 +84,12 @@ export default function PageEntreeStock() {
   });
 
   useEffect(() => {
+    setChargementMarques(true);
     api
       .get<{ data: Marque[] }>("/marques")
       .then((r) => setMarques(r.data))
-      .catch(() => setMarques([]));
+      .catch(() => setMarques([]))
+      .finally(() => setChargementMarques(false));
   }, []);
 
   useEffect(() => {
@@ -435,6 +438,10 @@ export default function PageEntreeStock() {
 
   const etats: EtatTelephone[] = ["neuf", "occasion", "reconditionne"];
 
+  if (chargementMarques) {
+    return <SqueletteFormulaire />;
+  }
+
   return (
     <>
       <Button
@@ -578,6 +585,13 @@ export default function PageEntreeStock() {
                     }))}
                     valeur={marqueChoisie}
                     onChange={(v) => choisirMarque(v)}
+                    disabled={chargementMarques}
+                    chargement={chargementMarques}
+                    texteChargement={
+                      lang === "en"
+                        ? "Loading brands..."
+                        : "Chargement des marques…"
+                    }
                     placeholder={
                       lang === "en" ? "Choose brand" : "Choisir la marque"
                     }

@@ -4,10 +4,12 @@
  * Changement d'adresse email, en deux temps.
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
+import { useRateLimit } from "@/lib/useRateLimit";
+import { AlerteRateLimit } from "@/components/ui/alerte-rate-limit";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
 import { ChampCode } from "@/components/champ-code";
@@ -29,13 +31,11 @@ export function ChangerEmail() {
   const [code, setCode] = useState("");
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
-  const [secondesAvantRenvoi, setSecondesAvantRenvoi] = useState(0);
 
-  useEffect(() => {
-    if (secondesAvantRenvoi <= 0) return;
-    const minuteur = setTimeout(() => setSecondesAvantRenvoi((s) => s - 1), 1000);
-    return () => clearTimeout(minuteur);
-  }, [secondesAvantRenvoi]);
+  // Rate limiting dynamique
+  const rateLimitEmail = useRateLimit();
+  const rateLimitRenvoi = useRateLimit();
+  const rateLimitConfirmation = useRateLimit();
 
   function reinitialiser() {
     setOuvert(false);
@@ -44,10 +44,17 @@ export function ChangerEmail() {
     setMotDePasse("");
     setCode("");
     setErreurs({});
+    rateLimitEmail.arreter();
+    rateLimitRenvoi.arreter();
+    rateLimitConfirmation.arreter();
   }
 
   async function demanderCode(evenement?: React.FormEvent) {
     evenement?.preventDefault();
+    if (rateLimitEmail.estBloque || rateLimitRenvoi.estBloque || envoiEnCours) {
+      return;
+    }
+
     setErreurs({});
 
     const errs: Record<string, string> = {};
@@ -74,13 +81,14 @@ export function ChangerEmail() {
       });
 
       setEtape("code");
-      setSecondesAvantRenvoi(DELAI_RENVOI);
+      rateLimitRenvoi.demarrer(DELAI_RENVOI);
       toast.success(t("changerEmail.codeEnvoye"));
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
-        const reste = e.nombre("secondes_restantes");
-        if (reste !== undefined) setSecondesAvantRenvoi(reste);
+        const sec = e.secondesRestantes(DELAI_RENVOI);
+        rateLimitEmail.demarrer(sec, e.message);
+        rateLimitRenvoi.demarrer(sec, e.message);
         toast.error(e.resume());
       }
     } finally {
@@ -89,6 +97,8 @@ export function ChangerEmail() {
   }
 
   async function confirmer(codeSaisi: string) {
+    if (rateLimitConfirmation.estBloque || envoiEnCours) return;
+
     setErreurs({});
     setEnvoiEnCours(true);
 
@@ -104,6 +114,7 @@ export function ChangerEmail() {
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
+        rateLimitConfirmation.gererErreur(e);
         toast.error(e.resume());
       }
     } finally {
@@ -184,12 +195,27 @@ export function ChangerEmail() {
               )}
             </div>
 
+            {rateLimitEmail.estBloque && (
+              <AlerteRateLimit
+                secondes={rateLimitEmail.secondes}
+                message={rateLimitEmail.message}
+                compact
+              />
+            )}
+
             <div className="flex gap-2">
-              <Button type="submit" disabled={envoiEnCours}>
+              <Button
+                type="submit"
+                disabled={envoiEnCours || rateLimitEmail.estBloque}
+              >
                 {envoiEnCours && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {t("changerEmail.envoyerCode")}
+                {rateLimitEmail.estBloque
+                  ? t("auth.reessayerDans", {
+                      secondes: rateLimitEmail.secondes,
+                    })
+                  : t("changerEmail.envoyerCode")}
               </Button>
               <Button type="button" variant="ghost" onClick={reinitialiser}>
                 {t("commun.annuler")}
@@ -211,10 +237,18 @@ export function ChangerEmail() {
               erreur={Boolean(erreurs.code)}
             />
 
-            {erreurs.code && (
-              <p className="text-center text-xs text-destructive">
-                {erreurs.code}
-              </p>
+            {rateLimitConfirmation.estBloque ? (
+              <AlerteRateLimit
+                secondes={rateLimitConfirmation.secondes}
+                message={rateLimitConfirmation.message}
+                compact
+              />
+            ) : (
+              erreurs.code && (
+                <p className="text-center text-xs text-destructive">
+                  {erreurs.code}
+                </p>
+              )
             )}
 
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -225,6 +259,7 @@ export function ChangerEmail() {
                   setEtape("saisie");
                   setCode("");
                   setErreurs({});
+                  rateLimitConfirmation.arreter();
                 }}
               >
                 {t("commun.modifier")}
@@ -232,12 +267,14 @@ export function ChangerEmail() {
 
               <button
                 type="button"
-                disabled={secondesAvantRenvoi > 0 || envoiEnCours}
+                disabled={rateLimitRenvoi.estBloque || envoiEnCours}
                 onClick={() => void demanderCode()}
                 className="text-sm font-medium text-primary underline underline-offset-4 disabled:text-muted-foreground disabled:no-underline"
               >
-                {secondesAvantRenvoi > 0
-                  ? t("changerEmail.renvoyerDans", { secondes: secondesAvantRenvoi })
+                {rateLimitRenvoi.estBloque
+                  ? t("changerEmail.renvoyerDans", {
+                      secondes: rateLimitRenvoi.secondes,
+                    })
                   : t("changerEmail.renvoyerCode")}
               </button>
             </div>

@@ -21,7 +21,8 @@ import {
   Apparait,
   EtatErreur,
   PastilleMouvement,
-  SquelettesCartes,
+  SqueletteDashboard,
+  SqueletteTitrePage,
   TitrePage,
 } from "@/components/ui-commun";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,19 @@ export default function PageTableauBord() {
     void charger();
   }, [charger]);
 
+  if (erreur) {
+    return <EtatErreur message={erreur} onReessayer={() => void charger()} />;
+  }
+
+  if (chargement || !donnees) {
+    return (
+      <div className="space-y-4">
+        <SqueletteTitrePage avecBouton={true} />
+        <SqueletteDashboard />
+      </div>
+    );
+  }
+
   const prenom = utilisateur?.name.split(" ")[0] ?? "";
 
   return (
@@ -69,18 +83,12 @@ export default function PageTableauBord() {
         </Button>
       </TitrePage>
 
-      {erreur ? (
-        <EtatErreur message={erreur} onReessayer={() => void charger()} />
-      ) : chargement || !donnees ? (
-        <SquelettesCartes />
-      ) : (
-        <Contenu
-          donnees={donnees}
-          devise={devise}
-          deviseBoutique={deviseBoutique}
-          boutiques={boutiques}
-        />
-      )}
+      <Contenu
+        donnees={donnees}
+        devise={devise}
+        deviseBoutique={deviseBoutique}
+        boutiques={boutiques}
+      />
     </>
   );
 }

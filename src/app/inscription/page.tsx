@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi, enregistrerToken } from "@/lib/api";
+import { useRateLimit } from "@/lib/useRateLimit";
+import { AlerteRateLimit } from "@/components/ui/alerte-rate-limit";
 import { useAuth } from "@/components/auth-provider";
 import { BasculeTheme } from "@/components/bascule-theme";
 import { BasculeLangue } from "@/components/bascule-langue";
@@ -65,7 +67,11 @@ export default function PageInscription() {
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [erreurGenerale, setErreurGenerale] = useState<string | null>(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
-  const [secondesAvantRenvoi, setSecondesAvantRenvoi] = useState(0);
+
+  // Rate limiting dynamique sur les différentes étapes
+  const rateLimitFormulaire = useRateLimit();
+  const rateLimitRenvoi = useRateLimit();
+  const rateLimitCreation = useRateLimit();
 
   function modifier(champ: keyof typeof champs, valeur: string) {
     setChamps((precedent) => ({ ...precedent, [champ]: valeur }));
@@ -116,19 +122,10 @@ export default function PageInscription() {
     };
   }, [champs.password, lang]);
 
-  // Compte à rebours du bouton « Renvoyer le code »
-  useEffect(() => {
-    if (secondesAvantRenvoi <= 0) return;
-    const minuteur = setTimeout(
-      () => setSecondesAvantRenvoi((s) => s - 1),
-      1000,
-    );
-    return () => clearTimeout(minuteur);
-  }, [secondesAvantRenvoi]);
- 
   /** Étape 1 : vérification des coordonnées et envoi du code */
   async function demanderCode(evenement: React.FormEvent) {
     evenement.preventDefault();
+    if (rateLimitFormulaire.estBloque || envoiEnCours) return;
 
     const errs: Record<string, string> = {};
 
@@ -198,7 +195,7 @@ export default function PageInscription() {
       });
 
       setEtape("code");
-      setSecondesAvantRenvoi(DELAI_RENVOI);
+      rateLimitRenvoi.demarrer(DELAI_RENVOI);
       toast.success(
         lang === "en"
           ? "We sent a 6-digit code to your email."
@@ -208,6 +205,10 @@ export default function PageInscription() {
       if (e instanceof ErreurApi) {
         const parChamp = e.parChamp();
         setErreurs(parChamp);
+        const estRateLimite = rateLimitFormulaire.gererErreur(e, DELAI_RENVOI);
+        if (estRateLimite) {
+          rateLimitRenvoi.demarrer(e.secondesRestantes(DELAI_RENVOI));
+        }
         if (Object.keys(parChamp).length === 0) setErreurGenerale(e.message);
       } else {
         setErreurGenerale(t("commun.erreur"));
@@ -220,6 +221,8 @@ export default function PageInscription() {
   /** Étape 2 : validation du code et création du compte */
   const creerLeCompte = useCallback(
     async (codeSaisi: string) => {
+      if (rateLimitCreation.estBloque || envoiEnCours) return;
+
       setErreurs({});
       setErreurGenerale(null);
       setEnvoiEnCours(true);
@@ -235,6 +238,7 @@ export default function PageInscription() {
         router.push("/merci");
       } catch (e) {
         if (e instanceof ErreurApi) {
+          rateLimitCreation.gererErreur(e);
           const parChamp = e.parChamp();
           setErreurs(parChamp);
 
@@ -249,10 +253,12 @@ export default function PageInscription() {
         setEnvoiEnCours(false);
       }
     },
-    [champs, rafraichir, router, t],
+    [champs, rafraichir, router, t, rateLimitCreation, envoiEnCours],
   );
 
   async function renvoyerCode() {
+    if (rateLimitRenvoi.estBloque || envoiEnCours) return;
+
     setErreurs({});
     setEnvoiEnCours(true);
 
@@ -262,7 +268,7 @@ export default function PageInscription() {
         name: champs.name,
       });
       setCode("");
-      setSecondesAvantRenvoi(DELAI_RENVOI);
+      rateLimitRenvoi.demarrer(DELAI_RENVOI);
       toast.success(
         lang === "en"
           ? "We just sent you a new code."
@@ -271,8 +277,7 @@ export default function PageInscription() {
     } catch (e) {
       if (e instanceof ErreurApi) {
         toast.error(e.resume());
-        const reste = e.nombre("secondes_restantes");
-        if (reste !== undefined) setSecondesAvantRenvoi(reste);
+        rateLimitRenvoi.gererErreur(e, DELAI_RENVOI);
       }
     } finally {
       setEnvoiEnCours(false);
@@ -647,26 +652,32 @@ export default function PageInscription() {
 
               {/* Bouton de soumission */}
               <div className="space-y-3 pt-1">
+                {rateLimitFormulaire.estBloque && (
+                  <AlerteRateLimit
+                    secondes={rateLimitFormulaire.secondes}
+                    message={rateLimitFormulaire.message}
+                    compact
+                  />
+                )}
+
                 <Button
                   type="submit"
                   size="lg"
                   className="w-full text-base font-semibold shadow-md transition-all hover:shadow-lg cursor-pointer"
-                  disabled={envoiEnCours}
+                  disabled={envoiEnCours || rateLimitFormulaire.estBloque}
                 >
-                  {envoiEnCours ? (
+                  {rateLimitFormulaire.estBloque ? (
+                    t("auth.reessayerDans", {
+                      secondes: rateLimitFormulaire.secondes,
+                    })
+                  ) : envoiEnCours ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {/* {lang === "en"
-                        ? "Sending your code…"
-                        : "Envoi de votre code en cours…"} */}
                       {t("auth.EnvoieCode")}
                     </>
                   ) : (
                     <>
                       <span>
-                        {/* {lang === "en"
-                          ? "Create my store & receive my code"
-                          : "Créer ma boutique et recevoir mon code"} */}
                         {t("auth.CreerBoutiqueCode")}
                       </span>
                       <ArrowRight className="ml-2 h-4 w-4" />
@@ -675,9 +686,6 @@ export default function PageInscription() {
                 </Button>
 
                 <p className="text-center text-xs text-muted-foreground">
-                  {/* {lang === "en"
-                    ? "Free for 14 days, no card required."
-                    : "Essai gratuit de 14 jours, sans carte bancaire."} */}
                   {t("auth.EssaieGratuit")}
                 </p>
               </div>
@@ -700,9 +708,6 @@ export default function PageInscription() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">
-                  {/* {lang === "en"
-                    ? "Step 2 of 2: confirm your email"
-                    : "Étape 2 sur 2 : confirmation de votre email"} */}
                   {t("auth.DeuxiemeEtape")}
                 </span>
                 <span>100%</span>
@@ -719,15 +724,9 @@ export default function PageInscription() {
 
               <div>
                 <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground">
-                  {/* {lang === "en"
-                    ? "Last step: check your inbox"
-                    : "Dernière étape : vérifiez vos messages"} */}
                   {t("auth.DerniereEtape")}
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {/* {lang === "en"
-                    ? "We just sent a 6-digit confirmation code to:"
-                    : "Nous venons d'envoyer un code de validation à 6 chiffres à :"} */}
                   {t("auth.CodeRecu")}
                 </p>
                 <div className="mt-2 inline-flex items-center rounded-lg bg-muted px-3 py-1 font-mono text-xs font-semibold text-foreground">
@@ -735,13 +734,21 @@ export default function PageInscription() {
                 </div>
               </div>
 
-              {erreurGenerale && (
-                <div
-                  role="alert"
-                  className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive text-left"
-                >
-                  {erreurGenerale}
-                </div>
+              {rateLimitCreation.estBloque ? (
+                <AlerteRateLimit
+                  secondes={rateLimitCreation.secondes}
+                  message={rateLimitCreation.message}
+                  compact
+                />
+              ) : (
+                erreurGenerale && (
+                  <div
+                    role="alert"
+                    className="rounded-xl border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive text-left"
+                  >
+                    {erreurGenerale}
+                  </div>
+                )
               )}
 
               <div className="space-y-5">
@@ -772,7 +779,11 @@ export default function PageInscription() {
                 <Button
                   size="lg"
                   className="w-full text-base font-semibold shadow-md transition-all hover:shadow-lg cursor-pointer"
-                  disabled={envoiEnCours || code.replace(/\D/g, "").length < 6}
+                  disabled={
+                    envoiEnCours ||
+                    rateLimitCreation.estBloque ||
+                    code.replace(/\D/g, "").length < 6
+                  }
                   onClick={() => void creerLeCompte(code)}
                 >
                   {envoiEnCours ? (
@@ -780,6 +791,10 @@ export default function PageInscription() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       {t("commun.validerEnCours")}
                     </>
+                  ) : rateLimitCreation.estBloque ? (
+                    t("auth.reessayerDans", {
+                      secondes: rateLimitCreation.secondes,
+                    })
                   ) : lang === "en" ? (
                     "Activate my store"
                   ) : (
@@ -795,26 +810,24 @@ export default function PageInscription() {
                     setEtape("formulaire");
                     setCode("");
                     setErreurs({});
+                    rateLimitCreation.arreter();
                   }}
                   className="inline-flex items-center gap-1.5 font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  {/* {lang === "en"
-                    ? "Change my email or details"
-                    : "Corriger mon email ou mes informations"} */}
                   {t("auth.CorrigerInfo")}
                 </button>
 
                 <button
                   type="button"
-                  disabled={secondesAvantRenvoi > 0 || envoiEnCours}
+                  disabled={rateLimitRenvoi.estBloque || envoiEnCours}
                   onClick={() => void renvoyerCode()}
                   className="font-medium text-primary underline underline-offset-4 hover:text-primary/80 disabled:text-muted-foreground disabled:no-underline transition-colors cursor-pointer"
                 >
-                  {secondesAvantRenvoi > 0
+                  {rateLimitRenvoi.estBloque
                     ? lang === "en"
-                      ? `Resend code in ${secondesAvantRenvoi}s`
-                      : `Renvoyer un code dans ${secondesAvantRenvoi}s`
+                      ? `Resend code in ${rateLimitRenvoi.secondes}s`
+                      : `Renvoyer un code dans ${rateLimitRenvoi.secondes}s`
                     : lang === "en"
                       ? "I didn't get it, resend"
                       : "Je n'ai rien reçu, renvoyer un code"}

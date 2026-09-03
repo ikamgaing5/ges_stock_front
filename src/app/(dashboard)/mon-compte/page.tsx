@@ -14,7 +14,7 @@ import { BasculeLangue } from "@/components/bascule-langue";
 import { BasculeTheme } from "@/components/bascule-theme";
 import { ChangerEmail } from "@/components/changer-email";
 import { DeuxFacteurs } from "@/components/deux-facteurs";
-import { Apparait, TitrePage } from "@/components/ui-commun";
+import { Apparait, SqueletteMonCompte, TitrePage } from "@/components/ui-commun";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,7 @@ export default function PageMonCompte() {
     setTelephone(utilisateur.telephone ?? "");
   }, [utilisateur]);
 
-  if (!utilisateur) return null;
+  if (!utilisateur) return <SqueletteMonCompte />;
 
   async function enregistrerCoordonnees(evenement: React.FormEvent) {
     evenement.preventDefault();

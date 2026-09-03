@@ -39,7 +39,14 @@ export default function AdminLayout({
     if (chargement) return;
 
     if (!utilisateur) {
-      router.replace("/connexion");
+      const cheminActuel =
+        typeof window !== "undefined"
+          ? window.location.pathname + window.location.search
+          : "";
+      const destination = cheminActuel
+        ? `/connexion?retour=${encodeURIComponent(cheminActuel)}`
+        : "/connexion";
+      router.replace(destination);
       return;
     }
 

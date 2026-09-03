@@ -16,6 +16,7 @@ import {
   EtatErreur,
   EtatVide,
   PastilleStatut,
+  SquelettePageTableau,
   SquelettesTableau,
   TitrePage,
 } from "@/components/ui-commun";
@@ -44,8 +45,8 @@ export default function PageParc() {
   const { devise, deviseBoutique, boutiqueActive, parametresBoutique } = useAuth();
   const { t, formatMontant, formatDate, libelleEtat, lang } = useI18n();
   const parametresUrl = useSearchParams();
-
   const [modeles, setModeles] = useState<Modele[]>([]);
+  const [chargementModeles, setChargementModeles] = useState(true);
 
   // Le tableau de bord renvoie ici avec un statut pré-filtré.
   const [statut, setStatut] = useState(parametresUrl.get("statut") ?? "en_stock");
@@ -93,6 +94,7 @@ export default function PageParc() {
 
   useEffect(() => {
     const controleur = new AbortController();
+    setChargementModeles(true);
 
     api
       .get<{ data: Modele[] }>(
@@ -101,7 +103,8 @@ export default function PageParc() {
         controleur.signal,
       )
       .then((r) => setModeles(r.data))
-      .catch(() => setModeles([]));
+      .catch(() => setModeles([]))
+      .finally(() => setChargementModeles(false));
 
     return () => controleur.abort();
   }, [boutiqueId]);
@@ -114,10 +117,22 @@ export default function PageParc() {
     [modeles, t],
   );
 
+  if (!donnees) {
+    return (
+      <SquelettePageTableau
+        lignes={8}
+        colonnes={7}
+        selectsFiltre={2}
+        avecBouton={true}
+      />
+    );
+  }
+
   return (
     <>
       <TitrePage
         titre={t("telephones.titre")}
+        chargement={chargement}
         description={
           boutiqueActive
             ? `${total} ${t("telephones.titre").toLowerCase()} — ${boutiqueActive.nom}`
@@ -176,6 +191,11 @@ export default function PageParc() {
                 setModeleId(v || "tous");
                 setPage(1);
               }}
+              disabled={chargementModeles}
+              chargement={chargementModeles}
+              texteChargement={
+                lang === "en" ? "Loading models..." : "Chargement des modèles…"
+              }
               placeholder={t("telephones.tousLesModeles")}
               placeholderRecherche={
                 lang === "en" ? "Filter model..." : "Filtrer un modèle…"
@@ -188,7 +208,7 @@ export default function PageParc() {
       {erreur ? (
         <EtatErreur message={erreur} onReessayer={recharger} />
       ) : chargement ? (
-        <SquelettesTableau />
+        <SquelettesTableau lignes={8} colonnes={7} />
       ) : appareils.length === 0 ? (
         <EtatVide
           icone={<Smartphone className="h-5 w-5" />}

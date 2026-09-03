@@ -20,6 +20,8 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
+import { useRateLimit } from "@/lib/useRateLimit";
+import { AlerteRateLimit } from "@/components/ui/alerte-rate-limit";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
 import { permissions } from "@/lib/permissions";
@@ -251,6 +253,9 @@ function FenetreAction({
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
+  // Rate limiting dynamique sur les actions de stock
+  const rateLimitStock = useRateLimit();
+
   const destinations = boutiques.filter((b) => b.id !== telephone.boutique?.id);
 
   function reinitialiser() {
@@ -262,11 +267,12 @@ function FenetreAction({
     setBoutiqueId("");
     setStatut("en_stock");
     setErreurs({});
+    rateLimitStock.arreter();
   }
 
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
-    if (!action) return;
+    if (!action || rateLimitStock.estBloque || envoiEnCours) return;
 
     setErreurs({});
     setEnvoiEnCours(true);
@@ -310,6 +316,7 @@ function FenetreAction({
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
+        rateLimitStock.gererErreur(e);
         toast.error(e.resume());
       }
     } finally {
@@ -519,6 +526,14 @@ function FenetreAction({
                     {erreurs.statut}
                   </p>
                 )}
+
+                {rateLimitStock.estBloque && (
+                  <AlerteRateLimit
+                    secondes={rateLimitStock.secondes}
+                    message={rateLimitStock.message}
+                    compact
+                  />
+                )}
               </DialogCorps>
 
               <DialogFooter>
@@ -529,13 +544,18 @@ function FenetreAction({
                   type="submit"
                   disabled={
                     envoiEnCours ||
+                    rateLimitStock.estBloque ||
                     (action.champs.includes("boutique") && !boutiqueId)
                   }
                 >
                   {envoiEnCours && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  {t("commun.valider")}
+                  {rateLimitStock.estBloque
+                    ? t("auth.reessayerDans", {
+                        secondes: rateLimitStock.secondes,
+                      })
+                    : t("commun.valider")}
                 </Button>
               </DialogFooter>
             </form>
