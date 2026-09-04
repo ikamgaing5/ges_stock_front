@@ -199,7 +199,8 @@ export const fr = {
     accesRefuse: "Accès refusé.",
     reessayerDans: "Réessayer dans {secondes}s",
     patienter: "Patienter ({secondes}s)",
-    tropDeTentatives: "Trop de tentatives. Veuillez réessayer dans {secondes} secondes.",
+    tropDeTentatives:
+      "Trop de tentatives. Veuillez réessayer dans {secondes} secondes.",
     delaiSecuriteActif: "Délai de sécurité actif ({secondes}s)",
     votreEssai: "Votre période d'essai",
     votreAbonnement: "Votre abonnement",
@@ -351,6 +352,8 @@ export const fr = {
     aucunMouvementDesc:
       "Aucun événement ne correspond aux critères sélectionnés.",
     totalMouvements: "{total} mouvement(s) enregistré(s)",
+    filtreAu: "Filtrer jusqu'à",
+    filtreDu: "Filter du",
   },
   equipe: {
     titre: "Équipe & Accès",
@@ -367,6 +370,18 @@ export const fr = {
     renvoyerInvitation: "Renvoyer l'email",
     annulerInvitation: "Annuler",
     invitationAnnulee: "Invitation annulée.",
+    tableauEmail: "Email invité",
+    tableauExpireLe: "Expire le",
+    tableauEnvoyeLe: "Envoyé le",
+    expiree: "Expirée",
+    enAttente: "En attente",
+    aucuneInvitation: "Aucune invitation en attente",
+    aucuneInvitationDesc:
+      "Toutes les invitations ont été acceptées ou aucune invitation n'est en cours.",
+    annulerInvitationTitre: "Annuler l'invitation ?",
+    annulerInvitationDesc:
+      "L'invitation envoyée à {email} sera définitivement annulée et son lien d'activation expirera immédiatement.",
+    renvoyerSucces: "Invitation renvoyée avec succès.",
     desactiverAcces: "Désactiver l'accès",
     activerAcces: "Activer l'accès",
     aucunMembre: "Aucun membre d'équipe invité",

@@ -7,14 +7,25 @@
  * détermine le stock que chaque personne pourra voir.
  */
 
-import { useEffect, useState } from "react";
-import { Loader2, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  AlertCircle,
+  Clock,
+  Loader2,
+  Mail,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { useListe } from "@/lib/useListe";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
 import { permissions } from "@/lib/permissions";
+import { cn } from "@/lib/utils";
 import {
   Apparait,
   EtatErreur,
@@ -47,14 +58,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { Role, Utilisateur } from "@/types";
+import type { InvitationEmploye, Role, Utilisateur } from "@/types";
 
 export default function PageEquipe() {
   const { utilisateur: moi, parametresBoutique } = useAuth();
-  const { t, libelleRole, descriptionRole } = useI18n();
+  const { t, libelleRole, descriptionRole, formatDate } = useI18n();
 
   const [enEdition, setEnEdition] = useState<Partial<Utilisateur> | null>(null);
   const [aSupprimer, setASupprimer] = useState<Utilisateur | null>(null);
+
+  const [onglet, setOnglet] = useState<"membres" | "invitations">("membres");
+  const [invitations, setInvitations] = useState<InvitationEmploye[]>([]);
+  const [chargementInvitations, setChargementInvitations] = useState(false);
+  const [invitationEnRenvoi, setInvitationEnRenvoi] = useState<string | null>(null);
+  const [invitationASupprimer, setInvitationASupprimer] = useState<InvitationEmploye | null>(null);
+
+  const peutGerer = Boolean(moi && permissions.gererEmployes(moi.role));
 
   const { donnees, chargement, erreur, recharger } = useListe(
     (signal) =>
@@ -63,6 +82,23 @@ export default function PageEquipe() {
   );
 
   const equipe = donnees?.data ?? [];
+
+  const chargerInvitations = useCallback(async () => {
+    if (!peutGerer) return;
+    setChargementInvitations(true);
+    try {
+      const res = await api.get<{ data: InvitationEmploye[] }>("/employes/invitations");
+      setInvitations(res.data);
+    } catch {
+      // Ignorer si non accessible
+    } finally {
+      setChargementInvitations(false);
+    }
+  }, [peutGerer]);
+
+  useEffect(() => {
+    void chargerInvitations();
+  }, [chargerInvitations]);
 
   async function supprimer() {
     if (!aSupprimer) return;
@@ -76,7 +112,30 @@ export default function PageEquipe() {
     }
   }
 
-  const peutGerer = moi && permissions.gererEmployes(moi.role);
+  async function renvoyer(invitation: InvitationEmploye) {
+    setInvitationEnRenvoi(invitation.id);
+    try {
+      await api.post(`/employes/invitations/${invitation.id}/renvoyer`);
+      toast.success(t("equipe.renvoyerSucces"));
+      void chargerInvitations();
+    } catch (e) {
+      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
+    } finally {
+      setInvitationEnRenvoi(null);
+    }
+  }
+
+  async function supprimerInvitation() {
+    if (!invitationASupprimer) return;
+    try {
+      await api.delete(`/employes/invitations/${invitationASupprimer.id}`);
+      toast.success(t("equipe.invitationAnnulee"));
+      setInvitationASupprimer(null);
+      void chargerInvitations();
+    } catch (e) {
+      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
+    }
+  }
 
   if (chargement && equipe.length === 0) {
     return (
@@ -103,138 +162,300 @@ export default function PageEquipe() {
         )}
       </TitrePage>
 
-      {erreur ? (
-        <EtatErreur message={erreur} onReessayer={recharger} />
-      ) : chargement ? (
-        <SquelettesTableau lignes={5} colonnes={6} />
-      ) : equipe.length === 0 ? (
-        <EtatVide
-          icone={<Users className="h-5 w-5" />}
-          titre={t("equipe.aucunMembre")}
-          description={t("equipe.aucunMembreDesc")}
-        >
-          {peutGerer && (
-            <Button onClick={() => setEnEdition({})}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t("equipe.ajouterPersonne")}
-            </Button>
-          )}
-        </EtatVide>
+      {peutGerer && (
+        <div className="mb-4 flex border-b border-border">
+          <button
+            type="button"
+            onClick={() => setOnglet("membres")}
+            className={cn(
+              "flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
+              onglet === "membres"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Users className="h-4 w-4" />
+            <span>{t("equipe.membresActifs")}</span>
+            <span className="ml-1 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+              {equipe.length}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setOnglet("invitations")}
+            className={cn(
+              "flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
+              onglet === "invitations"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Mail className="h-4 w-4" />
+            <span>{t("equipe.invitationsEnAttente")}</span>
+            {invitations.length > 0 && (
+              <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                {invitations.length}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {onglet === "membres" ? (
+        erreur ? (
+          <EtatErreur message={erreur} onReessayer={recharger} />
+        ) : chargement ? (
+          <SquelettesTableau lignes={5} colonnes={6} />
+        ) : equipe.length === 0 ? (
+          <EtatVide
+            icone={<Users className="h-5 w-5" />}
+            titre={t("equipe.aucunMembre")}
+            description={t("equipe.aucunMembreDesc")}
+          >
+            {peutGerer && (
+              <Button onClick={() => setEnEdition({})}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t("equipe.ajouterPersonne")}
+              </Button>
+            )}
+          </EtatVide>
+        ) : (
+          <Apparait>
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t("equipe.tableauPersonne")}</TableHead>
+                        <TableHead>{t("equipe.tableauRole")}</TableHead>
+                        <TableHead>{t("equipe.tableauBoutiques")}</TableHead>
+                        <TableHead className="hidden lg:table-cell">
+                          {t("monCompte.telephone")}
+                        </TableHead>
+                        <TableHead>{t("equipe.tableauStatut")}</TableHead>
+                        {peutGerer && (
+                          <TableHead className="text-right">
+                            {t("commun.actions")}
+                          </TableHead>
+                        )}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {equipe.map((personne) => (
+                        <TableRow key={personne.id}>
+                          <TableCell>
+                            <p className="font-medium">{personne.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {personne.email}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <p>{libelleRole(personne.role)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {descriptionRole(personne.role)}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {(personne.boutiques_rattachees ?? []).map(
+                                (boutique) => (
+                                  <span
+                                    key={boutique.id}
+                                    className="rounded-full bg-muted px-2 py-0.5 text-xs"
+                                  >
+                                    {boutique.nom}
+                                  </span>
+                                ),
+                              )}
+                              {(personne.boutiques_rattachees ?? []).length ===
+                                0 && (
+                                <span className="text-xs text-statut-alerte">
+                                  {t("equipe.aucuneBoutique")}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden text-muted-foreground lg:table-cell">
+                            {formaterTelephoneVisuel(personne.telephone) || "—"}
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={
+                                personne.actif
+                                  ? "text-sm text-statut-ok"
+                                  : "text-sm text-muted-foreground"
+                              }
+                            >
+                              {personne.actif
+                                ? t("commun.actif")
+                                : t("commun.inactif")}
+                            </span>
+                          </TableCell>
+                          {peutGerer && (
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  onClick={() => setEnEdition(personne)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">
+                                    {t("commun.modifier")}
+                                  </span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  onClick={() => setASupprimer(personne)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">
+                                    {t("commun.supprimer")}
+                                  </span>
+                                </Button>
+                              </div>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </Apparait>
+        )
       ) : (
-        <Apparait>
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t("equipe.tableauPersonne")}</TableHead>
-                      <TableHead>{t("equipe.tableauRole")}</TableHead>
-                      <TableHead>{t("equipe.tableauBoutiques")}</TableHead>
-                      <TableHead className="hidden lg:table-cell">
-                        {t("monCompte.telephone")}
-                      </TableHead>
-                      <TableHead>{t("equipe.tableauStatut")}</TableHead>
-                      {peutGerer && (
+        /* Onglet des invitations */
+        chargementInvitations ? (
+          <SquelettesTableau lignes={4} colonnes={5} />
+        ) : invitations.length === 0 ? (
+          <EtatVide
+            icone={<Mail className="h-5 w-5" />}
+            titre={t("equipe.aucuneInvitation")}
+            description={t("equipe.aucuneInvitationDesc")}
+          >
+            {peutGerer && (
+              <Button onClick={() => setEnEdition({})}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t("equipe.ajouterPersonne")}
+              </Button>
+            )}
+          </EtatVide>
+        ) : (
+          <Apparait>
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t("equipe.tableauEmail")}</TableHead>
+                        <TableHead>{t("equipe.tableauRole")}</TableHead>
+                        <TableHead>{t("equipe.tableauBoutiques")}</TableHead>
+                        <TableHead>{t("equipe.tableauExpireLe")}</TableHead>
                         <TableHead className="text-right">
                           {t("commun.actions")}
                         </TableHead>
-                      )}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {equipe.map((personne) => (
-                      <TableRow key={personne.id}>
-                        <TableCell>
-                          <p className="font-medium">{personne.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {personne.email}
-                          </p>
-                        </TableCell>
-                        <TableCell>
-                          <p>{libelleRole(personne.role)}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {descriptionRole(personne.role)}
-                          </p>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {(personne.boutiques_rattachees ?? []).map(
-                              (boutique) => (
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {invitations.map((invitation) => (
+                        <TableRow key={invitation.id}>
+                          <TableCell>
+                            <p className="font-medium">{invitation.email}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {t("equipe.tableauEnvoyeLe")}{" "}
+                              {formatDate(invitation.created_at)}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <p>{libelleRole(invitation.role)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {descriptionRole(invitation.role)}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {invitation.boutiques.map((b) => (
                                 <span
-                                  key={boutique.id}
+                                  key={b.id}
                                   className="rounded-full bg-muted px-2 py-0.5 text-xs"
                                 >
-                                  {boutique.nom}
+                                  {b.nom}
                                 </span>
-                              ),
-                            )}
-                            {(personne.boutiques_rattachees ?? []).length ===
-                              0 && (
-                              <span className="text-xs text-statut-alerte">
-                                {t("equipe.aucuneBoutique")}
+                              ))}
+                              {invitation.boutiques.length === 0 && (
+                                <span className="text-xs text-muted-foreground">
+                                  {t("equipe.toutesLesBoutiques")}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {invitation.est_expiree ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
+                                <AlertCircle className="h-3 w-3" />
+                                {t("equipe.expiree")}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                <Clock className="h-3.5 w-3.5 text-amber-500" />
+                                {formatDate(invitation.expire_le)}
                               </span>
                             )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden text-muted-foreground lg:table-cell">
-                          {formaterTelephoneVisuel(personne.telephone) || "—"}
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={
-                              personne.actif
-                                ? "text-sm text-statut-ok"
-                                : "text-sm text-muted-foreground"
-                            }
-                          >
-                            {personne.actif
-                              ? t("commun.actif")
-                              : t("commun.inactif")}
-                          </span>
-                        </TableCell>
-                        {peutGerer && (
+                          </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
+                            <div className="flex justify-end gap-1.5">
                               <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={() => setEnEdition(personne)}
+                                variant="outline"
+                                size="sm"
+                                disabled={invitationEnRenvoi === invitation.id}
+                                onClick={() => void renvoyer(invitation)}
                               >
-                                <Pencil className="h-4 w-4" />
-                                <span className="sr-only">
-                                  {t("commun.modifier")}
-                                </span>
+                                {invitationEnRenvoi === invitation.id ? (
+                                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                                )}
+                                {t("equipe.renvoyerInvitation")}
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
-                                onClick={() => setASupprimer(personne)}
+                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                onClick={() => setInvitationASupprimer(invitation)}
                               >
                                 <Trash2 className="h-4 w-4" />
                                 <span className="sr-only">
-                                  {t("commun.supprimer")}
+                                  {t("equipe.annulerInvitation")}
                                 </span>
                               </Button>
                             </div>
                           </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </Apparait>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </Apparait>
+        )
       )}
 
       <FenetreEmploye
         cible={enEdition}
         onFermer={() => setEnEdition(null)}
-        onSucces={() => {
+        onSucces={(estNouvelleInvitation) => {
           setEnEdition(null);
           recharger();
+          void chargerInvitations();
+          if (estNouvelleInvitation) {
+            setOnglet("invitations");
+          }
         }}
       />
 
@@ -263,6 +484,36 @@ export default function PageEquipe() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={invitationASupprimer !== null}
+        onOpenChange={(o) => !o && setInvitationASupprimer(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("equipe.annulerInvitationTitre")}</DialogTitle>
+            <DialogDescription>
+              {t("equipe.annulerInvitationDesc", {
+                email: invitationASupprimer?.email ?? "",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setInvitationASupprimer(null)}
+            >
+              {t("commun.annuler")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void supprimerInvitation()}
+            >
+              {t("commun.supprimer")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -274,7 +525,7 @@ function FenetreEmploye({
 }: {
   cible: Partial<Utilisateur> | null;
   onFermer: () => void;
-  onSucces: () => void;
+  onSucces: (estNouvelleInvitation?: boolean) => void;
 }) {
   const { boutiques } = useAuth();
   const { t, libelleRole, descriptionRole } = useI18n();
@@ -349,6 +600,7 @@ function FenetreEmploye({
       if (modification) {
         await api.put(`/employes/${cible!.id}`, corps);
         toast.success(t("equipe.compteModifie"));
+        onSucces(false);
       } else {
         await api.post("/employes", {
           email,
@@ -356,8 +608,8 @@ function FenetreEmploye({
           boutiques: choisies,
         });
         toast.success(t("equipe.invitationEnvoyee"));
+        onSucces(true);
       }
-      onSucces();
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());

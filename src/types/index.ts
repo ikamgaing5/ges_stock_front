@@ -81,6 +81,16 @@ export interface Utilisateur {
   employes_count?: number;
 }
 
+export interface InvitationEmploye {
+  id: string;
+  email: string;
+  role: Role;
+  boutiques: { id: string; nom: string }[];
+  expire_le: string;
+  est_expiree: boolean;
+  created_at: string;
+}
+
 export interface ResultatLookupImei {
   trouve: boolean;
   premium_requis?: boolean;

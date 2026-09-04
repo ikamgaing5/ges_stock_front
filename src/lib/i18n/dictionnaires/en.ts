@@ -107,8 +107,8 @@ export const en = {
     SendCode: "We send your activation code here",
     PhoneNumber: "Phone number (WhatsApp / Mobile)",
     SecuriseCompte: "To secure your account",
-    VotreMDP:"2. Your password",
-    MDPSure:"Choose a secure password",
+    VotreMDP: "2. Your password",
+    MDPSure: "Choose a secure password",
     MDPConfirm: "Confirm your password",
     MDPPasIdentique: "Both passwords match",
     VotreBoutique: "3. Your store",
@@ -120,14 +120,13 @@ export const en = {
     EssaieGratuit: "Free for 14 days, no card required.",
     DeuxiemeEtape: "Step 2 of 2: confirm your email",
     derniereEtape: "Last step: check your inbox",
-    CodeRecu :"We just sent a 6-digit confirmation code to:",
-    RegarderSpam: "If the code has not arrived within a minute, check your spam folder.",
+    CodeRecu: "We just sent a 6-digit confirmation code to:",
+    RegarderSpam:
+      "If the code has not arrived within a minute, check your spam folder.",
     ActiveBoutique: "Activate my store",
     CorrigerInfo: "Change my email or details",
     RenvoieCodeSeconde: "Resend code in {secondesAvantRenvoi}s",
-    RenvoieCode:"I didn't get it, resend",
-    
-    
+    RenvoieCode: "I didn't get it, resend",
 
     connexionTitre: "Sign in",
     connexionDesc: "Sign in to manage your stock",
@@ -344,6 +343,8 @@ export const en = {
     aucunMouvement: "No movements found",
     aucunMouvementDesc: "No events match the selected filter criteria.",
     totalMouvements: "{total} movement(s) recorded",
+    filtreAu: "Filter up to",
+    filtreDu: "Filter from",
   },
   equipe: {
     titre: "Team & Access",
@@ -360,6 +361,18 @@ export const en = {
     renvoyerInvitation: "Resend email",
     annulerInvitation: "Cancel",
     invitationAnnulee: "Invitation canceled.",
+    tableauEmail: "Invited Email",
+    tableauExpireLe: "Expires on",
+    tableauEnvoyeLe: "Sent on",
+    expiree: "Expired",
+    enAttente: "Pending",
+    aucuneInvitation: "No pending invitations",
+    aucuneInvitationDesc:
+      "All invitations have been accepted or there are no pending invitations.",
+    annulerInvitationTitre: "Cancel invitation?",
+    annulerInvitationDesc:
+      "The invitation sent to {email} will be permanently canceled and its activation link will expire immediately.",
+    renvoyerSucces: "Invitation resent successfully.",
     desactiverAcces: "Disable access",
     activerAcces: "Enable access",
     aucunMembre: "No staff members invited yet",
