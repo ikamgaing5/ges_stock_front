@@ -4,12 +4,15 @@
 
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Store } from "lucide-react";
+import { ArrowLeft, Pencil, Printer, Store } from "lucide-react";
 import { api, ErreurApi } from "@/lib/api";
 import { formaterImei } from "@/lib/imei";
 import { useAuth } from "@/components/auth-provider";
+import { permissions } from "@/lib/permissions";
 import { useI18n } from "@/lib/i18n";
 import { ActionsTelephone } from "@/components/actions-telephone";
+import { ModalFacture } from "@/components/facture/modal-facture";
+import { ModalModifierTelephone } from "@/components/modal-modifier-telephone";
 import {
   Apparait,
   EtatErreur,
@@ -36,7 +39,7 @@ export default function PageAppareil({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const { devise, deviseBoutique } = useAuth();
+  const { devise, deviseBoutique, utilisateur } = useAuth();
   const { t, formatMontant, formatDate, libelleEtat, libelleStatut, lang } =
     useI18n();
 
@@ -46,6 +49,8 @@ export default function PageAppareil({
   const [erreur, setErreur] = useState<string | null>(null);
   const [nonTrouve, setNonTrouve] = useState(false);
   const [nonAutorise, setNonAutorise] = useState(false);
+  const [factureSelectionnee, setFactureSelectionnee] = useState<Mouvement | null>(null);
+  const [modalModifierOuvert, setModalModifierOuvert] = useState(false);
 
   const charger = useCallback(async () => {
     setErreur(null);
@@ -124,7 +129,20 @@ export default function PageAppareil({
       </Button>
 
       <TitrePage titre={appareil.modele?.libelle ?? "Appareil"}>
-        <PastilleStatut statut={appareil.statut} className="px-3 py-1 text-sm" />
+        <div className="flex flex-wrap items-center gap-2">
+          <PastilleStatut statut={appareil.statut} className="px-3 py-1 text-sm" />
+          {permissions.saisirAppareils(utilisateur?.role ?? "vendeuse") && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setModalModifierOuvert(true)}
+              className="gap-1.5"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              <span>{t("commun.modifier")}</span>
+            </Button>
+          )}
+        </div>
       </TitrePage>
 
       <p className="chiffres -mt-2 mb-4 font-mono text-xs text-muted-foreground sm:-mt-3 sm:mb-6 sm:text-sm">
@@ -323,6 +341,23 @@ export default function PageAppareil({
                                 {mouvement.motif && (
                                   <span>{mouvement.motif}</span>
                                 )}
+                                {mouvement.type === "vente" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      setFactureSelectionnee({
+                                        ...mouvement,
+                                        telephone: appareil,
+                                        boutique: appareil.boutique ?? mouvement.boutique,
+                                      })
+                                    }
+                                    className="mt-1.5 h-6 gap-1 px-2 text-[11px]"
+                                  >
+                                    <Printer className="h-3 w-3" />
+                                    <span>{t("factures.voirFacture")}</span>
+                                  </Button>
+                                )}
                               </>
                             )}
                           </TableCell>
@@ -336,6 +371,21 @@ export default function PageAppareil({
           </Card>
         </Apparait>
       </div>
+
+      {/* Modal d'aperçu et d'impression de la facture */}
+      <ModalFacture
+        ouvert={factureSelectionnee !== null}
+        onFermer={() => setFactureSelectionnee(null)}
+        mouvement={factureSelectionnee}
+      />
+
+      {/* Modal de modification de l'appareil */}
+      <ModalModifierTelephone
+        ouvert={modalModifierOuvert}
+        onFermer={() => setModalModifierOuvert(false)}
+        telephone={appareil}
+        surSucces={(maj) => setAppareil(maj)}
+      />
     </>
   );
 }

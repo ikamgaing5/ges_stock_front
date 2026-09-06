@@ -38,6 +38,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IconeTelora } from "@/components/ui/logo-telora";
+import { SelecteurLogo } from "@/components/selecteur-logo";
+import {
+  nettoyerNiu,
+  validerNiu,
+  nettoyerRccm,
+  validerRccm,
+} from "@/lib/validation-legale";
 import type { Utilisateur } from "@/types";
 
 /** Délai imposé par le serveur entre deux envois de code, en secondes. */
@@ -58,7 +65,11 @@ export default function PageInscription() {
     password_confirmation: "",
     boutique_nom: "",
     boutique_ville: "",
+    niu: "",
+    registre_commerce: "",
   });
+
+  const [logoFichier, setLogoFichier] = useState<File | null>(null);
 
   const [afficherMotDePasse, setAfficherMotDePasse] = useState(false);
   const [afficherConfirmation, setAfficherConfirmation] = useState(false);
@@ -74,7 +85,14 @@ export default function PageInscription() {
   const rateLimitCreation = useRateLimit();
 
   function modifier(champ: keyof typeof champs, valeur: string) {
-    setChamps((precedent) => ({ ...precedent, [champ]: valeur }));
+    let valeurAjustee = valeur;
+    if (champ === "niu") {
+      valeurAjustee = nettoyerNiu(valeur);
+    } else if (champ === "registre_commerce") {
+      valeurAjustee = valeur.toUpperCase();
+    }
+
+    setChamps((precedent) => ({ ...precedent, [champ]: valeurAjustee }));
     if (erreurs[champ]) {
       setErreurs((precedent) => {
         const copie = { ...precedent };
@@ -179,6 +197,16 @@ export default function PageInscription() {
           : "Indiquez le nom de votre boutique.";
     }
 
+    const testNiu = validerNiu(champs.niu, lang);
+    if (!testNiu.valide && testNiu.erreur) {
+      errs.niu = testNiu.erreur;
+    }
+
+    const testRccm = validerRccm(champs.registre_commerce, lang);
+    if (!testRccm.valide && testRccm.erreur) {
+      errs.registre_commerce = testRccm.erreur;
+    }
+
     if (Object.keys(errs).length > 0) {
       setErreurs(errs);
       return;
@@ -228,9 +256,27 @@ export default function PageInscription() {
       setEnvoiEnCours(true);
 
       try {
+        const donneesFormulaire = new FormData();
+        donneesFormulaire.append("name", champs.name);
+        donneesFormulaire.append("email", champs.email);
+        if (champs.telephone) donneesFormulaire.append("telephone", champs.telephone);
+        donneesFormulaire.append("password", champs.password);
+        donneesFormulaire.append("password_confirmation", champs.password_confirmation);
+        donneesFormulaire.append("boutique_nom", champs.boutique_nom);
+        if (champs.boutique_ville) donneesFormulaire.append("boutique_ville", champs.boutique_ville);
+        donneesFormulaire.append("niu", nettoyerNiu(champs.niu));
+        donneesFormulaire.append(
+          "registre_commerce",
+          nettoyerRccm(champs.registre_commerce)
+        );
+        donneesFormulaire.append("code", codeSaisi);
+        if (logoFichier) {
+          donneesFormulaire.append("logo", logoFichier);
+        }
+
         const reponse = await api.post<{ token: string; user: Utilisateur }>(
           "/inscription",
-          { ...champs, code: codeSaisi },
+          donneesFormulaire,
         );
 
         enregistrerToken(reponse.token);
@@ -647,6 +693,68 @@ export default function PageInscription() {
                       placeholder="ex: Douala, Abidjan, Dakar, Paris..."
                     />
                   </Champ>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Champ
+                    label={t("auth.niuBoutique")}
+                    erreur={erreurs.niu}
+                    aide={
+                      lang === "en"
+                        ? "14 chars (e.g. M052012345678X or 14 digits) • M=Company, P=Individual"
+                        : "14 car. (ex: M052012345678X ou 14 chiffres) • M=Société, P=Individuel"
+                    }
+                    obligatoire
+                  >
+                    <Input
+                      className={`h-10 font-mono uppercase ${
+                        erreurs.niu
+                          ? "border-destructive focus-visible:ring-destructive/30"
+                          : ""
+                      }`}
+                      value={champs.niu}
+                      onChange={(e) => modifier("niu", e.target.value)}
+                      placeholder="ex: M052012345678X"
+                    />
+                  </Champ>
+
+                  <Champ
+                    label={t("auth.registreCommerce")}
+                    erreur={erreurs.registre_commerce}
+                    aide={
+                      lang === "en"
+                        ? "e.g. RC/DLA/2023/B/1234 • B=Company, A=Individual/ETS"
+                        : "ex: RC/DLA/2023/B/1234 • B=Société, A=ETS/Individuel"
+                    }
+                    obligatoire
+                  >
+                    <Input
+                      className={`h-10 font-mono uppercase ${
+                        erreurs.registre_commerce
+                          ? "border-destructive focus-visible:ring-destructive/30"
+                          : ""
+                      }`}
+                      value={champs.registre_commerce}
+                      onChange={(e) =>
+                        modifier("registre_commerce", e.target.value)
+                      }
+                      onBlur={() =>
+                        setChamps((p) => ({
+                          ...p,
+                          registre_commerce: nettoyerRccm(p.registre_commerce),
+                        }))
+                      }
+                      placeholder="ex: RC/DLA/2023/B/1234"
+                    />
+                  </Champ>
+                </div>
+
+                <div className="pt-2 border-t border-border/60">
+                  <SelecteurLogo
+                    fichier={logoFichier}
+                    surChangementFichier={setLogoFichier}
+                    avertissementFacture={true}
+                  />
                 </div>
               </div>
 

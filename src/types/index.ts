@@ -27,6 +27,8 @@ export type TypeMouvement =
   | "perte"
   | "correction";
 
+export type ModePaiementVente = "cash" | "om_momo";
+
 export type StatutAbonnement = "essai" | "actif" | "suspendu" | "expire";
 export type PlanAbonnement = "standard" | "premium";
 
@@ -53,6 +55,9 @@ export interface Boutique {
   telephone: string | null;
   devise: string;
   active: boolean;
+  logo_url?: string | null;
+  niu?: string | null;
+  registre_commerce?: string | null;
   nb_employes?: number;
   nb_en_stock?: number;
   created_at: string;
@@ -178,13 +183,17 @@ export interface Telephone {
 }
 
 export interface Mouvement {
-  id: number;
+  id: string | number;
+  uuid?: string;
+  mouvement_id?: number;
   boutique_id: number;
   telephone_id: number;
   type: TypeMouvement;
   statut_avant: StatutTelephone | null;
   statut_apres: StatutTelephone;
   prix: number | null;
+  mode_paiement?: ModePaiementVente | null;
+  numero_facture?: string | null;
   client_nom: string | null;
   client_telephone: string | null;
   motif: string | null;

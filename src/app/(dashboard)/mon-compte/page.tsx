@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CreditCard, HelpCircle, Loader2 } from "lucide-react";
+import { CreditCard, HelpCircle, Loader2, Store } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { couleursAbonnements } from "@/lib/format";
@@ -289,6 +289,93 @@ export default function PageMonCompte() {
             </CardContent>
           </Card>
         </Apparait>
+
+        {/* Identité légale et logos des boutiques */}
+        {utilisateur.role === "proprietaire" && (
+          <Apparait index={2.5}>
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Store className="h-4 w-4 text-primary" />
+                    <span>Identité légale & Logos de vos boutiques</span>
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs shrink-0"
+                    nativeButton={false}
+                    render={<Link href="/boutiques" />}
+                  >
+                    Gérer sur Boutiques
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Le logo, le NIU et le RCCM seront imprimés sur les factures remises à vos clients.
+                </p>
+
+                <div className="divide-y divide-border/60 rounded-xl border border-border/80 bg-muted/20 overflow-hidden">
+                  {utilisateur.boutiques && utilisateur.boutiques.length > 0 ? (
+                    utilisateur.boutiques.map((b) => (
+                      <div key={b.id} className="flex items-center justify-between p-3 gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {b.logo_url ? (
+                            <div className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-800 border border-border shrink-0 flex items-center justify-center p-1 overflow-hidden shadow-xs">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={b.logo_url} alt={b.nom} className="max-h-full max-w-full object-contain" />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 text-muted-foreground">
+                              <Store className="w-4 h-4" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{b.nom}</p>
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground mt-0.5">
+                              <span>
+                                NIU :{" "}
+                                {b.niu ? (
+                                  <strong className="text-foreground">{b.niu}</strong>
+                                ) : (
+                                  <em className="text-amber-600 dark:text-amber-400">Non renseigné</em>
+                                )}
+                              </span>
+                              <span>•</span>
+                              <span>
+                                RCCM :{" "}
+                                {b.registre_commerce ? (
+                                  <strong className="text-foreground">{b.registre_commerce}</strong>
+                                ) : (
+                                  <em className="text-amber-600 dark:text-amber-400">Non renseigné</em>
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs shrink-0"
+                          nativeButton={false}
+                          render={<Link href="/boutiques" />}
+                        >
+                          Modifier
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-3 text-xs text-muted-foreground">
+                      Aucune boutique enregistrée.
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </Apparait>
+        )}
 
         <Apparait index={3}>
           <ChangerEmail />

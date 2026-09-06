@@ -554,11 +554,20 @@ function FenetreEmploye({
   }, [cible]);
 
   function basculerBoutique(id: string) {
-    setChoisies((precedent) =>
-      precedent.includes(id)
+    setChoisies((precedent) => {
+      const maj = precedent.includes(id)
         ? precedent.filter((valeur) => valeur !== id)
-        : [...precedent, id],
-    );
+        : [...precedent, id];
+      if (maj.length > 0) {
+        setErreurs((prev) => {
+          if (!prev.boutiques) return prev;
+          const copie = { ...prev };
+          delete copie.boutiques;
+          return copie;
+        });
+      }
+      return maj;
+    });
   }
 
   async function envoyer(evenement: React.FormEvent) {
@@ -573,6 +582,9 @@ function FenetreEmploye({
       errs.email = t("commun.emailRequis");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       errs.email = t("commun.emailInvalide");
+    }
+    if (choisies.length === 0) {
+      errs.boutiques = "Rattachez cette personne à au moins une boutique.";
     }
 
     if (Object.keys(errs).length > 0) {

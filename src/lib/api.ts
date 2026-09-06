@@ -152,7 +152,7 @@ export class ErreurApi extends Error {
 // --------------------------------------------------------------------------
 
 type Options = {
-  methode?: "GET" | "POST" | "PUT" | "DELETE";
+  methode?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   corps?: unknown;
   /** Paramètres ajoutés à l'URL : { recherche: "samsung", page: 2 } */
   params?: Record<string, string | number | boolean | undefined | null>;
@@ -203,7 +203,9 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
     "Accept-Language": lireLangue(),
   };
 
-  if (corps !== undefined) {
+  const estFormData = typeof FormData !== "undefined" && corps instanceof FormData;
+
+  if (corps !== undefined && !estFormData) {
     entetes["Content-Type"] = "application/json";
   }
 
@@ -212,12 +214,27 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
     entetes["Authorization"] = `Bearer ${token}`;
   }
 
+  let methodeEffective = methode;
+  let corpsEffectif: BodyInit | undefined = undefined;
+
+  if (estFormData) {
+    if (methode === "PUT" || methode === "PATCH") {
+      methodeEffective = "POST";
+      if (!corps.has("_method")) {
+        corps.append("_method", methode);
+      }
+    }
+    corpsEffectif = corps;
+  } else if (corps !== undefined) {
+    corpsEffectif = JSON.stringify(corps);
+  }
+
   let reponse: Response;
   try {
     reponse = await fetch(url, {
-      method: methode,
+      method: methodeEffective,
       headers: entetes,
-      body: corps === undefined ? undefined : JSON.stringify(corps),
+      body: corpsEffectif,
       signal,
     });
   } catch (e) {

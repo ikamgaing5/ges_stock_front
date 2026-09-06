@@ -48,10 +48,11 @@ import {
 import { SelectRecherche } from "@/components/ui/select-recherche";
 import { ChampTelephone } from "@/components/champ-telephone";
 import { Textarea } from "@/components/ui/textarea";
-import type { StatutTelephone, Telephone } from "@/types";
+import { ModalFacture } from "@/components/facture/modal-facture";
+import type { ModePaiementVente, Mouvement, StatutTelephone, Telephone } from "@/types";
 
 /** Les champs qu'une action demande. */
-type Champ = "prix" | "client" | "motif" | "commentaire" | "boutique" | "statut";
+type Champ = "prix" | "paiement" | "client" | "motif" | "commentaire" | "boutique" | "statut";
 
 type ActionDef = {
   cle: string;
@@ -74,7 +75,7 @@ const actions: ActionDef[] = [
     route: "vente",
     icone: Banknote,
     depuis: ["en_stock", "reserve"],
-    champs: ["prix", "client", "commentaire"],
+    champs: ["prix", "paiement", "client", "commentaire"],
     autorise: permissions.bougerStock,
   },
   {
@@ -244,6 +245,7 @@ function FenetreAction({
     : "";
 
   const [prix, setPrix] = useState("");
+  const [modePaiement, setModePaiement] = useState<ModePaiementVente>("cash");
   const [clientNom, setClientNom] = useState("");
   const [clientTelephone, setClientTelephone] = useState("");
   const [motif, setMotif] = useState("");
@@ -252,6 +254,7 @@ function FenetreAction({
   const [statut, setStatut] = useState<StatutTelephone>("en_stock");
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const [factureVente, setFactureVente] = useState<Mouvement | null>(null);
 
   // Rate limiting dynamique sur les actions de stock
   const rateLimitStock = useRateLimit();
@@ -260,6 +263,7 @@ function FenetreAction({
 
   function reinitialiser() {
     setPrix(prixInitialPlaceholder);
+    setModePaiement("cash");
     setClientNom("");
     setClientTelephone("");
     setMotif("");
@@ -278,6 +282,22 @@ function FenetreAction({
     setEnvoiEnCours(true);
 
     const corps: Record<string, unknown> = { ...action.corpsFixe };
+
+    if (action.cle === "vente") {
+      const errs: Record<string, string> = {};
+      if (!clientNom.trim()) {
+        errs.client_nom = t("commun.champRequis");
+      }
+      if (!clientTelephone.trim()) {
+        errs.client_telephone = t("commun.champRequis");
+      }
+      if (Object.keys(errs).length > 0) {
+        setErreurs(errs);
+        setEnvoiEnCours(false);
+        return;
+      }
+      corps.mode_paiement = modePaiement;
+    }
 
     if (action.champs.includes("prix")) {
       if (prix) {
@@ -305,14 +325,19 @@ function FenetreAction({
     if (action.champs.includes("statut")) corps.statut = statut;
 
     try {
-      const reponse = await api.post<{ message: string }>(
+      const reponse = await api.post<{ message: string; data?: Mouvement }>(
         `/telephones/${telephone.id}/${action.route}`,
         corps,
       );
       toast.success(reponse.message || t("telephones.mouvementEnregistre"));
-      reinitialiser();
-      onSucces();
-      router.refresh();
+
+      if (action.cle === "vente" && reponse.data) {
+        setFactureVente(reponse.data);
+      } else {
+        reinitialiser();
+        onSucces();
+        router.refresh();
+      }
     } catch (e) {
       if (e instanceof ErreurApi) {
         setErreurs(e.parChamp());
@@ -333,13 +358,14 @@ function FenetreAction({
   ];
 
   return (
-    <Dialog
-      open={action !== null}
-      onOpenChange={(ouvert) => {
-        if (!ouvert) onFermer();
-        else reinitialiser();
-      }}
-    >
+    <>
+      <Dialog
+        open={action !== null && factureVente === null}
+        onOpenChange={(ouvert) => {
+          if (!ouvert) onFermer();
+          else reinitialiser();
+        }}
+      >
       <DialogContent>
         {action && (
           <>
@@ -374,19 +400,46 @@ function FenetreAction({
                   </div>
                 )}
 
+                {action.champs.includes("paiement") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="mode-paiement">
+                      {t("factures.moyenPaiement")}
+                      <span className="ml-0.5 text-destructive">*</span>
+                    </Label>
+                    <Select
+                      items={{
+                        cash: t("factures.cash"),
+                        om_momo: t("factures.omMomo"),
+                      }}
+                      value={modePaiement}
+                      onValueChange={(v) =>
+                        setModePaiement((v ?? "cash") as ModePaiementVente)
+                      }
+                    >
+                      <SelectTrigger id="mode-paiement" className="h-10 w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cash">{t("factures.cash")}</SelectItem>
+                        <SelectItem value="om_momo">{t("factures.omMomo")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 {action.champs.includes("client") && (
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="client-nom">
                         {t("telephones.clientNom")}
-                        {action.cle === "reservation" && (
+                        {(action.cle === "reservation" || action.cle === "vente") && (
                           <span className="ml-0.5 text-destructive">*</span>
                         )}
                       </Label>
                       <Input
                         id="client-nom"
                         className="h-10"
-                        required={action.cle === "reservation"}
+                        required={action.cle === "reservation" || action.cle === "vente"}
                         value={clientNom}
                         onChange={(e) => setClientNom(e.target.value)}
                       />
@@ -399,12 +452,20 @@ function FenetreAction({
                     <div className="space-y-2">
                       <Label htmlFor="client-tel">
                         {t("telephones.clientTelephone")}
+                        {action.cle === "vente" && (
+                          <span className="ml-0.5 text-destructive">*</span>
+                        )}
                       </Label>
                       <ChampTelephone
                         id="client-tel"
                         valeur={clientTelephone}
                         onChange={setClientTelephone}
                       />
+                      {erreurs.client_telephone && (
+                        <p className="text-xs text-destructive">
+                          {erreurs.client_telephone}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -563,5 +624,17 @@ function FenetreAction({
         )}
       </DialogContent>
     </Dialog>
+
+      <ModalFacture
+        ouvert={factureVente !== null}
+        onFermer={() => {
+          setFactureVente(null);
+          reinitialiser();
+          onSucces();
+          router.refresh();
+        }}
+        mouvement={factureVente}
+      />
+    </>
   );
 }

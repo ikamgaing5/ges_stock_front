@@ -4,12 +4,13 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, Printer } from "lucide-react";
 import { api } from "@/lib/api";
 import { useListe } from "@/lib/useListe";
 import { formaterImei } from "@/lib/imei";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
+import { ModalFacture } from "@/components/facture/modal-facture";
 import {
   Apparait,
   EtatErreur,
@@ -54,6 +55,7 @@ export default function PageHistorique() {
   const [du, setDu] = useState("");
   const [au, setAu] = useState("");
   const [page, setPage] = useState(1);
+  const [factureSelectionnee, setFactureSelectionnee] = useState<Mouvement | null>(null);
 
   const boutiqueId = parametresBoutique.boutique_id;
 
@@ -279,6 +281,17 @@ export default function PageHistorique() {
                               {mouvement.motif && (
                                 <span>{mouvement.motif}</span>
                               )}
+                              {mouvement.type === "vente" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setFactureSelectionnee(mouvement)}
+                                  className="mt-1.5 h-6 gap-1 px-2 text-[11px]"
+                                >
+                                  <Printer className="h-3 w-3" />
+                                  <span>{t("factures.voirFacture")}</span>
+                                </Button>
+                              )}
                             </>
                           )}
                         </TableCell>
@@ -315,6 +328,13 @@ export default function PageHistorique() {
           </Button>
         </div>
       )}
+
+      {/* Modal d'aperçu et d'impression de la facture */}
+      <ModalFacture
+        ouvert={factureSelectionnee !== null}
+        onFermer={() => setFactureSelectionnee(null)}
+        mouvement={factureSelectionnee}
+      />
     </>
   );
 }

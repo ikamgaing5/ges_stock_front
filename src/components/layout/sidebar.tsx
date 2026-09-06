@@ -18,6 +18,7 @@ import {
   ArrowLeftRight,
   BookOpen,
   LayoutDashboard,
+  Receipt,
   ScanLine,
   Smartphone,
   Store,
@@ -50,6 +51,7 @@ const liens: LienDef[] = [
     visiblePour: permissions.bougerStock,
   },
   { href: "/telephones", cleLibelle: "nav.parc", icone: Smartphone },
+  { href: "/factures", cleLibelle: "nav.factures", icone: Receipt },
   { href: "/modeles", cleLibelle: "nav.catalogue", icone: BookOpen },
   { href: "/mouvements", cleLibelle: "nav.historique", icone: ArrowLeftRight },
   {
