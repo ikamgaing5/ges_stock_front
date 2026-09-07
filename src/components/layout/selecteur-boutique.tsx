@@ -33,29 +33,40 @@ export function SelecteurBoutique() {
 
   // Une seule boutique : rien à choisir, on affiche juste où l'on est.
   if (boutiques.length === 1) {
+    const b = boutiques[0];
     return (
       <p className="flex min-w-0 items-center gap-2 text-sm">
         <Store className="h-4 w-4 shrink-0 text-muted-foreground" />
-        <span className="truncate font-medium">{boutiques[0].nom}</span>
+        <span className="truncate font-medium">{b.nom}</span>
+        {b.adresse && (
+          <span className="truncate text-xs text-muted-foreground font-normal">
+            ({b.adresse})
+          </span>
+        )}
       </p>
     );
   }
 
   const estProprietaire = utilisateur?.role === "proprietaire";
+  const libelleActif = boutiqueActive
+    ? boutiqueActive.adresse
+      ? `${boutiqueActive.nom} (${boutiqueActive.adresse})`
+      : boutiqueActive.nom
+    : t("selecteurBoutique.toutes");
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="outline" size="sm" className="max-w-56" />}
+        render={<Button variant="outline" size="sm" className="max-w-64" />}
       >
         <Store className="h-4 w-4 shrink-0" />
-        <span className="truncate">
-          {boutiqueActive?.nom ?? t("selecteurBoutique.toutes")}
+        <span className="truncate font-medium">
+          {libelleActif}
         </span>
         <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="w-64">
+      <DropdownMenuContent align="start" className="w-72">
         {/*
           L'intitulé et les entrées qu'il désigne doivent vivre dans le
           même <DropdownMenuGroup> : dans Base UI, un intitulé sans groupe
@@ -84,17 +95,16 @@ export function SelecteurBoutique() {
             <DropdownMenuItem
               key={boutique.id}
               onClick={() => changerBoutique(boutique.id)}
+              className="flex items-center justify-between gap-2 py-1.5"
             >
-              <span className="flex-1 truncate">
-                {boutique.nom}
-                {boutique.ville && (
-                  <span className="ml-1.5 text-xs text-muted-foreground">
-                    {boutique.ville}
-                  </span>
-                )}
-              </span>
+              <div className="flex-1 min-w-0">
+                <p className="truncate font-medium text-sm">{boutique.nom}</p>
+                <p className="truncate text-xs text-muted-foreground font-normal">
+                  {[boutique.adresse, boutique.ville].filter(Boolean).join(" · ") || t("boutiques.adresseNonRenseignee")}
+                </p>
+              </div>
               {boutiqueActive?.id === boutique.id && (
-                <Check className="h-4 w-4" />
+                <Check className="h-4 w-4 shrink-0 text-primary" />
               )}
             </DropdownMenuItem>
           ))}

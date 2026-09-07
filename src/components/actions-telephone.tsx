@@ -5,7 +5,7 @@
  * réparation, perte, transfert, correction.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeftRight,
@@ -37,6 +37,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ChampPrix } from "@/components/ui/champ-prix";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -47,6 +48,7 @@ import {
 } from "@/components/ui/select";
 import { SelectRecherche } from "@/components/ui/select-recherche";
 import { ChampTelephone } from "@/components/champ-telephone";
+import { ChampClient } from "@/components/champ-client";
 import { Textarea } from "@/components/ui/textarea";
 import { ModalFacture } from "@/components/facture/modal-facture";
 import type { ModePaiementVente, Mouvement, StatutTelephone, Telephone } from "@/types";
@@ -261,11 +263,52 @@ function FenetreAction({
 
   const destinations = boutiques.filter((b) => b.id !== telephone.boutique?.id);
 
+  // Pré-remplissage client lors de la vente d'un appareil réservé
+  useEffect(() => {
+    if (!action) return;
+
+    setPrix(prixInitialPlaceholder);
+    setModePaiement("cash");
+    setMotif("");
+    setCommentaire("");
+    setBoutiqueId("");
+    setStatut("en_stock");
+    setErreurs({});
+    rateLimitStock.arreter();
+
+    if (action.cle === "vente" && telephone.statut === "reserve") {
+      if (telephone.client_nom) {
+        setClientNom(telephone.client_nom);
+        setClientTelephone(telephone.client_telephone || "");
+      } else {
+        // Fallback si l'appareil a été réservé avant la persistance directe : on lit les mouvements
+        api
+          .get<{ data: Mouvement[] }>(`/telephones/${telephone.id}/mouvements`)
+          .then((res) => {
+            const resa = res.data?.find((m) => m.type === "reservation" && m.client_nom);
+            if (resa) {
+              setClientNom(resa.client_nom || "");
+              setClientTelephone(resa.client_telephone || "");
+            }
+          })
+          .catch(() => {});
+      }
+    } else {
+      setClientNom("");
+      setClientTelephone("");
+    }
+  }, [action, telephone, prixInitialPlaceholder]);
+
   function reinitialiser() {
     setPrix(prixInitialPlaceholder);
     setModePaiement("cash");
-    setClientNom("");
-    setClientTelephone("");
+    if (action?.cle === "vente" && telephone.statut === "reserve" && telephone.client_nom) {
+      setClientNom(telephone.client_nom);
+      setClientTelephone(telephone.client_telephone || "");
+    } else {
+      setClientNom("");
+      setClientTelephone("");
+    }
     setMotif("");
     setCommentaire("");
     setBoutiqueId("");
@@ -283,7 +326,7 @@ function FenetreAction({
 
     const corps: Record<string, unknown> = { ...action.corpsFixe };
 
-    if (action.cle === "vente") {
+    if (action.cle === "vente" || action.cle === "reservation") {
       const errs: Record<string, string> = {};
       if (!clientNom.trim()) {
         errs.client_nom = t("commun.champRequis");
@@ -296,12 +339,15 @@ function FenetreAction({
         setEnvoiEnCours(false);
         return;
       }
-      corps.mode_paiement = modePaiement;
+      if (action.cle === "vente") {
+        corps.mode_paiement = modePaiement;
+      }
     }
 
     if (action.champs.includes("prix")) {
-      if (prix) {
-        const montantSaisi = Number(prix);
+      const prixFinal = prix.trim() !== "" ? prix : prixInitialPlaceholder;
+      if (prixFinal) {
+        const montantSaisi = Number(prixFinal.replace(/\s+/g, "").replace(",", "."));
         const montantDeviseBoutique = convertirMontant(montantSaisi, devise, deviseOrigine);
         const configBoutique = obtenirDevise(deviseOrigine);
         corps.prix = configBoutique.decimales === 0
@@ -366,7 +412,7 @@ function FenetreAction({
           else reinitialiser();
         }}
       >
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl md:max-w-2xl">
         {action && (
           <>
             <form onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
@@ -381,16 +427,15 @@ function FenetreAction({
                 {action.champs.includes("prix") && (
                   <div className="space-y-2">
                     <Label htmlFor="prix">
-                      {t("telephones.prixVendu")} ({devise})
+                      {t("telephones.prixVendu")}
                     </Label>
-                    <Input
+                    <ChampPrix
                       id="prix"
-                      type="number"
-                      min={0}
-                      className="chiffres h-10"
-                      value={prix}
-                      onChange={(e) => setPrix(e.target.value)}
+                      devise={devise}
+                      valeur={prix}
+                      onChange={setPrix}
                       placeholder={prixInitialPlaceholder}
+                      permettreDecimales={configDevise.decimales > 0}
                     />
                     <p className="text-xs text-muted-foreground">
                       {lang === "en"
@@ -436,12 +481,14 @@ function FenetreAction({
                           <span className="ml-0.5 text-destructive">*</span>
                         )}
                       </Label>
-                      <Input
+                      <ChampClient
                         id="client-nom"
-                        className="h-10"
                         required={action.cle === "reservation" || action.cle === "vente"}
-                        value={clientNom}
-                        onChange={(e) => setClientNom(e.target.value)}
+                        valeurNom={clientNom}
+                        onNomChange={setClientNom}
+                        valeurTelephone={clientTelephone}
+                        onTelephoneChange={setClientTelephone}
+                        erreur={erreurs.client_nom}
                       />
                       {erreurs.client_nom && (
                         <p className="text-xs text-destructive">
@@ -452,14 +499,22 @@ function FenetreAction({
                     <div className="space-y-2">
                       <Label htmlFor="client-tel">
                         {t("telephones.clientTelephone")}
-                        {action.cle === "vente" && (
-                          <span className="ml-0.5 text-destructive">*</span>
-                        )}
+                        <span className="ml-0.5 text-destructive">*</span>
                       </Label>
                       <ChampTelephone
                         id="client-tel"
                         valeur={clientTelephone}
-                        onChange={setClientTelephone}
+                        onChange={(val) => {
+                          setClientTelephone(val);
+                          if (erreurs.client_telephone) {
+                            setErreurs((prev) => {
+                              const copie = { ...prev };
+                              delete copie.client_telephone;
+                              return copie;
+                            });
+                          }
+                        }}
+                        erreur={Boolean(erreurs.client_telephone)}
                       />
                       {erreurs.client_telephone && (
                         <p className="text-xs text-destructive">
@@ -486,8 +541,8 @@ function FenetreAction({
                       <SelectRecherche
                         options={destinations.map((b) => ({
                           valeur: String(b.id),
-                          libelle: b.nom,
-                          description: b.ville ?? undefined,
+                          libelle: b.libelle_complet || (b.adresse ? `${b.nom} — ${b.adresse}` : b.nom),
+                          description: [b.adresse, b.ville].filter(Boolean).join(" · ") || undefined,
                         }))}
                         valeur={boutiqueId}
                         onChange={(v) => setBoutiqueId(v)}

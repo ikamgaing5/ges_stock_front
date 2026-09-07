@@ -30,6 +30,70 @@ export function formaterNombre(valeur: number, lang: Langue = "fr"): string {
   return new Intl.NumberFormat(locale).format(valeur);
 }
 
+/**
+ * Formate un nombre au fur et à mesure de la saisie avec un séparateur de milliers (espace).
+ * Exemples :
+ * - "850000" -> "850 000"
+ * - "1500000" -> "1 500 000"
+ * - "850000,5" -> "850 000,5"
+ */
+export function formaterNombreSaisie(
+  valeur: string | number | null | undefined,
+  permettreDecimales = false,
+): string {
+  if (valeur === null || valeur === undefined) return "";
+  const brut = String(valeur).trim();
+  if (!brut) return "";
+
+  if (permettreDecimales) {
+    const aVirgule = brut.includes(",");
+    const sep = aVirgule ? "," : ".";
+    const parties = brut.split(/[.,]/);
+
+    const partieEntiere = parties[0].replace(/\D/g, "");
+    const partieEntiereFormatee = partieEntiere.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+    if (parties.length > 1) {
+      const partieDecimale = parties[1].replace(/\D/g, "");
+      return `${partieEntiereFormatee || "0"}${sep}${partieDecimale}`;
+    }
+
+    return partieEntiereFormatee;
+  }
+
+  // Chiffres entiers uniquement (standard XAF / devises africaines)
+  const chiffres = brut.replace(/\D/g, "");
+  if (!chiffres) return "";
+  return chiffres.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
+/**
+ * Nettoie une chaîne formatée pour n'en conserver que la valeur numérique exploitable.
+ * Exemples :
+ * - "850 000" -> "850000"
+ * - "1 500 000,50" -> "1500000.50"
+ */
+export function nettoyerNombreSaisie(
+  valeur: string | number | null | undefined,
+  permettreDecimales = false,
+): string {
+  if (valeur === null || valeur === undefined) return "";
+  const brut = String(valeur).trim();
+  if (!brut) return "";
+
+  if (permettreDecimales) {
+    const sansEspaces = brut.replace(/\s+/g, "").replace(",", ".");
+    const nettoye = sansEspaces.replace(/[^0-9.]/g, "");
+    const parties = nettoye.split(".");
+    if (parties.length > 2) {
+      return `${parties[0]}.${parties.slice(1).join("")}`;
+    }
+    return nettoye;
+  }
+
+  return brut.replace(/\D/g, "");
+}
+
 /** « 2026-08-13T05:42:31Z » -> « 13/08/2026 05:42 » */
 export function formaterDate(iso: string, lang: Langue = "fr"): string {
   const locale = lang === "en" ? "en-US" : "fr-FR";

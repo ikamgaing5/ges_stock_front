@@ -39,6 +39,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ChampPrix } from "@/components/ui/champ-prix";
 import { Label } from "@/components/ui/label";
 import { SelectRecherche } from "@/components/ui/select-recherche";
 import { Switch } from "@/components/ui/switch";
@@ -491,8 +492,8 @@ function FenetreModele({
       nom: champs.nom,
       ram: champs.ram || null,
       description: champs.description || null,
-      prix_achat_conseille: Number(champs.prix_achat_conseille),
-      prix_vente_conseille: Number(champs.prix_vente_conseille),
+      prix_achat_conseille: Number(String(champs.prix_achat_conseille).replace(/\s+/g, "").replace(",", ".")),
+      prix_vente_conseille: Number(String(champs.prix_vente_conseille).replace(/\s+/g, "").replace(",", ".")),
       seuil_alerte: Number(champs.seuil_alerte),
       actif: champs.actif,
     };
@@ -645,32 +646,28 @@ function FenetreModele({
 
               <div className="space-y-2">
                 <Label htmlFor="pac">
-                  {t("modeles.prixAchatConseille")} ({devise})
+                  {t("modeles.prixAchatConseille")}
                 </Label>
-                <Input
+                <ChampPrix
                   id="pac"
-                  type="number"
-                  min={0}
-                  className="chiffres h-10"
-                  value={champs.prix_achat_conseille}
-                  onChange={(e) =>
-                    modifier("prix_achat_conseille", e.target.value)
+                  devise={devise}
+                  valeur={champs.prix_achat_conseille}
+                  onChange={(v) =>
+                    modifier("prix_achat_conseille", v)
                   }
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="pvc">
-                  {t("modeles.prixVenteConseille")} ({devise})
+                  {t("modeles.prixVenteConseille")}
                 </Label>
-                <Input
+                <ChampPrix
                   id="pvc"
-                  type="number"
-                  min={0}
-                  className="chiffres h-10"
-                  value={champs.prix_vente_conseille}
-                  onChange={(e) =>
-                    modifier("prix_vente_conseille", e.target.value)
+                  devise={devise}
+                  valeur={champs.prix_vente_conseille}
+                  onChange={(v) =>
+                    modifier("prix_vente_conseille", v)
                   }
                 />
               </div>

@@ -11,7 +11,7 @@
  * - Prise en charge des caméras arrière / ultra-wide / frontale
  * - Bascule rapide de caméra si plusieurs capteurs sont détectés
  * - Contrôle de la torche / flash (sur mobile compatible)
- * - Viseur graphique avec repères et faisceau laser animé
+ * - Viseur graphique unique avec repères et faisceau laser animé
  * - Retours sensoriels : vibration haptique et confirmation sonore
  */
 
@@ -41,6 +41,7 @@ export function ScannerCameraModal({ onDetecte, onFermer }: Props) {
   const [flashActif, setFlashActif] = useState(false);
 
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const demarrantRef = useRef(false);
   const arreteRef = useRef(false);
   const detecteRef = useRef(false);
 
@@ -55,47 +56,41 @@ export function ScannerCameraModal({ onDetecte, onFermer }: Props) {
     }
   }, []);
 
-  // Détection des caméras disponibles
-  useEffect(() => {
-    let monte = true;
+  // Fonction de démarrage unique et sécurisée du scanner
+  const demarrerScanner = useCallback(
+    async (idCameraSpecifique?: string) => {
+      if (demarrantRef.current || arreteRef.current) return;
+      demarrantRef.current = true;
 
-    async function listerCameras() {
-      try {
-        const cameras = await Html5Qrcode.getCameras();
-        if (!monte) return;
-        if (cameras && cameras.length > 0) {
-          setAppareils(cameras);
-          // Chercher en priorité la caméra arrière ("back", "rear", "environment")
-          const indexArriere = cameras.findIndex((c) =>
-            /back|rear|environment|arrière/i.test(c.label)
-          );
-          setIndexCamera(indexArriere !== -1 ? indexArriere : 0);
+      setErreur(null);
+      setInitialise(false);
+
+      // 1. Arrêter et détruire toute instance précédente
+      if (scannerRef.current) {
+        try {
+          if (scannerRef.current.isScanning) {
+            await scannerRef.current.stop();
+          }
+          scannerRef.current.clear();
+        } catch (e) {
+          console.warn("Arrêt scanner précédent :", e);
         }
-      } catch (err) {
-        console.warn("Impossible de lister les caméras à l'avance", err);
+        scannerRef.current = null;
       }
-    }
 
-    void listerCameras();
+      // 2. Nettoyer le conteneur DOM pour éliminer toute balise vidéo ou canvas orpheline
+      const conteneur = document.getElementById(elementId);
+      if (conteneur) {
+        conteneur.innerHTML = "";
+      }
 
-    return () => {
-      monte = false;
-    };
-  }, []);
+      if (arreteRef.current) {
+        demarrantRef.current = false;
+        return;
+      }
 
-  // Démarrage du scanner
-  useEffect(() => {
-    let instance: Html5Qrcode | null = null;
-    arreteRef.current = false;
-    detecteRef.current = false;
-
-    async function demarrerScanner() {
       try {
-        setErreur(null);
-        setInitialise(false);
-
-        // Instance Html5Qrcode configurée avec les formats clés pour l'IMEI et l'emballage
-        instance = new Html5Qrcode(elementId, {
+        const instance = new Html5Qrcode(elementId, {
           formatsToSupport: [
             Html5QrcodeSupportedFormats.CODE_128,
             Html5QrcodeSupportedFormats.CODE_39,
@@ -110,42 +105,37 @@ export function ScannerCameraModal({ onDetecte, onFermer }: Props) {
 
         scannerRef.current = instance;
 
-        // Configuration de la caméra : utiliser l'ID choisi ou la caméra environnement
-        const contrainteCamera: string | MediaTrackConstraints =
-          appareils.length > 0 && appareils[indexCamera]
-            ? appareils[indexCamera].id
-            : { facingMode: "environment" };
+        // Privilégier la caméra spécifiée ou la caméra environnement/arrière
+        const contrainte: string | MediaTrackConstraints = idCameraSpecifique
+          ? idCameraSpecifique
+          : { facingMode: "environment" };
 
         await instance.start(
-          contrainteCamera,
+          contrainte,
           {
             fps: 15,
             qrbox: (viewfinderWidth, viewfinderHeight) => {
-              // Cadre rectangulaire panoramique adapté aux codes-barres allongés des boîtes de smartphones
               const largeur = Math.floor(Math.min(viewfinderWidth * 0.85, 340));
               const hauteur = Math.floor(Math.min(viewfinderHeight * 0.45, 160));
               return { width: largeur, height: Math.max(hauteur, 110) };
             },
-            aspectRatio: 1.333333,
           },
           (codeTexte) => {
             if (arreteRef.current || detecteRef.current) return;
             const imeiNettoye = nettoyerImei(codeTexte);
 
-            // Si c'est un code IMEI (ou un code contenant 14-15 chiffres)
             if (imeiNettoye.length >= 14) {
               detecteRef.current = true;
               vibrer();
               onDetecte(imeiNettoye.slice(0, 15));
             } else if (codeTexte.trim().length >= 8) {
-              // Code barre standard
               detecteRef.current = true;
               vibrer();
               onDetecte(codeTexte.trim());
             }
           },
           () => {
-            // Échecs de lecture d'une frame : tout à fait normal entre deux scans
+            // Frame ignorée (normal entre deux détections)
           }
         );
 
@@ -153,51 +143,86 @@ export function ScannerCameraModal({ onDetecte, onFermer }: Props) {
           try {
             await instance.stop();
             instance.clear();
-          } catch {
-            // Ignorer
-          }
+            const el = document.getElementById(elementId);
+            if (el) el.innerHTML = "";
+          } catch {}
           return;
         }
 
         setInitialise(true);
 
-        // Tester si la torche / flash est supportée
+        // Une fois la caméra active et l'autorisation accordée, récupérer la liste des capteurs
+        Html5Qrcode.getCameras()
+          .then((cameras) => {
+            if (cameras && cameras.length > 1) {
+              setAppareils(cameras);
+            }
+          })
+          .catch(() => {});
+
+        // Détection de la torche / flash
         try {
           const cap = instance.getRunningTrackCameraCapabilities();
           if (cap && typeof cap.torchFeature === "function" && cap.torchFeature().isSupported()) {
             setFlashDisponible(true);
+          } else {
+            setFlashDisponible(false);
           }
         } catch {
           setFlashDisponible(false);
         }
       } catch (err) {
         console.error("Erreur lancement scanner caméra :", err);
-        setErreur(t("imei.cameraErreur"));
+        if (!arreteRef.current) {
+          setErreur(t("imei.cameraErreur"));
+        }
+      } finally {
+        demarrantRef.current = false;
       }
-    }
+    },
+    [elementId, onDetecte, t, vibrer]
+  );
 
-    // Petit délai pour s'assurer que le DOM est peint
+  // Démarrage initial unique
+  useEffect(() => {
+    arreteRef.current = false;
+    detecteRef.current = false;
+
     const timer = setTimeout(() => {
       void demarrerScanner();
-    }, 50);
+    }, 60);
 
     return () => {
       arreteRef.current = true;
       clearTimeout(timer);
-      if (instance && instance.isScanning) {
-        instance
-          .stop()
-          .then(() => instance?.clear())
-          .catch((e) => console.warn("Erreur arrêt scanner :", e));
+      if (scannerRef.current) {
+        try {
+          if (scannerRef.current.isScanning) {
+            scannerRef.current
+              .stop()
+              .then(() => {
+                scannerRef.current?.clear();
+                const conteneur = document.getElementById(elementId);
+                if (conteneur) conteneur.innerHTML = "";
+              })
+              .catch(() => {});
+          } else {
+            scannerRef.current.clear();
+            const conteneur = document.getElementById(elementId);
+            if (conteneur) conteneur.innerHTML = "";
+          }
+        } catch {}
       }
     };
-  }, [appareils, indexCamera, onDetecte, t, vibrer]);
+  }, [demarrerScanner, elementId]);
 
-  // Basculer vers la caméra suivante (si plusieurs caméras physiques)
+  // Basculer vers la caméra suivante
   const basculerCamera = useCallback(() => {
     if (appareils.length <= 1) return;
-    setIndexCamera((actuel) => (actuel + 1) % appareils.length);
-  }, [appareils.length]);
+    const prochainIndex = (indexCamera + 1) % appareils.length;
+    setIndexCamera(prochainIndex);
+    void demarrerScanner(appareils[prochainIndex].id);
+  }, [appareils, demarrerScanner, indexCamera]);
 
   // Allumer / éteindre le flash / torche
   const toggleFlash = useCallback(async () => {
@@ -215,10 +240,10 @@ export function ScannerCameraModal({ onDetecte, onFermer }: Props) {
   }, [flashActif, flashDisponible]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-sm sm:p-6">
-      <div className="relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-card shadow-2xl border border-border/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-2.5 sm:p-6 backdrop-blur-sm">
+      <div className="relative flex w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-card shadow-2xl border border-border/40 max-h-[92dvh]">
         {/* En-tête avec contrôles */}
-        <div className="flex items-center justify-between border-b px-4 py-3 bg-muted/40">
+        <div className="flex items-center justify-between border-b px-4 py-3 bg-muted/40 shrink-0">
           <div className="flex items-center gap-2">
             <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <p className="text-sm font-semibold tracking-tight text-foreground">
@@ -271,18 +296,18 @@ export function ScannerCameraModal({ onDetecte, onFermer }: Props) {
         </div>
 
         {/* Zone de prévisualisation vidéo */}
-        <div className="relative bg-black min-h-[290px] sm:min-h-[340px] flex items-center justify-center overflow-hidden">
-          {/* Conteneur DOM pour html5-qrcode */}
+        <div className="relative bg-black min-h-[300px] sm:min-h-[360px] max-h-[62dvh] flex-1 flex items-center justify-center overflow-hidden">
+          {/* Conteneur DOM pour html5-qrcode : masque le canvas et le viseur par défaut pour laisser place à notre UI */}
           <div
             id={elementId}
-            className="w-full h-full overflow-hidden [&_video]:w-full [&_video]:h-full [&_video]:object-cover"
+            className="w-full h-full relative overflow-hidden flex items-center justify-center [&_video]:w-full [&_video]:h-full [&_video]:object-cover [&_canvas]:!hidden [&_#qr-shaded-region]:!hidden"
           />
 
-          {/* Viseur stylisé en superposition */}
+          {/* Viseur stylisé unique en superposition */}
           {!erreur && (
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center z-10">
               {/* Cadre de visée */}
-              <div className="relative w-[82%] max-w-[320px] h-[130px] sm:h-[150px] rounded-xl border-2 border-dashed border-white/60 bg-black/15 shadow-inner">
+              <div className="relative w-[84%] max-w-[320px] h-[130px] sm:h-[150px] rounded-xl border-2 border-dashed border-white/70 bg-black/20 shadow-inner">
                 {/* Coins renforcés pour l'effet scanner pro */}
                 <span className="absolute -top-0.5 -left-0.5 h-4 w-4 border-t-2 border-l-2 border-primary rounded-tl-sm" />
                 <span className="absolute -top-0.5 -right-0.5 h-4 w-4 border-t-2 border-r-2 border-primary rounded-tr-sm" />
@@ -295,7 +320,7 @@ export function ScannerCameraModal({ onDetecte, onFermer }: Props) {
                 )}
               </div>
 
-              <p className="mt-3 text-xs font-medium text-white/90 drop-shadow-md bg-black/60 px-3 py-1 rounded-full backdrop-blur-xs">
+              <p className="mt-3 text-xs font-medium text-white/90 drop-shadow-md bg-black/70 px-3 py-1 rounded-full backdrop-blur-xs">
                 {t("scanner.instruction")}
               </p>
             </div>
@@ -303,7 +328,7 @@ export function ScannerCameraModal({ onDetecte, onFermer }: Props) {
 
           {/* Affichage d'erreur caméra si refus d'accès ou problème matériel */}
           {erreur && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-card/95">
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-card/95">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-3">
                 <AlertCircle className="h-6 w-6" />
               </div>
@@ -323,7 +348,7 @@ export function ScannerCameraModal({ onDetecte, onFermer }: Props) {
         </div>
 
         {/* Pied d'aide */}
-        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-muted/20 border-t text-xs text-muted-foreground">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 bg-muted/20 border-t text-xs text-muted-foreground shrink-0">
           <div className="flex items-center gap-2">
             <Camera className="h-3.5 w-3.5 text-primary" />
             <span>{t("imei.cadrezCodeBarres")}</span>

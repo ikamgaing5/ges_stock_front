@@ -22,6 +22,7 @@ import {
   ScanLine,
   Smartphone,
   Store,
+  UserCheck,
   Users,
   X,
 } from "lucide-react";
@@ -52,6 +53,7 @@ const liens: LienDef[] = [
   },
   { href: "/telephones", cleLibelle: "nav.parc", icone: Smartphone },
   { href: "/factures", cleLibelle: "nav.factures", icone: Receipt },
+  { href: "/clients", cleLibelle: "nav.clients", icone: UserCheck },
   { href: "/modeles", cleLibelle: "nav.catalogue", icone: BookOpen },
   { href: "/mouvements", cleLibelle: "nav.historique", icone: ArrowLeftRight },
   {

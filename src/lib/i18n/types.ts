@@ -28,6 +28,7 @@ export type CleTraduction =
   | `modeles.${string}`
   | `mouvements.${string}`
   | `equipe.${string}`
+  | `clients.${string}`
   | `boutiques.${string}`
   | `monCompte.${string}`
   | `scanner.${string}`

@@ -89,6 +89,8 @@ export default function PageConnexion() {
         setErreur(t("auth.compteBoutiqueDesactive"));
       } else if (params.get("desactive") === "1") {
         setErreur(t("auth.compteDesactive"));
+      } else if (params.get("inactivite") === "1") {
+        setErreur(t("auth.sessionExpireeInactivite"));
       }
     }
   }, [t]);

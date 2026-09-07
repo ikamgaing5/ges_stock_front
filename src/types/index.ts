@@ -50,9 +50,11 @@ export interface Boutique {
   id: string;
   proprietaire_id: number;
   nom: string;
+  pays?: string;
   adresse: string | null;
   ville: string | null;
   telephone: string | null;
+  libelle_complet?: string;
   devise: string;
   active: boolean;
   logo_url?: string | null;
@@ -69,6 +71,11 @@ export interface Utilisateur {
   email: string;
   role: Role;
   telephone: string | null;
+  entreprise_nom?: string | null;
+  pays?: string | null;
+  niu?: string | null;
+  registre_commerce?: string | null;
+  logo_url?: string | null;
   actif: boolean;
   proprietaire_id: number | null;
   created_at: string;
@@ -345,3 +352,56 @@ export interface SessionPaiementReponse {
   payment_url: string;
   payment_token: string | null;
 }
+
+export interface ClientResume {
+  cle: string;
+  nom: string;
+  telephone: string;
+  nombre_achats: number;
+  total_depense: number;
+  premier_achat: string;
+  dernier_achat: string;
+  boutiques: Array<{ id: number; nom: string; uuid?: string }>;
+  derniers_appareils: string[];
+}
+
+export interface ClientAchatDetail {
+  id: number | string;
+  uuid?: string;
+  date: string;
+  prix: number;
+  mode_paiement?: string | null;
+  numero_facture?: string | null;
+  commentaire?: string | null;
+  boutique_nom: string;
+  vendeur_nom: string;
+  telephone: {
+    id: number | string;
+    imei?: string | null;
+    couleur?: string | null;
+    modele: string;
+    marque: string;
+  };
+}
+
+export interface ClientFicheDetail {
+  client: {
+    cle: string;
+    nom: string;
+    telephone: string;
+    nombre_achats: number;
+    total_depense: number;
+    premier_achat: string;
+    dernier_achat: string;
+  };
+  achats: ClientAchatDetail[];
+}
+
+export interface StatistiquesClients {
+  total_clients: number;
+  total_ventes: number;
+  chiffre_affaires: number;
+  panier_moyen: number;
+  clients_fideles: number;
+}
+

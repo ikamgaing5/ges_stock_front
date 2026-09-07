@@ -38,6 +38,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IconeTelora } from "@/components/ui/logo-telora";
+import { SelectRecherche } from "@/components/ui/select-recherche";
+import { LISTE_PAYS } from "@/lib/pays";
 import { SelecteurLogo } from "@/components/selecteur-logo";
 import {
   nettoyerNiu,
@@ -55,7 +57,7 @@ export default function PageInscription() {
   const { rafraichir } = useAuth();
   const { t, lang } = useI18n();
 
-  const [etape, setEtape] = useState<"formulaire" | "code">("formulaire");
+  const [etape, setEtape] = useState<"vous" | "boutique" | "code">("vous");
 
   const [champs, setChamps] = useState({
     name: "",
@@ -63,7 +65,9 @@ export default function PageInscription() {
     telephone: "",
     password: "",
     password_confirmation: "",
+    pays: "CM",
     boutique_nom: "",
+    boutique_adresse: "",
     boutique_ville: "",
     niu: "",
     registre_commerce: "",
@@ -140,11 +144,9 @@ export default function PageInscription() {
     };
   }, [champs.password, lang]);
 
-  /** Étape 1 : vérification des coordonnées et envoi du code */
-  async function demanderCode(evenement: React.FormEvent) {
+  /** Étape 1 : validation des coordonnées utilisateur et passage à l'étape boutique */
+  function passerAEtapeBoutique(evenement: React.FormEvent) {
     evenement.preventDefault();
-    if (rateLimitFormulaire.estBloque || envoiEnCours) return;
-
     const errs: Record<string, string> = {};
 
     if (!champs.name.trim()) {
@@ -166,11 +168,18 @@ export default function PageInscription() {
           : "Il manque quelque chose dans cette adresse, par exemple nom@domaine.com.";
     }
 
+    if (!champs.telephone.trim()) {
+      errs.telephone =
+        lang === "en"
+          ? "Please enter your phone number."
+          : "Votre numéro de téléphone est obligatoire.";
+    }
+
     if (!champs.password) {
       errs.password =
         lang === "en"
           ? "Choose a password to protect your account."
-          : "Choisissez un mot de passe pour protéger l'accès à votre boutique.";
+          : "Choisissez un mot de passe pour protéger l'accès à votre compte.";
     } else if (champs.password.length < 8) {
       errs.password =
         lang === "en"
@@ -190,11 +199,47 @@ export default function PageInscription() {
           : "Les deux mots de passe sont différents.";
     }
 
+    if (Object.keys(errs).length > 0) {
+      setErreurs(errs);
+      return;
+    }
+
+    setErreurs({});
+    setErreurGenerale(null);
+    setEtape("boutique");
+  }
+
+  /** Étape 2 : validation des informations de la boutique et envoi du code */
+  async function demanderCode(evenement: React.FormEvent) {
+    evenement.preventDefault();
+    if (rateLimitFormulaire.estBloque || envoiEnCours) return;
+
+    const errs: Record<string, string> = {};
+
     if (!champs.boutique_nom.trim()) {
       errs.boutique_nom =
         lang === "en"
           ? "Enter your store name."
           : "Indiquez le nom de votre boutique.";
+    }
+
+    if (!champs.pays) {
+      errs.pays =
+        lang === "en" ? "Select a country." : "Sélectionnez un pays.";
+    }
+
+    if (!champs.boutique_ville.trim()) {
+      errs.boutique_ville =
+        lang === "en"
+          ? "Enter the city of your first store."
+          : "Indiquez la ville de votre premier point de vente.";
+    }
+
+    if (!champs.boutique_adresse.trim()) {
+      errs.boutique_adresse =
+        lang === "en"
+          ? "Enter the address of your first store."
+          : "Indiquez l'adresse de votre premier point de vente.";
     }
 
     const testNiu = validerNiu(champs.niu, lang);
@@ -237,6 +282,10 @@ export default function PageInscription() {
         if (estRateLimite) {
           rateLimitRenvoi.demarrer(e.secondesRestantes(DELAI_RENVOI));
         }
+        if (parChamp.email || parChamp.name || parChamp.password) {
+          setEtape("vous");
+          toast.error(parChamp.email || parChamp.name || parChamp.password);
+        }
         if (Object.keys(parChamp).length === 0) setErreurGenerale(e.message);
       } else {
         setErreurGenerale(t("commun.erreur"));
@@ -246,7 +295,7 @@ export default function PageInscription() {
     }
   }
 
-  /** Étape 2 : validation du code et création du compte */
+  /** Étape 3 : validation du code et création du compte */
   const creerLeCompte = useCallback(
     async (codeSaisi: string) => {
       if (rateLimitCreation.estBloque || envoiEnCours) return;
@@ -259,11 +308,14 @@ export default function PageInscription() {
         const donneesFormulaire = new FormData();
         donneesFormulaire.append("name", champs.name);
         donneesFormulaire.append("email", champs.email);
-        if (champs.telephone) donneesFormulaire.append("telephone", champs.telephone);
+        donneesFormulaire.append("telephone", champs.telephone);
+        donneesFormulaire.append("boutique_telephone", champs.telephone);
         donneesFormulaire.append("password", champs.password);
         donneesFormulaire.append("password_confirmation", champs.password_confirmation);
+        donneesFormulaire.append("pays", champs.pays);
         donneesFormulaire.append("boutique_nom", champs.boutique_nom);
-        if (champs.boutique_ville) donneesFormulaire.append("boutique_ville", champs.boutique_ville);
+        donneesFormulaire.append("boutique_adresse", champs.boutique_adresse);
+        donneesFormulaire.append("boutique_ville", champs.boutique_ville);
         donneesFormulaire.append("niu", nettoyerNiu(champs.niu));
         donneesFormulaire.append(
           "registre_commerce",
@@ -288,10 +340,16 @@ export default function PageInscription() {
           const parChamp = e.parChamp();
           setErreurs(parChamp);
 
-          const horsCode = Object.keys(parChamp).filter((c) => c !== "code");
-          if (horsCode.length > 0) {
-            setEtape("formulaire");
-            toast.error(parChamp[horsCode[0]]);
+          const champsBoutique = ["boutique_nom", "pays", "boutique_ville", "boutique_adresse", "niu", "registre_commerce", "logo"];
+          const erreursBoutique = Object.keys(parChamp).filter((c) => champsBoutique.includes(c));
+          const erreursVous = Object.keys(parChamp).filter((c) => ["name", "email", "telephone", "password", "password_confirmation"].includes(c));
+
+          if (erreursVous.length > 0) {
+            setEtape("vous");
+            toast.error(parChamp[erreursVous[0]]);
+          } else if (erreursBoutique.length > 0) {
+            setEtape("boutique");
+            toast.error(parChamp[erreursBoutique[0]]);
           }
         } else {
           setErreurGenerale(t("commun.erreur"));
@@ -299,7 +357,7 @@ export default function PageInscription() {
         setEnvoiEnCours(false);
       }
     },
-    [champs, rafraichir, router, t, rateLimitCreation, envoiEnCours],
+    [champs, logoFichier, rafraichir, router, t, rateLimitCreation, envoiEnCours],
   );
 
   async function renvoyerCode() {
@@ -395,19 +453,19 @@ export default function PageInscription() {
           </span>
         </div>
 
-        {/* ------------------- Étape 1 : Formulaire ------------------- */}
-        {etape === "formulaire" ? (
+        {/* ------------------- Étape 1 : Vos identifiants ------------------- */}
+        {etape === "vous" && (
           <div className="anim-apparait w-full max-w-lg space-y-6">
             {/* Progression */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">
-                  {t("auth.etapeInscription")}
+                  {lang === "en" ? "Step 1 of 3: your credentials" : "Étape 1 sur 3 : vos identifiants"}
                 </span>
-                <span>50%</span>
+                <span>33%</span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                <div className="h-full w-1/2 rounded-full bg-primary transition-all duration-300" />
+                <div className="h-full w-1/3 rounded-full bg-primary transition-all duration-300" />
               </div>
             </div>
 
@@ -432,7 +490,7 @@ export default function PageInscription() {
               </div>
             )}
 
-            <form noValidate onSubmit={demanderCode} className="space-y-5">
+            <form noValidate onSubmit={passerAEtapeBoutique} className="space-y-5">
               {/* SECTION 1 : VOUS */}
               <div className="rounded-2xl border border-border/80 bg-card/60 p-5 shadow-xs backdrop-blur-xs space-y-4">
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2.5">
@@ -464,7 +522,6 @@ export default function PageInscription() {
                   <Champ
                     label={t("auth.email")}
                     erreur={erreurs.email}
-                    aide={t("auth.SendCode")}
                     obligatoire
                   >
                     <Input
@@ -484,7 +541,7 @@ export default function PageInscription() {
                   <Champ
                     label={t("auth.PhoneNumber")}
                     erreur={erreurs.telephone}
-                    aide={t("auth.SecuriseCompte")}
+                    obligatoire
                   >
                     <ChampTelephone
                       autoComplete="tel"
@@ -501,16 +558,13 @@ export default function PageInscription() {
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2.5">
                   <Lock className="h-4 w-4 text-primary" />
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {/* {lang === "en"
-                      ? "2. Your password"
-                      : "2. Votre mot de passe"} */}
                     {t("auth.VotreMDP")}
                   </h3>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Champ
-                    label={t("auth.MDPSure")}
+                    label={t("auth.motDePasse")}
                     erreur={erreurs.password}
                     obligatoire
                   >
@@ -529,15 +583,8 @@ export default function PageInscription() {
                       />
                       <button
                         type="button"
-                        onClick={() =>
-                          setAfficherMotDePasse(!afficherMotDePasse)
-                        }
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
-                        aria-label={
-                          afficherMotDePasse
-                            ? "Masquer le mot de passe"
-                            : "Afficher le mot de passe"
-                        }
+                        onClick={() => setAfficherMotDePasse(!afficherMotDePasse)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       >
                         {afficherMotDePasse ? (
                           <EyeOff className="h-4 w-4" />
@@ -547,41 +594,29 @@ export default function PageInscription() {
                       </button>
                     </div>
 
-                    {/* Jauge de robustesse */}
                     {champs.password && (
                       <div className="mt-2 space-y-1">
-                        <div className="flex h-1.5 w-full gap-1">
-                          {[1, 2, 3, 4].map((barre) => (
+                        <div className="flex h-1 gap-1">
+                          {[1, 2, 3, 4].map((index) => (
                             <div
-                              key={barre}
-                              className={`h-full flex-1 rounded-full transition-all duration-300 ${
-                                barre <= forceMotDePasse.score
+                              key={index}
+                              className={`h-full flex-1 rounded-full transition-colors ${
+                                index <= forceMotDePasse.score
                                   ? forceMotDePasse.couleur
                                   : "bg-muted"
                               }`}
                             />
                           ))}
                         </div>
-                        <p className="text-[11px] text-muted-foreground flex justify-between">
-                          <span>
-                            {lang === "en" ? "Security: " : "Sécurité : "}
-                            <span className="font-medium text-foreground">
-                              {forceMotDePasse.label}
-                            </span>
-                          </span>
-                          <span>8+ car.</span>
+                        <p className="text-[11px] text-muted-foreground">
+                          {forceMotDePasse.label}
                         </p>
                       </div>
                     )}
                   </Champ>
 
                   <Champ
-                    label={
-                      // lang === "en"
-                      //   ? "Confirm your password"
-                      //   : "Confirmez le mot de passe"
-                      t("auth.MDPConfirm")
-                    }
+                    label={t("auth.confirmationMotDePasse")}
                     erreur={erreurs.password_confirmation}
                     obligatoire
                   >
@@ -605,12 +640,7 @@ export default function PageInscription() {
                         onClick={() =>
                           setAfficherConfirmation(!afficherConfirmation)
                         }
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 transition-colors cursor-pointer"
-                        aria-label={
-                          afficherConfirmation
-                            ? "Masquer la confirmation"
-                            : "Afficher la confirmation"
-                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       >
                         {afficherConfirmation ? (
                           <EyeOff className="h-4 w-4" />
@@ -625,41 +655,106 @@ export default function PageInscription() {
                       champs.password === champs.password_confirmation && (
                         <p className="mt-1.5 flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
                           <CheckCircle2 className="h-3.5 w-3.5" />
-                          {/* {lang === "en"
-                            ? "Both passwords match"
-                            : "Les deux mots de passe sont identiques"} */}
-                          {t("auth.MPDPasIdentique")}
+                          {t("auth.MDPPasIdentique")}
                         </p>
                       )}
                   </Champ>
                 </div>
               </div>
 
-              {/* SECTION 3 : PREMIÈRE BOUTIQUE */}
+              {/* Bouton de passage à l'étape Boutique */}
+              <div className="space-y-3 pt-1">
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full text-base font-semibold shadow-md transition-all hover:shadow-lg cursor-pointer"
+                >
+                  <span>
+                    {lang === "en" ? "Continue: set up store" : "Continuer : configurer ma boutique"}
+                  </span>
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </form>
+
+            <div className="pt-2 text-center text-sm text-muted-foreground border-t border-border/60">
+              {t("auth.dejaCompte")}{" "}
+              <Link
+                href="/connexion"
+                className="font-semibold text-primary underline underline-offset-4 hover:text-primary/80 transition-colors"
+              >
+                {t("auth.seConnecter")}
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* ------------------- Étape 2 : Votre Boutique ------------------- */}
+        {etape === "boutique" && (
+          <div className="anim-apparait w-full max-w-lg space-y-6">
+            {/* Progression */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  {lang === "en" ? "Step 2 of 3: your store" : "Étape 2 sur 3 : votre boutique"}
+                </span>
+                <span>66%</span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                <div className="h-full w-2/3 rounded-full bg-primary transition-all duration-300" />
+              </div>
+            </div>
+
+            {/* Bouton retour vers vos identifiants */}
+            <button
+              type="button"
+              onClick={() => {
+                setEtape("vous");
+                setErreurs({});
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>{lang === "en" ? "Back to credentials" : "Retour à vos identifiants"}</span>
+            </button>
+
+            {/* Titre et accroche */}
+            <div>
+              <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                {lang === "en" ? "Your store details" : "Informations de votre boutique"}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {lang === "en"
+                  ? "Give an identity to your first store point of sale"
+                  : "Donnez une identité à votre premier point de vente"}
+              </p>
+            </div>
+
+            {/* Message d'erreur générale éventuel */}
+            {erreurGenerale && (
+              <div
+                role="alert"
+                className="flex items-center gap-2.5 rounded-xl border border-destructive/20 bg-destructive/10 p-3.5 text-sm text-destructive"
+              >
+                <div className="h-2 w-2 shrink-0 rounded-full bg-destructive" />
+                <span>{erreurGenerale}</span>
+              </div>
+            )}
+
+            <form noValidate onSubmit={demanderCode} className="space-y-5">
+              {/* SECTION BOUTIQUE & POINT DE VENTE */}
               <div className="rounded-2xl border border-border/80 bg-card/60 p-5 shadow-xs backdrop-blur-xs space-y-4">
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2.5">
                   <Store className="h-4 w-4 text-primary" />
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {/* {lang === "en"
-                      ? "3. Your store"
-                      : "3. Votre point de vente"} */}
                     {t("auth.VotreBoutique")}
                   </h3>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Champ
-                    label={
-                      // lang === "en" ? "Store name" : "Nom de votre boutique"
-                      t("auth.NomBoutique")
-                    }
+                    label={t("auth.NomBoutique")}
                     erreur={erreurs.boutique_nom}
-                    aide={
-                      // lang === "en"
-                      //   ? "The name your customers and staff know"
-                      //   : "Le nom que vos clients et vendeuses connaissent"
-                      t("auth.NomBoutiqueConnu")
-                    }
                     obligatoire
                   >
                     <Input
@@ -675,22 +770,79 @@ export default function PageInscription() {
                   </Champ>
 
                   <Champ
-                    label={t("auth.villeBoutique")}
-                    erreur={erreurs.boutique_ville}
-                    aide={
-                      // lang === "en"
-                      //   ? "Where is this store located?"
-                      //   : "Où se situe cette première boutique ?"
-                      t("auth.PositionBoutique")
+                    label={lang === "en" ? "Country" : "Pays"}
+                    erreur={erreurs.pays}
+                    obligatoire
+                  >
+                    <SelectRecherche
+                      id="inscription-pays"
+                      options={LISTE_PAYS.map((p) => ({
+                        valeur: p.code,
+                        libelle: lang === "en" ? p.nomEn : p.nomFr,
+                        badge: p.drapeau,
+                        description: p.indicatif,
+                      }))}
+                      valeur={champs.pays}
+                      onChange={(v) => v && modifier("pays", v)}
+                      placeholder={
+                        lang === "en"
+                          ? "Select a country"
+                          : "Sélectionnez un pays"
+                      }
+                      placeholderRecherche={
+                        lang === "en"
+                          ? "Search a country..."
+                          : "Rechercher un pays…"
+                      }
+                      erreur={erreurs.pays}
+                    />
+                  </Champ>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Champ
+                    label={
+                      lang === "en"
+                        ? "First store city"
+                        : "Ville du premier point de vente"
                     }
+                    erreur={erreurs.boutique_ville}
+                    obligatoire
                   >
                     <Input
-                      className="h-10"
+                      className={`h-10 ${
+                        erreurs.boutique_ville
+                          ? "border-destructive focus-visible:ring-destructive/30"
+                          : ""
+                      }`}
                       value={champs.boutique_ville}
                       onChange={(e) =>
                         modifier("boutique_ville", e.target.value)
                       }
-                      placeholder="ex: Douala, Abidjan, Dakar, Paris..."
+                      placeholder="ex: Douala, Abidjan, Dakar..."
+                    />
+                  </Champ>
+
+                  <Champ
+                    label={
+                      lang === "en"
+                        ? "Store physical address"
+                        : "Adresse du point de vente"
+                    }
+                    erreur={erreurs.boutique_adresse}
+                    obligatoire
+                  >
+                    <Input
+                      className={`h-10 ${
+                        erreurs.boutique_adresse
+                          ? "border-destructive focus-visible:ring-destructive/30"
+                          : ""
+                      }`}
+                      value={champs.boutique_adresse}
+                      onChange={(e) =>
+                        modifier("boutique_adresse", e.target.value)
+                      }
+                      placeholder="ex: Rue des Télécoms, face Marché..."
                     />
                   </Champ>
                 </div>
@@ -701,8 +853,8 @@ export default function PageInscription() {
                     erreur={erreurs.niu}
                     aide={
                       lang === "en"
-                        ? "14 chars (e.g. M052012345678X or 14 digits) • M=Company, P=Individual"
-                        : "14 car. (ex: M052012345678X ou 14 chiffres) • M=Société, P=Individuel"
+                        ? "e.g. M052012345678X • Inherited by same-country stores"
+                        : "ex: M052012345678X • Partagé par vos boutiques du même pays"
                     }
                     obligatoire
                   >
@@ -721,11 +873,6 @@ export default function PageInscription() {
                   <Champ
                     label={t("auth.registreCommerce")}
                     erreur={erreurs.registre_commerce}
-                    aide={
-                      lang === "en"
-                        ? "e.g. RC/DLA/2023/B/1234 • B=Company, A=Individual/ETS"
-                        : "ex: RC/DLA/2023/B/1234 • B=Société, A=ETS/Individuel"
-                    }
                     obligatoire
                   >
                     <Input
@@ -788,7 +935,7 @@ export default function PageInscription() {
                       <span>
                         {t("auth.CreerBoutiqueCode")}
                       </span>
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      <MailCheck className="ml-2 h-4 w-4" />
                     </>
                   )}
                 </Button>
@@ -798,25 +945,17 @@ export default function PageInscription() {
                 </p>
               </div>
             </form>
-
-            <div className="pt-2 text-center text-sm text-muted-foreground border-t border-border/60">
-              {t("auth.dejaCompte")}{" "}
-              <Link
-                href="/connexion"
-                className="font-semibold text-primary underline underline-offset-4 hover:text-primary/80 transition-colors"
-              >
-                {t("auth.seConnecter")}
-              </Link>
-            </div>
           </div>
-        ) : (
-          /* ---------------- Étape 2 : Saisie du code ---------------- */
+        )}
+
+        {/* ---------------- Étape 3 : Saisie du code ---------------- */}
+        {etape === "code" && (
           <div className="anim-apparait w-full max-w-md space-y-6">
             {/* Stepper à 100% */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">
-                  {t("auth.DeuxiemeEtape")}
+                  {lang === "en" ? "Step 3 of 3: confirm your email" : "Étape 3 sur 3 : confirmez votre email"}
                 </span>
                 <span>100%</span>
               </div>
@@ -915,7 +1054,7 @@ export default function PageInscription() {
                 <button
                   type="button"
                   onClick={() => {
-                    setEtape("formulaire");
+                    setEtape("boutique");
                     setCode("");
                     setErreurs({});
                     rateLimitCreation.arreter();
@@ -923,7 +1062,7 @@ export default function PageInscription() {
                   className="inline-flex items-center gap-1.5 font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  {t("auth.CorrigerInfo")}
+                  {lang === "en" ? "Back to store setup" : "Modifier les informations de la boutique"}
                 </button>
 
                 <button

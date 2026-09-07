@@ -6,34 +6,54 @@ import { useI18n } from "@/lib/i18n";
 import { formaterImei } from "@/lib/imei";
 
 interface ModeleFactureProps {
-  mouvement: Mouvement;
+  mouvement: Mouvement | { data: Mouvement };
   idPrint?: string;
 }
 
-export function ModeleFacture({ mouvement, idPrint = "facture-imprimable" }: ModeleFactureProps) {
+export function ModeleFacture({ mouvement: propMouvement, idPrint = "facture-imprimable" }: ModeleFactureProps) {
   const { t, formatMontant, lang } = useI18n();
 
-  const telephone = mouvement.telephone;
+  const mouvement: Mouvement =
+    propMouvement && typeof propMouvement === "object" && "data" in propMouvement && propMouvement.data
+      ? (propMouvement.data as Mouvement)
+      : (propMouvement as Mouvement);
+
+  const telephone = mouvement?.telephone;
   const modele = telephone?.modele;
-  const boutique = mouvement.boutique ?? telephone?.boutique;
+  const boutique = mouvement?.boutique ?? telephone?.boutique;
   const devise = boutique?.devise ?? "XAF";
 
-  // Date et heure formatées
-  const dateObj = new Date(mouvement.created_at);
-  const dateFormatee = dateObj.toLocaleDateString(lang === "en" ? "en-US" : "fr-FR", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const heureFormatee = dateObj.toLocaleTimeString(lang === "en" ? "en-US" : "fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // Date et heure formatées avec gestion des dates invalides
+  const dateObj = mouvement?.created_at ? new Date(mouvement.created_at) : new Date();
+  const dateValide = !isNaN(dateObj.getTime());
+  const dateFormatee = dateValide
+    ? dateObj.toLocaleDateString(lang === "en" ? "en-US" : "fr-FR", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : new Date().toLocaleDateString(lang === "en" ? "en-US" : "fr-FR");
+  const heureFormatee = dateValide
+    ? dateObj.toLocaleTimeString(lang === "en" ? "en-US" : "fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : new Date().toLocaleTimeString(lang === "en" ? "en-US" : "fr-FR", { hour: "2-digit", minute: "2-digit" });
 
   // Libellé désignation
+  const marqueNom =
+    modele?.gamme?.marque?.nom ??
+    (modele as any)?.marque?.nom ??
+    (telephone as any)?.marque ??
+    "";
+  const modeleNom = modele?.nom ?? (telephone as any)?.modele ?? "";
+  const designationBrute =
+    modele?.libelle ||
+    (marqueNom && modeleNom ? `${marqueNom} ${modeleNom}`.trim() : modeleNom || marqueNom);
+
   const nomArticle = [
-    modele?.libelle || modele?.nom || (lang === "en" ? "Mobile Phone" : "Téléphone portable"),
+    designationBrute || (lang === "en" ? "Mobile Phone" : "Téléphone portable"),
     telephone?.couleur ? `(${telephone.couleur})` : "",
   ]
     .filter(Boolean)
@@ -41,21 +61,24 @@ export function ModeleFacture({ mouvement, idPrint = "facture-imprimable" }: Mod
 
   // Mode de paiement
   const libellePaiement =
-    mouvement.mode_paiement === "om_momo"
+    mouvement?.mode_paiement === "om_momo"
       ? t("factures.omMomo")
       : t("factures.cash");
 
-  const prix = mouvement.prix ?? telephone?.prix_vente_reel ?? telephone?.prix_vente ?? 0;
+  const prix =
+    mouvement?.prix !== null && Number(mouvement?.prix) > 0
+      ? Number(mouvement.prix)
+      : (telephone?.prix_vente_reel ?? telephone?.prix_vente ?? 0);
   const logoBoutique = boutique?.logo_url;
 
   return (
     <div
       id={idPrint}
-      className="facture-container relative mx-auto w-full max-w-[820px] bg-white text-neutral-900 shadow-sm print:shadow-none print:m-0 print:w-full print:max-w-none"
+      className="facture-container relative mx-auto w-full max-w-[820px] bg-white text-neutral-900 shadow-sm print:shadow-none print:m-0 print:w-full print:max-w-none print:min-h-0"
       style={{
         minHeight: "1050px",
-        padding: "48px 48px 40px 48px",
-        fontFamily: "var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif)",
+        padding: "44px 44px 36px 44px",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
         color: "#111827",
         backgroundColor: "#ffffff",
       }}
@@ -86,7 +109,7 @@ export function ModeleFacture({ mouvement, idPrint = "facture-imprimable" }: Mod
       )}
 
       {/* Contenu au premier plan */}
-      <div className="relative z-10 flex flex-col justify-between" style={{ minHeight: "960px" }}>
+      <div className="relative z-10 flex flex-col justify-between print:min-h-0" style={{ minHeight: "960px" }}>
         <div>
           {/* En-tête : Logo + Informations Boutique à gauche / Titre et N° à droite */}
           <div className="flex items-start justify-between border-b border-neutral-200 pb-5">
@@ -130,7 +153,7 @@ export function ModeleFacture({ mouvement, idPrint = "facture-imprimable" }: Mod
                 {boutique?.telephone && (
                   <p className="text-neutral-600">
                     <span className="font-semibold text-neutral-700">{t("factures.telephone")} :</span>{" "}
-                    <span className="font-mono">{boutique.telephone}</span>
+                    <span className="font-medium text-neutral-800">{boutique.telephone}</span>
                   </p>
                 )}
               </div>
@@ -153,7 +176,7 @@ export function ModeleFacture({ mouvement, idPrint = "facture-imprimable" }: Mod
               {t("factures.detailsFacture")}
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm">
+            <div className="grid grid-cols-2 gap-8 text-sm">
               {/* Colonne gauche : Informations sur la commande */}
               <div>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500 border-b border-neutral-200 pb-1 mb-2.5">
@@ -186,14 +209,14 @@ export function ModeleFacture({ mouvement, idPrint = "facture-imprimable" }: Mod
                   <div className="flex justify-between py-0.5">
                     <dt className="text-neutral-500">{t("factures.client")}</dt>
                     <dd className="font-bold text-right text-neutral-900">
-                      {mouvement.client_nom || "—"}
+                      {mouvement.client_nom || telephone?.client_nom || "—"}
                     </dd>
                   </div>
-                  {mouvement.client_telephone && (
+                  {(mouvement.client_telephone || telephone?.client_telephone) && (
                     <div className="flex justify-between py-0.5">
                       <dt className="text-neutral-500">{t("factures.telephoneClient")}</dt>
-                      <dd className="font-mono font-medium text-right text-neutral-900">
-                        {mouvement.client_telephone}
+                      <dd className="font-medium text-right text-neutral-900">
+                        {mouvement.client_telephone || telephone?.client_telephone}
                       </dd>
                     </div>
                   )}

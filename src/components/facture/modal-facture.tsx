@@ -18,12 +18,17 @@ import { imprimerFacture, genererNomFichierFacture } from "@/lib/impression";
 interface ModalFactureProps {
   ouvert: boolean;
   onFermer: () => void;
-  mouvement: Mouvement | null;
+  mouvement: Mouvement | { data: Mouvement } | null;
 }
 
-export function ModalFacture({ ouvert, onFermer, mouvement }: ModalFactureProps) {
+export function ModalFacture({ ouvert, onFermer, mouvement: propMouvement }: ModalFactureProps) {
   const { t } = useI18n();
   const zoneImpressionRef = useRef<HTMLDivElement>(null);
+
+  const mouvement: Mouvement | null =
+    propMouvement && typeof propMouvement === "object" && "data" in propMouvement && propMouvement.data
+      ? (propMouvement.data as Mouvement)
+      : (propMouvement as Mouvement | null);
 
   const lancerImpression = useCallback(() => {
     if (!mouvement) return;

@@ -264,7 +264,9 @@ export default function PageEquipe() {
                                     key={boutique.id}
                                     className="rounded-full bg-muted px-2 py-0.5 text-xs"
                                   >
-                                    {boutique.nom}
+                                    {boutique.adresse
+                                      ? `${boutique.nom} (${boutique.adresse})`
+                                      : boutique.nom}
                                   </span>
                                 ),
                               )}
@@ -578,6 +580,9 @@ function FenetreEmploye({
     if (modification && !nom.trim()) {
       errs.name = t("commun.nomRequis");
     }
+    if (modification && !telephone.trim()) {
+      errs.telephone = "Le numéro de téléphone est obligatoire.";
+    }
     if (!email.trim()) {
       errs.email = t("commun.emailRequis");
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
@@ -599,7 +604,7 @@ function FenetreEmploye({
           name: nom,
           email,
           role,
-          telephone: telephone || null,
+          telephone: telephone.trim(),
           actif,
           boutiques: choisies,
           ...(motDePasse ? { password: motDePasse } : {}),
@@ -644,7 +649,7 @@ function FenetreEmploye({
             </DialogTitle>
             <DialogDescription>
               {modification
-                ? t("equipe.laisserVideMdp")
+                ? " "
                 : t("equipe.invitationDesc")}
             </DialogDescription>
           </DialogHeader>
@@ -672,12 +677,28 @@ function FenetreEmploye({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="e-tel">{t("monCompte.telephone")}</Label>
+                  <Label htmlFor="e-tel">
+                    {t("monCompte.telephone")}
+                    <span className="ml-0.5 text-destructive">*</span>
+                  </Label>
                   <ChampTelephone
                     id="e-tel"
                     valeur={telephone}
-                    onChange={setTelephone}
+                    onChange={(val) => {
+                      setTelephone(val);
+                      if (erreurs.telephone) {
+                        setErreurs((prev) => {
+                          const copie = { ...prev };
+                          delete copie.telephone;
+                          return copie;
+                        });
+                      }
+                    }}
+                    erreur={Boolean(erreurs.telephone)}
                   />
+                  {erreurs.telephone && (
+                    <p className="text-xs text-destructive">{erreurs.telephone}</p>
+                  )}
                 </div>
               </>
             )}
@@ -747,12 +768,16 @@ function FenetreEmploye({
                       checked={choisies.includes(boutique.id)}
                       onChange={() => basculerBoutique(boutique.id)}
                     />
-                    <span className="flex-1">{boutique.nom}</span>
-                    {boutique.ville && (
-                      <span className="text-xs text-muted-foreground">
-                        {boutique.ville}
-                      </span>
-                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm leading-snug">
+                        {boutique.nom}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {[boutique.adresse, boutique.ville]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
                   </label>
                 ))}
               </div>

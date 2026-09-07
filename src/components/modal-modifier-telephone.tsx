@@ -36,6 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ChampPrix } from "@/components/ui/champ-prix";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { EtatTelephone, Telephone } from "@/types";
@@ -158,7 +159,7 @@ export function ModalModifierTelephone({
     };
 
     if (prixAchat) {
-      const montantDevise = convertirMontant(Number(prixAchat), devise, deviseOrigine);
+      const montantDevise = convertirMontant(Number(String(prixAchat).replace(/\s+/g, "").replace(",", ".")), devise, deviseOrigine);
       const confBoutique = obtenirDevise(deviseOrigine);
       corps.prix_achat =
         confBoutique.decimales === 0
@@ -169,7 +170,7 @@ export function ModalModifierTelephone({
     }
 
     if (prixVente) {
-      const montantDevise = convertirMontant(Number(prixVente), devise, deviseOrigine);
+      const montantDevise = convertirMontant(Number(String(prixVente).replace(/\s+/g, "").replace(",", ".")), devise, deviseOrigine);
       const confBoutique = obtenirDevise(deviseOrigine);
       corps.prix_vente =
         confBoutique.decimales === 0
@@ -471,22 +472,15 @@ export function ModalModifierTelephone({
                   <Label htmlFor="edit-prix-vente" className="text-xs font-medium text-foreground">
                     {t("telephones.prixVente")}
                   </Label>
-                  <div className="relative">
-                    <Input
-                      id="edit-prix-vente"
-                      type="number"
-                      min={0}
-                      className="h-10 font-mono text-sm font-semibold pr-16"
-                      value={prixVente}
-                      onChange={(e) => setPrixVente(e.target.value)}
-                      placeholder="0"
-                    />
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                      <span className="text-xs font-bold text-muted-foreground uppercase">
-                        {devise}
-                      </span>
-                    </div>
-                  </div>
+                  <ChampPrix
+                    id="edit-prix-vente"
+                    devise={devise}
+                    valeur={prixVente}
+                    onChange={setPrixVente}
+                    placeholder="0"
+                    permettreDecimales={configDevise.decimales > 0}
+                    erreur={erreurs.prix_vente}
+                  />
                   {erreurs.prix_vente && (
                     <p className="text-xs text-destructive font-medium">{erreurs.prix_vente}</p>
                   )}
@@ -504,22 +498,15 @@ export function ModalModifierTelephone({
                         <span>Confidentiel</span>
                       </span>
                     </div>
-                    <div className="relative">
-                      <Input
-                        id="edit-prix-achat"
-                        type="number"
-                        min={0}
-                        className="h-10 font-mono text-sm pr-16"
-                        value={prixAchat}
-                        onChange={(e) => setPrixAchat(e.target.value)}
-                        placeholder="0"
-                      />
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                        <span className="text-xs font-bold text-muted-foreground uppercase">
-                          {devise}
-                        </span>
-                      </div>
-                    </div>
+                    <ChampPrix
+                      id="edit-prix-achat"
+                      devise={devise}
+                      valeur={prixAchat}
+                      onChange={setPrixAchat}
+                      placeholder="0"
+                      permettreDecimales={configDevise.decimales > 0}
+                      erreur={erreurs.prix_achat}
+                    />
                     {erreurs.prix_achat && (
                       <p className="text-xs text-destructive font-medium">{erreurs.prix_achat}</p>
                     )}

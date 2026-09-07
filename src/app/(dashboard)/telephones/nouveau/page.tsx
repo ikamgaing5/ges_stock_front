@@ -24,6 +24,7 @@ import { Apparait, SqueletteFormulaire, TitrePage } from "@/components/ui-commun
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ChampPrix } from "@/components/ui/champ-prix";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -394,8 +395,8 @@ export default function PageEntreeStock() {
           couleur: commun.couleur || null,
           etat: commun.etat,
           modele_stockage_id: stockageChoisi,
-          prix_achat: commun.prix_achat ? Number(commun.prix_achat) : null,
-          prix_vente: commun.prix_vente ? Number(commun.prix_vente) : null,
+          prix_achat: commun.prix_achat ? Number(String(commun.prix_achat).replace(/\s+/g, "").replace(",", ".")) : null,
+          prix_vente: commun.prix_vente ? Number(String(commun.prix_vente).replace(/\s+/g, "").replace(",", ".")) : null,
           fournisseur: commun.fournisseur || null,
           notes: commun.notes || null,
         });
@@ -715,8 +716,12 @@ export default function PageEntreeStock() {
                   <SelectRecherche
                     options={boutiques.map((b) => ({
                       valeur: String(b.id),
-                      libelle: b.nom,
-                      description: b.ville ?? undefined,
+                      libelle:
+                        b.libelle_complet ||
+                        (b.adresse ? `${b.nom} — ${b.adresse}` : b.nom),
+                      description:
+                        [b.adresse, b.ville].filter(Boolean).join(" · ") ||
+                        undefined,
                     }))}
                     valeur={commun.boutique_id}
                     onChange={(v) => modifier("boutique_id", v)}
@@ -778,30 +783,40 @@ export default function PageEntreeStock() {
 
                 <div className="space-y-2">
                   <Label htmlFor="prix-achat">
-                    {t("telephones.prixAchat")} ({deviseEntree})
+                    {t("telephones.prixAchat")}
                   </Label>
-                  <Input
+                  <ChampPrix
                     id="prix-achat"
-                    type="number"
-                    min={0}
-                    className="chiffres h-10"
-                    value={commun.prix_achat}
-                    onChange={(e) => modifier("prix_achat", e.target.value)}
+                    devise={deviseEntree}
+                    valeur={commun.prix_achat}
+                    onChange={(v) => modifier("prix_achat", v)}
+                    permettreDecimales={configDeviseEntree.decimales > 0}
+                    erreur={erreurs.prix_achat}
                   />
+                  {erreurs.prix_achat && (
+                    <p className="text-xs text-destructive">
+                      {erreurs.prix_achat}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="prix-vente">
-                    {t("telephones.prixVente")} ({deviseEntree})
+                    {t("telephones.prixVente")}
                   </Label>
-                  <Input
+                  <ChampPrix
                     id="prix-vente"
-                    type="number"
-                    min={0}
-                    className="chiffres h-10"
-                    value={commun.prix_vente}
-                    onChange={(e) => modifier("prix_vente", e.target.value)}
+                    devise={deviseEntree}
+                    valeur={commun.prix_vente}
+                    onChange={(v) => modifier("prix_vente", v)}
+                    permettreDecimales={configDeviseEntree.decimales > 0}
+                    erreur={erreurs.prix_vente}
                   />
+                  {erreurs.prix_vente && (
+                    <p className="text-xs text-destructive">
+                      {erreurs.prix_vente}
+                    </p>
+                  )}
                 </div>
               </div>
 

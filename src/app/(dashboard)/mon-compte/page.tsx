@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CreditCard, HelpCircle, Loader2, Store } from "lucide-react";
+import { Building2, CreditCard, HelpCircle, Loader2, Store } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { couleursAbonnements } from "@/lib/format";
@@ -21,6 +21,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChampTelephone } from "@/components/champ-telephone";
 import { SelecteurDevise } from "@/components/layout/selecteur-devise";
+import { SelectRecherche } from "@/components/ui/select-recherche";
+import { SelecteurLogo } from "@/components/selecteur-logo";
+import { LISTE_PAYS } from "@/lib/pays";
+import {
+  nettoyerNiu,
+  validerNiu,
+  nettoyerRccm,
+  validerRccm,
+} from "@/lib/validation-legale";
+import type { Utilisateur } from "@/types";
 
 export default function PageMonCompte() {
   const { utilisateur, rafraichir } = useAuth();
@@ -35,6 +45,7 @@ export default function PageMonCompte() {
   const [confirmation, setConfirmation] = useState("");
   const [changementMdp, setChangementMdp] = useState(false);
   const [erreurNom, setErreurNom] = useState<string | null>(null);
+  const [erreurTelephone, setErreurTelephone] = useState<string | null>(null);
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -48,15 +59,29 @@ export default function PageMonCompte() {
   async function enregistrerCoordonnees(evenement: React.FormEvent) {
     evenement.preventDefault();
 
+    let valide = true;
     if (!nom.trim()) {
       setErreurNom(t("commun.nomRequis"));
-      return;
+      valide = false;
+    } else {
+      setErreurNom(null);
     }
-    setErreurNom(null);
+
+    if (!telephone.trim()) {
+      setErreurTelephone(
+        lang === "en" ? "Phone number is required." : "Le numéro de téléphone est obligatoire."
+      );
+      valide = false;
+    } else {
+      setErreurTelephone(null);
+    }
+
+    if (!valide) return;
+
     setEnregistrement(true);
 
     try {
-      await api.put("/mon-compte", { name: nom, telephone: telephone || null });
+      await api.put("/mon-compte", { name: nom, telephone: telephone.trim() });
       toast.success(t("monCompte.coordonneesMisesAJour"));
       await rafraichir();
     } catch (e) {
@@ -271,12 +296,22 @@ export default function PageMonCompte() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="c-tel">{t("monCompte.telephone")}</Label>
+                  <Label htmlFor="c-tel">
+                    {t("monCompte.telephone")}
+                    <span className="text-destructive ml-0.5">*</span>
+                  </Label>
                   <ChampTelephone
                     id="c-tel"
                     valeur={telephone}
-                    onChange={setTelephone}
+                    onChange={(val) => {
+                      setTelephone(val);
+                      if (erreurTelephone) setErreurTelephone(null);
+                    }}
+                    erreur={Boolean(erreurTelephone)}
                   />
+                  {erreurTelephone && (
+                    <p className="text-xs text-destructive">{erreurTelephone}</p>
+                  )}
                 </div>
 
                 <Button type="submit" disabled={enregistrement}>
@@ -290,90 +325,10 @@ export default function PageMonCompte() {
           </Card>
         </Apparait>
 
-        {/* Identité légale et logos des boutiques */}
+        {/* Identité légale et logo unique de l'entreprise */}
         {utilisateur.role === "proprietaire" && (
           <Apparait index={2.5}>
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between gap-3">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Store className="h-4 w-4 text-primary" />
-                    <span>Identité légale & Logos de vos boutiques</span>
-                  </CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs shrink-0"
-                    nativeButton={false}
-                    render={<Link href="/boutiques" />}
-                  >
-                    Gérer sur Boutiques
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-xs text-muted-foreground">
-                  Le logo, le NIU et le RCCM seront imprimés sur les factures remises à vos clients.
-                </p>
-
-                <div className="divide-y divide-border/60 rounded-xl border border-border/80 bg-muted/20 overflow-hidden">
-                  {utilisateur.boutiques && utilisateur.boutiques.length > 0 ? (
-                    utilisateur.boutiques.map((b) => (
-                      <div key={b.id} className="flex items-center justify-between p-3 gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          {b.logo_url ? (
-                            <div className="w-10 h-10 rounded-lg bg-white dark:bg-neutral-800 border border-border shrink-0 flex items-center justify-center p-1 overflow-hidden shadow-xs">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={b.logo_url} alt={b.nom} className="max-h-full max-w-full object-contain" />
-                            </div>
-                          ) : (
-                            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 text-muted-foreground">
-                              <Store className="w-4 h-4" />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{b.nom}</p>
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground mt-0.5">
-                              <span>
-                                NIU :{" "}
-                                {b.niu ? (
-                                  <strong className="text-foreground">{b.niu}</strong>
-                                ) : (
-                                  <em className="text-amber-600 dark:text-amber-400">Non renseigné</em>
-                                )}
-                              </span>
-                              <span>•</span>
-                              <span>
-                                RCCM :{" "}
-                                {b.registre_commerce ? (
-                                  <strong className="text-foreground">{b.registre_commerce}</strong>
-                                ) : (
-                                  <em className="text-amber-600 dark:text-amber-400">Non renseigné</em>
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-xs shrink-0"
-                          nativeButton={false}
-                          render={<Link href="/boutiques" />}
-                        >
-                          Modifier
-                        </Button>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-3 text-xs text-muted-foreground">
-                      Aucune boutique enregistrée.
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <SectionIdentiteEntreprise utilisateur={utilisateur} />
           </Apparait>
         )}
 
@@ -506,5 +461,266 @@ export default function PageMonCompte() {
         </Apparait>
       </div>
     </div>
+  );
+}
+
+function SectionIdentiteEntreprise({
+  utilisateur,
+}: {
+  utilisateur: Utilisateur;
+}) {
+  const { rafraichir } = useAuth();
+  const { t, lang } = useI18n();
+
+  const [nom, setNom] = useState(utilisateur.entreprise_nom || "");
+  const [pays, setPays] = useState(utilisateur.pays || "CM");
+  const [niu, setNiu] = useState(utilisateur.niu || "");
+  const [registreCommerce, setRegistreCommerce] = useState(
+    utilisateur.registre_commerce || "",
+  );
+  const [logoFichier, setLogoFichier] = useState<File | null>(null);
+  const [supprimerLogo, setSupprimerLogo] = useState(false);
+  const [chargement, setChargement] = useState(false);
+  const [erreurs, setErreurs] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setNom(utilisateur.entreprise_nom || "");
+    setPays(utilisateur.pays || "CM");
+    setNiu(utilisateur.niu || "");
+    setRegistreCommerce(utilisateur.registre_commerce || "");
+    setLogoFichier(null);
+    setSupprimerLogo(false);
+    setErreurs({});
+  }, [utilisateur]);
+
+  async function enregistrer(e: React.FormEvent) {
+    e.preventDefault();
+    setErreurs({});
+
+    const errs: Record<string, string> = {};
+    if (!nom.trim()) {
+      errs.entreprise_nom =
+        lang === "en"
+          ? "Enterprise name is required."
+          : "Le nom de l'entreprise est obligatoire.";
+    }
+
+    const testNiu = validerNiu(niu, lang);
+    if (!testNiu.valide && testNiu.erreur) errs.niu = testNiu.erreur;
+
+    const testRccm = validerRccm(registreCommerce, lang);
+    if (!testRccm.valide && testRccm.erreur)
+      errs.registre_commerce = testRccm.erreur;
+
+    if (Object.keys(errs).length > 0) {
+      setErreurs(errs);
+      return;
+    }
+
+    setChargement(true);
+    const formData = new FormData();
+    formData.append("entreprise_nom", nom);
+    formData.append("pays", pays);
+    formData.append("niu", nettoyerNiu(niu));
+    formData.append("registre_commerce", nettoyerRccm(registreCommerce));
+    if (logoFichier) {
+      formData.append("logo", logoFichier);
+    }
+    if (supprimerLogo) {
+      formData.append("supprimer_logo", "1");
+    }
+
+    try {
+      await api.put("/mon-compte", formData);
+      toast.success(
+        lang === "en"
+          ? "Enterprise identity updated."
+          : "Identité de l'entreprise mise à jour.",
+      );
+      await rafraichir();
+    } catch (err) {
+      if (err instanceof ErreurApi) {
+        setErreurs(err.parChamp());
+        toast.error(err.resume());
+      } else {
+        toast.error(t("commun.erreur"));
+      }
+    } finally {
+      setChargement(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-primary" />
+            <span>
+              {lang === "en"
+                ? "Enterprise Identity & Unique Logo"
+                : "Identité de l'entreprise & Logo unique"}
+            </span>
+          </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs shrink-0"
+            nativeButton={false}
+            render={<Link href="/boutiques" />}
+          >
+            {lang === "en" ? "Manage stores" : "Gérer les boutiques"}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-xs text-muted-foreground">
+          {lang === "en"
+            ? "This legal identity and logo are shared by all your points of sale in the same country and appear on your invoices/receipts."
+            : "Ces informations légales et ce logo sont partagés par tous vos points de vente dans le même pays et figurent sur vos factures et reçus."}
+        </p>
+
+        <form noValidate onSubmit={enregistrer} className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="ent-nom">
+                {lang === "en" ? "Enterprise name" : "Nom de l'entreprise"}
+                <span className="ml-0.5 text-destructive">*</span>
+              </Label>
+              <Input
+                id="ent-nom"
+                className={`h-10 ${erreurs.entreprise_nom ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
+                value={nom}
+                onChange={(e) => {
+                  setNom(e.target.value);
+                  if (erreurs.entreprise_nom) {
+                    setErreurs((prev) => {
+                      const copy = { ...prev };
+                      delete copy.entreprise_nom;
+                      return copy;
+                    });
+                  }
+                }}
+                placeholder="Akwa Télécom"
+              />
+              {erreurs.entreprise_nom && (
+                <p className="text-xs text-destructive">
+                  {erreurs.entreprise_nom}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ent-pays">
+                {lang === "en" ? "Home country" : "Pays principal"}
+              </Label>
+              <SelectRecherche
+                id="ent-pays"
+                options={LISTE_PAYS.map((p) => ({
+                  valeur: p.code,
+                  libelle: lang === "en" ? p.nomEn : p.nomFr,
+                  badge: p.drapeau,
+                  description: p.indicatif,
+                }))}
+                valeur={pays}
+                onChange={(v) => {
+                  if (v) {
+                    setPays(v);
+                    if (erreurs.pays) {
+                      setErreurs((prev) => {
+                        const copy = { ...prev };
+                        delete copy.pays;
+                        return copy;
+                      });
+                    }
+                  }
+                }}
+                placeholder={
+                  lang === "en" ? "Select country" : "Sélectionner un pays"
+                }
+                placeholderRecherche={
+                  lang === "en" ? "Search country..." : "Rechercher un pays…"
+                }
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="ent-niu">
+                {t("auth.niuBoutique")}
+                <span className="ml-0.5 text-destructive">*</span>
+              </Label>
+              <Input
+                id="ent-niu"
+                className={`h-10 font-mono uppercase ${erreurs.niu ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
+                value={niu}
+                onChange={(e) => {
+                  setNiu(nettoyerNiu(e.target.value));
+                  if (erreurs.niu) {
+                    setErreurs((prev) => {
+                      const copy = { ...prev };
+                      delete copy.niu;
+                      return copy;
+                    });
+                  }
+                }}
+                placeholder="ex: M052012345678X"
+              />
+              {erreurs.niu && (
+                <p className="text-xs text-destructive">{erreurs.niu}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="ent-rccm">
+                {t("auth.registreCommerce")}
+                <span className="ml-0.5 text-destructive">*</span>
+              </Label>
+              <Input
+                id="ent-rccm"
+                className={`h-10 font-mono uppercase ${erreurs.registre_commerce ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
+                value={registreCommerce}
+                onChange={(e) => {
+                  setRegistreCommerce(e.target.value.toUpperCase());
+                  if (erreurs.registre_commerce) {
+                    setErreurs((prev) => {
+                      const copy = { ...prev };
+                      delete copy.registre_commerce;
+                      return copy;
+                    });
+                  }
+                }}
+                onBlur={() =>
+                  setRegistreCommerce(nettoyerRccm(registreCommerce))
+                }
+                placeholder="ex: RC/DLA/2023/B/1234"
+              />
+              {erreurs.registre_commerce && (
+                <p className="text-xs text-destructive">
+                  {erreurs.registre_commerce}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-border">
+            <SelecteurLogo
+              logoActuelUrl={utilisateur.logo_url}
+              fichier={logoFichier}
+              surChangementFichier={setLogoFichier}
+              supprimerLogoExistant={supprimerLogo}
+              surChangementSupprimer={setSupprimerLogo}
+              avertissementFacture={true}
+            />
+          </div>
+
+          <Button type="submit" disabled={chargement}>
+            {chargement && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {t("commun.enregistrer")}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

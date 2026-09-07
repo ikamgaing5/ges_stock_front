@@ -55,6 +55,10 @@ export default function PageInvitation({
     if (!nom.trim()) {
       errs.name = t("commun.nomRequis");
     }
+    if (!telephone.trim()) {
+      errs.telephone =
+        lang === "en" ? "Phone number is required." : "Le numéro de téléphone est obligatoire.";
+    }
     if (!motDePasse) {
       errs.password = t("commun.motDePasseRequis");
     } else if (motDePasse.length < 8) {
@@ -74,7 +78,7 @@ export default function PageInvitation({
         `/invitations/${token}/accepter`,
         {
           name: nom,
-          telephone: telephone || null,
+          telephone: telephone.trim(),
           password: motDePasse,
         },
       );
@@ -144,12 +148,28 @@ export default function PageInvitation({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="i-tel">{t("monCompte.telephone")}</Label>
+          <Label htmlFor="i-tel">
+            {t("monCompte.telephone")}
+            <span className="text-destructive ml-0.5">*</span>
+          </Label>
           <ChampTelephone
             id="i-tel"
             valeur={telephone}
-            onChange={setTelephone}
+            onChange={(val) => {
+              setTelephone(val);
+              if (erreurs.telephone) {
+                setErreurs((prev) => {
+                  const copie = { ...prev };
+                  delete copie.telephone;
+                  return copie;
+                });
+              }
+            }}
+            erreur={Boolean(erreurs.telephone)}
           />
+          {erreurs.telephone && (
+            <p className="text-xs text-destructive">{erreurs.telephone}</p>
+          )}
         </div>
 
         <div className="space-y-2">

@@ -29,8 +29,8 @@ export function genererNomFichierFacture(
 
 /**
  * Imprime proprement la facture ciblée par son identifiant DOM.
- * Utilise un iframe isolé afin d'éviter d'imprimer l'interface de l'application
- * (modale, arrière-plan, boutons, barres de défilement).
+ * Utilise un iframe isolé et injecte toutes les feuilles de style compilées
+ * afin d'obtenir un rendu d'impression 100% identique à l'affichage dans la modale.
  */
 export function imprimerFacture(
   elementId = "facture-imprimable",
@@ -68,12 +68,13 @@ export function imprimerFacture(
   const iframe = document.createElement("iframe");
   iframe.id = "facture-iframe-print";
   iframe.style.position = "fixed";
-  iframe.style.right = "0";
-  iframe.style.bottom = "0";
-  iframe.style.width = "0";
-  iframe.style.height = "0";
+  iframe.style.top = "-9999px";
+  iframe.style.left = "-9999px";
+  iframe.style.width = "820px";
+  iframe.style.height = "1160px";
   iframe.style.border = "0";
-  iframe.style.visibility = "hidden";
+  iframe.style.opacity = "0";
+  iframe.style.pointerEvents = "none";
   document.body.appendChild(iframe);
 
   const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
@@ -85,18 +86,40 @@ export function imprimerFacture(
   // Définir le titre dans l'iframe (utilisé par le navigateur pour le nom de fichier PDF)
   iframeDoc.title = nomFichier;
 
-  // Copier toutes les feuilles de style de la page principale
+  // Cloner la classe html pour hériter des polices et variables
+  iframeDoc.documentElement.className = document.documentElement.className;
+  iframeDoc.body.className = document.body.className;
+
+  // 1. Extraire et injecter TOUTES les règles CSS compilées déjà en mémoire dans le navigateur
+  for (let i = 0; i < document.styleSheets.length; i++) {
+    try {
+      const sheet = document.styleSheets[i];
+      if (sheet.cssRules) {
+        const styleTag = iframeDoc.createElement("style");
+        let cssText = "";
+        for (let j = 0; j < sheet.cssRules.length; j++) {
+          cssText += sheet.cssRules[j].cssText + "\n";
+        }
+        styleTag.textContent = cssText;
+        iframeDoc.head.appendChild(styleTag);
+      }
+    } catch {
+      // Ignorer les restrictions CORS de certaines polices externes
+    }
+  }
+
+  // 2. Copier également les balises style et link existantes de la page principale
   const styleElements = document.querySelectorAll('style, link[rel="stylesheet"]');
   styleElements.forEach((node) => {
     iframeDoc.head.appendChild(node.cloneNode(true));
   });
 
-  // Ajouter les règles CSS spécifiques à l'impression A4
+  // 3. Ajouter les règles d'ajustement A4 préservant fidèlement la facture de la modale
   const stylePrint = iframeDoc.createElement("style");
   stylePrint.textContent = `
     @page {
       size: A4 portrait;
-      margin: 10mm;
+      margin: 8mm 10mm;
     }
     * {
       -webkit-print-color-adjust: exact !important;
@@ -108,14 +131,14 @@ export function imprimerFacture(
       padding: 0 !important;
       background: #ffffff !important;
       color: #111827 !important;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
     }
     .facture-container {
       width: 100% !important;
       max-width: 100% !important;
       min-height: auto !important;
-      margin: 0 !important;
-      padding: 0 !important;
+      margin: 0 auto !important;
+      padding: 24px 32px !important;
       box-shadow: none !important;
       border: none !important;
       background: #ffffff !important;
@@ -123,10 +146,10 @@ export function imprimerFacture(
   `;
   iframeDoc.head.appendChild(stylePrint);
 
-  // Injecter le contenu HTML de la facture
+  // Injecter le contenu HTML complet de la facture affichée dans la modale
   iframeDoc.body.innerHTML = element.outerHTML;
 
-  // Attendre le chargement des images (logo, filigrane)
+  // Attendre le chargement des images (logo boutique, etc.)
   const images = Array.from(iframeDoc.images);
   const promesses = images.map((img) => {
     if (img.complete) return Promise.resolve();
@@ -147,8 +170,8 @@ export function imprimerFacture(
       } finally {
         setTimeout(() => {
           iframe.remove();
-        }, 2000);
+        }, 3000);
       }
-    }, 200);
+    }, 250);
   });
 }

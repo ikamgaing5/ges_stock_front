@@ -23,6 +23,12 @@ import {
 import { useRouter } from "next/navigation";
 import { api, effacerToken, enregistrerToken, lireToken } from "@/lib/api";
 import { detecterDeviseParIP } from "@/lib/geolocalisation";
+import {
+  demarrerSurveillanceInactivite,
+  effacerDerniereActivite,
+  enregistrerActivite,
+  reinitialiserActivite,
+} from "@/lib/inactivite";
 import type { Boutique, Utilisateur } from "@/types";
 
 /**
@@ -169,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const ouvrirSession = useCallback(
     (token: string, user: Utilisateur, urlRetourExplicite?: string) => {
       enregistrerToken(token);
+      reinitialiserActivite();
       setUtilisateur(user);
 
       // Résolution de l'URL de destination :
@@ -267,10 +274,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Même si l'appel échoue (serveur arrêté), on déconnecte localement.
     }
     effacerToken();
+    effacerDerniereActivite();
     window.localStorage.removeItem(CLE_BOUTIQUE);
     setUtilisateur(null);
     router.push("/connexion");
   }, [router]);
+
+  // Surveillance d'inactivité (déconnexion automatique après 60 minutes)
+  useEffect(() => {
+    if (!utilisateur) return;
+
+    enregistrerActivite();
+
+    const stopperSurveillance = demarrerSurveillanceInactivite(async () => {
+      try {
+        await api.post("/logout");
+      } catch {
+        // En cas d'erreur réseau, la déconnexion locale est garantie
+      }
+      effacerToken();
+      effacerDerniereActivite();
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(CLE_BOUTIQUE);
+      }
+      setUtilisateur(null);
+      router.push("/connexion?inactivite=1");
+    });
+
+    return () => {
+      stopperSurveillance();
+    };
+  }, [utilisateur, router]);
 
   const [deviseChoisie, setDeviseChoisie] = useState<string | null>(null);
   const [deviseDetectee, setDeviseDetectee] = useState<string | null>(null);

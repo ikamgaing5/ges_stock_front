@@ -3,7 +3,7 @@
 /** Les boutiques du propriétaire (/boutiques). */
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Pencil, Plus, Store, Trash2 } from "lucide-react";
+import { CheckCircle2, Loader2, Pencil, Plus, Store, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
@@ -29,10 +29,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChampTelephone } from "@/components/champ-telephone";
-import { formaterTelephoneVisuel } from "@/lib/pays";
+import { formaterTelephoneVisuel, LISTE_PAYS } from "@/lib/pays";
 import { Switch } from "@/components/ui/switch";
 import { SelectRecherche } from "@/components/ui/select-recherche";
-import { SelecteurLogo } from "@/components/selecteur-logo";
 import {
   nettoyerNiu,
   validerNiu,
@@ -43,7 +42,7 @@ import { DEVISES } from "@/lib/devises";
 import type { Boutique } from "@/types";
 
 export default function PageBoutiques() {
-  const { rafraichir } = useAuth();
+  const { rafraichir, utilisateur } = useAuth();
   const { t, formatNombre, lang } = useI18n();
 
   const [boutiques, setBoutiques] = useState<Boutique[]>([]);
@@ -132,10 +131,16 @@ export default function PageBoutiques() {
                       )}
                       <div className="min-w-0">
                         <p className="truncate font-medium">{boutique.nom}</p>
-                        <p className="truncate text-sm text-muted-foreground">
-                          {[boutique.ville, boutique.adresse]
+                        <p className="truncate text-sm font-normal text-foreground/80">
+                          {boutique.adresse || t("boutiques.adresseNonRenseignee")}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {[
+                            boutique.ville,
+                            LISTE_PAYS.find((p) => p.code === boutique.pays)?.nomFr || boutique.pays,
+                          ]
                             .filter(Boolean)
-                            .join(" · ") || t("boutiques.adresseNonRenseignee")}
+                            .join(" · ")}
                         </p>
                       </div>
                     </div>
@@ -146,24 +151,26 @@ export default function PageBoutiques() {
                     )}
                   </div>
 
-                  {boutique.niu || boutique.registre_commerce ? (
-                    <div className="flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
-                      {boutique.niu && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted/60 border border-border/50">
-                          <strong className="font-medium mr-1">NIU :</strong> {boutique.niu}
+                  <div className="flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+                    {boutique.pays && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted/60 border border-border/50">
+                        <span className="mr-1">
+                          {LISTE_PAYS.find((p) => p.code === boutique.pays)?.drapeau || "🌐"}
                         </span>
-                      )}
-                      {boutique.registre_commerce && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted/60 border border-border/50">
-                          <strong className="font-medium mr-1">RCCM :</strong> {boutique.registre_commerce}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-[11px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 rounded-md px-2 py-1">
-                      Informations légales (NIU / RCCM) à renseigner
-                    </div>
-                  )}
+                        {LISTE_PAYS.find((p) => p.code === boutique.pays)?.nomFr || boutique.pays}
+                      </span>
+                    )}
+                    {boutique.niu && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted/60 border border-border/50">
+                        <strong className="font-medium mr-1">NIU :</strong> {boutique.niu}
+                      </span>
+                    )}
+                    {boutique.registre_commerce && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted/60 border border-border/50">
+                        <strong className="font-medium mr-1">RCCM :</strong> {boutique.registre_commerce}
+                      </span>
+                    )}
+                  </div>
 
                   <dl className="flex gap-6 text-sm">
                     <div>
@@ -265,11 +272,15 @@ function FenetreBoutique({
   onFermer: () => void;
   onSucces: () => void;
 }) {
+  const { utilisateur } = useAuth();
   const { t, lang } = useI18n();
   const modification = Boolean(boutique?.id);
+  const nomEntreprise =
+    utilisateur?.entreprise_nom || boutique?.nom || "Boutique";
 
   const [champs, setChamps] = useState({
-    nom: "",
+    nom: nomEntreprise,
+    pays: boutique?.pays ?? (utilisateur?.pays || "CM"),
     ville: "",
     adresse: "",
     telephone: "",
@@ -279,16 +290,14 @@ function FenetreBoutique({
     registre_commerce: "",
   });
 
-  const [logoFichier, setLogoFichier] = useState<File | null>(null);
-  const [supprimerLogo, setSupprimerLogo] = useState(false);
-
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
   useEffect(() => {
     if (!boutique) return;
     setChamps({
-      nom: boutique.nom ?? "",
+      nom: nomEntreprise,
+      pays: boutique.pays ?? (utilisateur?.pays || "CM"),
       ville: boutique.ville ?? "",
       adresse: boutique.adresse ?? "",
       telephone: boutique.telephone ?? "",
@@ -297,10 +306,8 @@ function FenetreBoutique({
       niu: boutique.niu ?? "",
       registre_commerce: boutique.registre_commerce ?? "",
     });
-    setLogoFichier(null);
-    setSupprimerLogo(false);
     setErreurs({});
-  }, [boutique]);
+  }, [boutique, nomEntreprise, utilisateur?.pays]);
 
   function modifier<K extends keyof typeof champs>(
     champ: K,
@@ -323,23 +330,53 @@ function FenetreBoutique({
     }
   }
 
+  const memePays = champs.pays === (utilisateur?.pays || "CM");
+  const paysActif = LISTE_PAYS.find((p) => p.code === champs.pays);
+  const nomPaysChoisi =
+    lang === "en" ? paysActif?.nomEn : paysActif?.nomFr || champs.pays;
+
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
     setErreurs({});
 
     const errs: Record<string, string> = {};
-    if (!champs.nom.trim()) {
-      errs.nom = t("commun.boutiqueRequise");
+    if (!champs.ville.trim()) {
+      errs.ville =
+        lang === "en"
+          ? "Store city is required."
+          : "La ville du point de vente est obligatoire.";
+    }
+    if (!champs.adresse.trim()) {
+      errs.adresse =
+        lang === "en"
+          ? "Store address is required."
+          : "L'adresse du point de vente est obligatoire.";
     }
 
-    const testNiu = validerNiu(champs.niu, lang);
-    if (!testNiu.valide && testNiu.erreur) {
-      errs.niu = testNiu.erreur;
+    if (!memePays) {
+      const testNiu = validerNiu(champs.niu, lang);
+      if (!testNiu.valide && testNiu.erreur) {
+        errs.niu = testNiu.erreur;
+      }
+      const testRccm = validerRccm(champs.registre_commerce, lang);
+      if (!testRccm.valide && testRccm.erreur) {
+        errs.registre_commerce = testRccm.erreur;
+      }
+    } else {
+      if (champs.niu) {
+        const testNiu = validerNiu(champs.niu, lang);
+        if (!testNiu.valide && testNiu.erreur) errs.niu = testNiu.erreur;
+      }
+      if (champs.registre_commerce) {
+        const testRccm = validerRccm(champs.registre_commerce, lang);
+        if (!testRccm.valide && testRccm.erreur)
+          errs.registre_commerce = testRccm.erreur;
+      }
     }
 
-    const testRccm = validerRccm(champs.registre_commerce, lang);
-    if (!testRccm.valide && testRccm.erreur) {
-      errs.registre_commerce = testRccm.erreur;
+    if (!champs.telephone.trim()) {
+      errs.telephone =
+        lang === "en" ? "Phone number is required." : "Le numéro de téléphone est obligatoire.";
     }
 
     if (Object.keys(errs).length > 0) {
@@ -350,25 +387,29 @@ function FenetreBoutique({
     setEnvoiEnCours(true);
 
     const formData = new FormData();
-    formData.append("nom", champs.nom);
-    if (champs.ville) formData.append("ville", champs.ville);
-    if (champs.adresse) formData.append("adresse", champs.adresse);
-    if (champs.telephone) formData.append("telephone", champs.telephone);
+    formData.append("nom", nomEntreprise);
+    formData.append("pays", champs.pays);
+    formData.append("ville", champs.ville);
+    formData.append("adresse", champs.adresse);
+    formData.append("telephone", champs.telephone.trim());
     formData.append("devise", champs.devise);
     formData.append("active", champs.active ? "1" : "0");
-    formData.append("niu", nettoyerNiu(champs.niu));
-    formData.append("registre_commerce", nettoyerRccm(champs.registre_commerce));
-    if (logoFichier) {
-      formData.append("logo", logoFichier);
+    if (!memePays || champs.niu) {
+      formData.append("niu", nettoyerNiu(champs.niu));
     }
-    if (supprimerLogo) {
-      formData.append("supprimer_logo", "1");
+    if (!memePays || champs.registre_commerce) {
+      formData.append(
+        "registre_commerce",
+        nettoyerRccm(champs.registre_commerce),
+      );
     }
 
     try {
       if (modification) {
         await api.put(`/boutiques/${boutique!.id}`, formData);
-        toast.success(lang === "en" ? "Store updated." : "Boutique mise à jour.");
+        toast.success(
+          lang === "en" ? "Store updated." : "Boutique mise à jour.",
+        );
       } else {
         await api.post("/boutiques", formData);
         toast.success(t("boutiques.boutiqueCreee"));
@@ -387,7 +428,11 @@ function FenetreBoutique({
   return (
     <Dialog open={boutique !== null} onOpenChange={(o) => !o && onFermer()}>
       <DialogContent>
-        <form noValidate onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
+        <form
+          noValidate
+          onSubmit={envoyer}
+          className="flex min-h-0 flex-1 flex-col"
+        >
           <DialogHeader>
             <DialogTitle>
               {modification
@@ -398,36 +443,47 @@ function FenetreBoutique({
             </DialogTitle>
           </DialogHeader>
 
-          <DialogCorps>
-            <div className="space-y-2">
-              <Label htmlFor="b-nom">
-                {t("auth.nomBoutique")}
-                <span className="ml-0.5 text-destructive">*</span>
-              </Label>
+          <DialogCorps className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="b-nom">{t("auth.nomBoutique")}</Label>
               <Input
                 id="b-nom"
-                className={`h-10 ${erreurs.nom ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
-                value={champs.nom}
-                onChange={(e) => modifier("nom", e.target.value)}
-                placeholder="Akwa Mobile"
+                disabled
+                value={nomEntreprise}
+                className="bg-muted/50 font-medium text-foreground cursor-not-allowed"
               />
-              {erreurs.nom && (
-                <p className="text-xs text-destructive">{erreurs.nom}</p>
-              )}
+              <p className="text-[11px] text-muted-foreground">
+                {lang === "en"
+                  ? "All your stores share your enterprise name. Differentiate them with the address below."
+                  : "Toutes vos boutiques portent le nom de votre entreprise. Elles sont différenciées par leur adresse."}
+              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="b-ville">{t("auth.villeBoutique")}</Label>
-                <Input
-                  id="b-ville"
-                  className="h-10"
-                  value={champs.ville}
-                  onChange={(e) => modifier("ville", e.target.value)}
-                  placeholder="Douala"
+              <div className="space-y-1.5">
+                <Label htmlFor="b-pays">
+                  {lang === "en" ? "Country" : "Pays"}
+                </Label>
+                <SelectRecherche
+                  id="b-pays"
+                  options={LISTE_PAYS.map((p) => ({
+                    valeur: p.code,
+                    libelle: lang === "en" ? p.nomEn : p.nomFr,
+                    badge: p.drapeau,
+                    description: p.indicatif,
+                  }))}
+                  valeur={champs.pays}
+                  onChange={(v) => v && modifier("pays", v)}
+                  placeholder={
+                    lang === "en" ? "Select country" : "Sélectionner un pays"
+                  }
+                  placeholderRecherche={
+                    lang === "en" ? "Search country..." : "Rechercher un pays…"
+                  }
                 />
               </div>
-              <div className="space-y-2">
+
+              <div className="space-y-1.5">
                 <Label htmlFor="b-devise">{t("boutiques.devise")}</Label>
                 <SelectRecherche
                   id="b-devise"
@@ -441,93 +497,177 @@ function FenetreBoutique({
                   onChange={(v) => v && modifier("devise", v)}
                   placeholder={t("boutiques.devise")}
                   placeholderRecherche={
-                    lang === "en" ? "Search currency..." : "Rechercher une devise…"
+                    lang === "en"
+                      ? "Search currency..."
+                      : "Rechercher une devise…"
                   }
                 />
               </div>
             </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="b-adresse">{t("boutiques.adresse")}</Label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="b-ville">
+                  {t("auth.villeBoutique")}
+                  <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                <Input
+                  id="b-ville"
+                  className={`h-10 ${
+                    erreurs.ville
+                      ? "border-destructive focus-visible:ring-destructive/30"
+                      : ""
+                  }`}
+                  value={champs.ville}
+                  onChange={(e) => modifier("ville", e.target.value)}
+                  placeholder="ex: Douala"
+                />
+                {erreurs.ville && (
+                  <p className="text-xs text-destructive">{erreurs.ville}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="b-adresse">
+                  {t("boutiques.adresse")}
+                  <span className="ml-0.5 text-destructive">*</span>
+                </Label>
                 <Input
                   id="b-adresse"
-                  className="h-10"
+                  className={`h-10 ${
+                    erreurs.adresse
+                      ? "border-destructive focus-visible:ring-destructive/30"
+                      : ""
+                  }`}
                   value={champs.adresse}
                   onChange={(e) => modifier("adresse", e.target.value)}
+                  placeholder="ex: Akwa, Rue de la Joie face Total"
                 />
+                {erreurs.adresse && (
+                  <p className="text-xs text-destructive">{erreurs.adresse}</p>
+                )}
               </div>
+            </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="b-niu">
-                    {t("auth.niuBoutique")}
-                    <span className="ml-0.5 text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="b-niu"
-                    className={`h-10 font-mono uppercase ${erreurs.niu ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
-                    value={champs.niu}
-                    onChange={(e) => modifier("niu", e.target.value)}
-                    placeholder="ex: M052012345678X"
-                  />
-                  <p className="text-[11px] text-muted-foreground">
+            {/* Identifiants légaux */}
+            {memePays ? (
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 text-xs space-y-1">
+                <div className="flex items-center gap-2 font-semibold text-emerald-700 dark:text-emerald-400">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span>
                     {lang === "en"
-                      ? "14 chars (e.g. M052012345678X or 14 digits) • M=Company, P=Individual"
-                      : "14 car. (ex: M052012345678X ou 14 chiffres) • M=Société, P=Individuel"}
-                  </p>
-                  {erreurs.niu && (
-                    <p className="text-xs text-destructive">{erreurs.niu}</p>
-                  )}
+                      ? "Legal identifiers automatically inherited"
+                      : "Identifiants légaux hérités de l'entreprise"}
+                  </span>
                 </div>
+                <p className="text-muted-foreground text-[11px] leading-relaxed">
+                  {lang === "en"
+                    ? `This store is located in your enterprise's home country (${nomPaysChoisi}). It automatically shares your enterprise NIU (${utilisateur?.niu || "—"}) and RCCM (${utilisateur?.registre_commerce || "—"}).`
+                    : `Cette boutique se trouve dans le même pays que votre entreprise (${nomPaysChoisi}). Elle hérite automatiquement de votre NIU (${utilisateur?.niu || "—"}) et de votre RCCM (${utilisateur?.registre_commerce || "—"}).`}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3.5">
+                <div className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                  {lang === "en"
+                    ? `This store is located in ${nomPaysChoisi}. Please enter its local NIU and RCCM:`
+                    : `Cette boutique est située en ${nomPaysChoisi}. Veuillez renseigner le NIU et le RCCM locaux :`}
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="b-niu">
+                      {t("auth.niuBoutique")}
+                      <span className="ml-0.5 text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="b-niu"
+                      className={`h-10 font-mono uppercase ${
+                        erreurs.niu
+                          ? "border-destructive focus-visible:ring-destructive/30"
+                          : ""
+                      }`}
+                      value={champs.niu}
+                      onChange={(e) => modifier("niu", e.target.value)}
+                      placeholder="ex: M052012345678X"
+                    />
+                    {erreurs.niu && (
+                      <p className="text-xs text-destructive">{erreurs.niu}</p>
+                    )}
+                  </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="b-rccm">
-                    {t("auth.registreCommerce")}
-                    <span className="ml-0.5 text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="b-rccm"
-                    className={`h-10 font-mono uppercase ${erreurs.registre_commerce ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
-                    value={champs.registre_commerce}
-                    onChange={(e) => modifier("registre_commerce", e.target.value)}
-                    onBlur={() =>
-                      setChamps((p) => ({
-                        ...p,
-                        registre_commerce: nettoyerRccm(p.registre_commerce),
-                      }))
-                    }
-                    placeholder="ex: RC/DLA/2023/B/1234"
+                  <div className="space-y-1.5">
+                    <Label htmlFor="b-rccm">
+                      {t("auth.registreCommerce")}
+                      <span className="ml-0.5 text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="b-rccm"
+                      className={`h-10 font-mono uppercase ${
+                        erreurs.registre_commerce
+                          ? "border-destructive focus-visible:ring-destructive/30"
+                          : ""
+                      }`}
+                      value={champs.registre_commerce}
+                      onChange={(e) =>
+                        modifier("registre_commerce", e.target.value)
+                      }
+                      placeholder="ex: RC/DLA/2023/B/1234"
+                    />
+                    {erreurs.registre_commerce && (
+                      <p className="text-xs text-destructive">
+                        {erreurs.registre_commerce}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label htmlFor="b-tel">
+                {t("monCompte.telephone")}
+                <span className="text-destructive ml-0.5">*</span>
+              </Label>
+              <ChampTelephone
+                id="b-tel"
+                valeur={champs.telephone}
+                onChange={(val) => modifier("telephone", val)}
+                erreur={Boolean(erreurs.telephone)}
+              />
+              {erreurs.telephone && (
+                <p className="text-xs text-destructive">{erreurs.telephone}</p>
+              )}
+            </div>
+
+            {/* Logo d'entreprise unifié */}
+            <div className="rounded-xl border border-border/80 bg-muted/20 p-3 flex items-center gap-3">
+              {utilisateur?.logo_url ? (
+                <div className="w-12 h-12 rounded-lg bg-white dark:bg-neutral-800 border border-border shrink-0 flex items-center justify-center p-1 overflow-hidden shadow-2xs">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={utilisateur.logo_url}
+                    alt="Logo"
+                    className="max-h-full max-w-full object-contain"
                   />
-                  <p className="text-[11px] text-muted-foreground">
-                    {lang === "en"
-                      ? "e.g. RC/DLA/2023/B/1234 • B=Company, A=Individual/ETS"
-                      : "ex: RC/DLA/2023/B/1234 • B=Société, A=ETS/Individuel"}
-                  </p>
-                  {erreurs.registre_commerce && (
-                    <p className="text-xs text-destructive">{erreurs.registre_commerce}</p>
-                  )}
                 </div>
+              ) : (
+                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0 text-muted-foreground">
+                  <Store className="w-5 h-5" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1 text-xs">
+                <p className="font-semibold text-foreground">
+                  {lang === "en"
+                    ? "Unified Enterprise Logo"
+                    : "Logo unique de l'entreprise"}
+                </p>
+                <p className="text-muted-foreground text-[11px] leading-relaxed">
+                  {lang === "en"
+                    ? "All your stores share this logo on receipts and invoices. You can update it in My Account."
+                    : "Toutes vos boutiques partagent ce logo sur les factures et reçus. Vous pouvez le modifier depuis Mon Compte."}
+                </p>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="b-tel">{t("monCompte.telephone")}</Label>
-                <ChampTelephone
-                  id="b-tel"
-                  valeur={champs.telephone}
-                  onChange={(val) => modifier("telephone", val)}
-                />
-              </div>
-
-              <div className="pt-2 border-t border-border">
-                <SelecteurLogo
-                  logoActuelUrl={boutique?.logo_url}
-                  fichier={logoFichier}
-                  surChangementFichier={setLogoFichier}
-                  supprimerLogoExistant={supprimerLogo}
-                  surChangementSupprimer={setSupprimerLogo}
-                  avertissementFacture={true}
-                />
-              </div>
+            </div>
 
             <div className="flex items-center gap-3">
               <Switch
