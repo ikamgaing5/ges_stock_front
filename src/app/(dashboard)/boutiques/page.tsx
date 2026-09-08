@@ -115,20 +115,7 @@ export default function PageBoutiques() {
                 <CardContent className="flex h-full flex-col gap-4 p-3.5 sm:p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      {boutique.logo_url ? (
-                        <div className="relative w-11 h-11 rounded-lg bg-white dark:bg-neutral-800 border border-border overflow-hidden shrink-0 flex items-center justify-center p-1 shadow-xs">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={boutique.logo_url}
-                            alt={boutique.nom}
-                            className="max-h-full max-w-full object-contain"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-11 h-11 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                          <Store className="h-5 w-5" />
-                        </div>
-                      )}
+                      <LogoBoutiqueAffichage logoUrl={boutique.logo_url} nom={boutique.nom} />
                       <div className="min-w-0">
                         <p className="truncate font-medium">{boutique.nom}</p>
                         <p className="truncate text-sm font-normal text-foreground/80">
@@ -260,6 +247,42 @@ export default function PageBoutiques() {
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function LogoBoutiqueAffichage({
+  logoUrl,
+  nom,
+  taille = "w-11 h-11",
+}: {
+  logoUrl?: string | null;
+  nom: string;
+  taille?: string;
+}) {
+  const [erreur, setErreur] = useState(false);
+
+  useEffect(() => {
+    setErreur(false);
+  }, [logoUrl]);
+
+  if (!logoUrl || erreur) {
+    return (
+      <div className={`${taille} rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0`}>
+        <Store className="h-5 w-5" />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative ${taille} rounded-lg bg-white dark:bg-neutral-800 border border-border overflow-hidden shrink-0 flex items-center justify-center p-1 shadow-xs`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={logoUrl}
+        alt={nom}
+        className="max-h-full max-w-full object-contain"
+        onError={() => setErreur(true)}
+      />
+    </div>
   );
 }
 
@@ -641,20 +664,11 @@ function FenetreBoutique({
 
             {/* Logo d'entreprise unifié */}
             <div className="rounded-xl border border-border/80 bg-muted/20 p-3 flex items-center gap-3">
-              {utilisateur?.logo_url ? (
-                <div className="w-12 h-12 rounded-lg bg-white dark:bg-neutral-800 border border-border shrink-0 flex items-center justify-center p-1 overflow-hidden shadow-2xs">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={utilisateur.logo_url}
-                    alt="Logo"
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0 text-muted-foreground">
-                  <Store className="w-5 h-5" />
-                </div>
-              )}
+              <LogoBoutiqueAffichage
+                logoUrl={utilisateur?.logo_url}
+                nom="Logo"
+                taille="w-12 h-12"
+              />
               <div className="min-w-0 flex-1 text-xs">
                 <p className="font-semibold text-foreground">
                   {lang === "en"
