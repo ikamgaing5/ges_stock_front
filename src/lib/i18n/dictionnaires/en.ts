@@ -417,6 +417,8 @@ export const en = {
     niu: "Tax ID",
     rccm: "RCCM No.",
     telephone: "Tel",
+    zoomAjuster: "Fit to screen",
+    zoomTailleReelle: "Actual size (100%)",
   },
   equipe: {
     titre: "Team & Access",

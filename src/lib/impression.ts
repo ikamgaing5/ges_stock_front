@@ -114,7 +114,7 @@ export function imprimerFacture(
     iframeDoc.head.appendChild(node.cloneNode(true));
   });
 
-  // 3. Ajouter les règles d'ajustement A4 préservant fidèlement la facture de la modale
+  // 3. Ajouter les règles d'ajustement A4 préservant fidèlement la facture de la modale (1 page stricte)
   const stylePrint = iframeDoc.createElement("style");
   stylePrint.textContent = `
     @page {
@@ -124,24 +124,49 @@ export function imprimerFacture(
     * {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
-      box-sizing: border-box;
+      box-sizing: border-box !important;
     }
     html, body {
       margin: 0 !important;
       padding: 0 !important;
+      height: 100% !important;
+      max-height: 297mm !important;
+      overflow: hidden !important;
       background: #ffffff !important;
       color: #111827 !important;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
     }
+    .facture-responsive-wrapper,
+    .facture-scale-wrapper,
+    .facture-scale-inner {
+      width: 100% !important;
+      height: auto !important;
+      transform: none !important;
+      overflow: visible !important;
+    }
     .facture-container {
       width: 100% !important;
       max-width: 100% !important;
+      height: 100% !important;
+      max-height: 280mm !important;
       min-height: auto !important;
       margin: 0 auto !important;
-      padding: 24px 32px !important;
+      padding: 16px 24px !important;
       box-shadow: none !important;
       border: none !important;
       background: #ffffff !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      page-break-before: avoid !important;
+      break-before: avoid !important;
+      page-break-after: avoid !important;
+      break-after: avoid !important;
+    }
+    .print\\:hidden,
+    [data-print-hidden="true"] {
+      display: none !important;
     }
   `;
   iframeDoc.head.appendChild(stylePrint);

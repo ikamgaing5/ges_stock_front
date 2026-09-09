@@ -285,17 +285,18 @@
 }
 
 /* =========================================================================
-   RÈGLES D'IMPRESSION POUR LES FACTURES (A4)
+   RÈGLES D'IMPRESSION POUR LES FACTURES (A4 - 1 PAGE STRICTE)
    ========================================================================= */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm;
+    margin: 8mm 10mm;
   }
 
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    box-sizing: border-box !important;
   }
 
   /* Masquer tous les éléments parasites de l'application */
@@ -341,20 +342,57 @@
   body {
     background-color: #ffffff !important;
     color: #111827 !important;
-    overflow: visible !important;
-    height: auto !important;
+    overflow: hidden !important;
+    height: 100% !important;
+    max-height: 297mm !important;
     margin: 0 !important;
     padding: 0 !important;
+  }
+
+  .facture-responsive-wrapper {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .facture-scale-wrapper {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  .facture-scale-inner {
+    transform: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    max-height: 280mm !important;
   }
 
   .facture-container {
     width: 100% !important;
     max-width: 100% !important;
+    height: 100% !important;
+    max-height: 280mm !important;
     margin: 0 auto !important;
-    padding: 24px 32px !important;
+    padding: 16px 24px !important;
     box-shadow: none !important;
     border: none !important;
     min-height: auto !important;
     background-color: #ffffff !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 }

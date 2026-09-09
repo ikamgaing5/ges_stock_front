@@ -425,7 +425,9 @@ export const fr = {
     omMomo: "OM / MoMo",
     niu: "NUI",
     rccm: "N° RCCM",
-    telephone:"Tel"
+    telephone:"Tel",
+    zoomAjuster: "Ajuster",
+    zoomTailleReelle: "Taille 100%",
   },
   equipe: {
     titre: "Équipe & Accès",
