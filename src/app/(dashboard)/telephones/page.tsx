@@ -91,6 +91,22 @@ export default function PageParc() {
   const appareils = donnees?.data ?? [];
   const nbPages = donnees?.meta.last_page ?? 1;
   const total = donnees?.meta.total ?? 0;
+  const totalBoutique = donnees?.meta.total_boutique;
+
+  // Réinitialiser le modèle sélectionné et la recherche si la boutique ou le statut change
+  useEffect(() => {
+    setModeleId("tous");
+    setRecherche("");
+    setPage(1);
+  }, [boutiqueId, statut]);
+
+  // S'il n'y a pas d'appareils dans la boutique (pour la vue actuelle ou au global),
+  // on masque le champ de recherche et le filtre des modèles, sauf si une recherche est en cours.
+  const aDesAppareils = Boolean(
+    recherche !== "" ||
+    modeleId !== "tous" ||
+    ((totalBoutique === undefined || totalBoutique > 0) && (total > 0 || modeles.length > 0))
+  );
 
   useEffect(() => {
     const controleur = new AbortController();
@@ -99,7 +115,10 @@ export default function PageParc() {
     api
       .get<{ data: Modele[] }>(
         "/modeles",
-        { boutique_id: boutiqueId },
+        {
+          boutique_id: boutiqueId,
+          statut_telephone: statut,
+        },
         controleur.signal,
       )
       .then((r) => setModeles(r.data))
@@ -107,14 +126,28 @@ export default function PageParc() {
       .finally(() => setChargementModeles(false));
 
     return () => controleur.abort();
-  }, [boutiqueId]);
+  }, [boutiqueId, statut]);
 
-  const optionsModeles: Record<string, string> = useMemo(
-    () => ({
-      tous: t("telephones.tousModeles"),
-      ...Object.fromEntries(modeles.map((m) => [String(m.id), m.libelle])),
-    }),
-    [modeles, t],
+  // Sécurité supplémentaire si le modèle sélectionné n'existe pas dans les modèles chargés
+  useEffect(() => {
+    if (modeleId !== "tous" && !modeles.some((m) => String(m.id) === modeleId)) {
+      setModeleId("tous");
+    }
+  }, [modeles, modeleId]);
+
+  const optionsModeles = useMemo(
+    () => [
+      { valeur: "tous", libelle: t("telephones.tousModeles") },
+      ...modeles.map((m) => ({
+        valeur: String(m.id),
+        libelle: m.libelle,
+        badge:
+          statut === "en_stock" && m.nb_en_stock !== undefined && m.nb_en_stock > 0
+            ? `${m.nb_en_stock}`
+            : undefined,
+      })),
+    ],
+    [modeles, statut, t],
   );
 
   if (!donnees) {
@@ -139,72 +172,76 @@ export default function PageParc() {
             : `${total} ${t("telephones.titre").toLowerCase()}, ${t("dashboard.descriptionToutes").toLowerCase()}`
         }
       >
-        <Button nativeButton={false} render={<Link href="/telephones/nouveau" />}>
+        <Button
+          nativeButton={false}
+          render={<Link href="/telephones/nouveau" />}
+        >
           <Smartphone className="mr-2 h-4 w-4" />
           {t("telephones.nouvelAppareil")}
         </Button>
       </TitrePage>
+      {aDesAppareils && (
+        <Card className="mb-4">
+          <CardContent className="flex flex-wrap gap-2.5 p-3 sm:flex-row sm:gap-3 sm:p-5">
+            <div className="relative min-w-48 flex-1 basis-full sm:basis-auto">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="h-9 pl-9 sm:h-10"
+                placeholder={t("telephones.recherchePlaceholder")}
+                value={recherche}
+                onChange={(e) => {
+                  setRecherche(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
 
-      <Card className="mb-4">
-        <CardContent className="flex flex-wrap gap-2.5 p-3 sm:flex-row sm:gap-3 sm:p-5">
-          <div className="relative min-w-48 flex-1 basis-full sm:basis-auto">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              className="h-9 pl-9 sm:h-10"
-              placeholder={t("telephones.recherchePlaceholder")}
-              value={recherche}
-              onChange={(e) => {
-                setRecherche(e.target.value);
+            <Select
+              items={optionsStatut}
+              value={statut}
+              onValueChange={(v) => {
+                setStatut(v ?? "tous");
                 setPage(1);
               }}
-            />
-          </div>
+            >
+              <SelectTrigger className="h-9 w-full sm:h-10 sm:w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(optionsStatut).map(([valeur, libelle]) => (
+                  <SelectItem key={valeur} value={valeur}>
+                    {libelle}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <Select
-            items={optionsStatut}
-            value={statut}
-            onValueChange={(v) => {
-              setStatut(v ?? "tous");
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="h-9 w-full sm:h-10 sm:w-44">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(optionsStatut).map(([valeur, libelle]) => (
-                <SelectItem key={valeur} value={valeur}>
-                  {libelle}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="w-full sm:w-56">
-            <SelectRecherche
-              options={Object.entries(optionsModeles).map(([valeur, libelle]) => ({
-                valeur,
-                libelle,
-              }))}
-              valeur={modeleId}
-              onChange={(v) => {
-                setModeleId(v || "tous");
-                setPage(1);
-              }}
-              disabled={chargementModeles}
-              chargement={chargementModeles}
-              texteChargement={
-                lang === "en" ? "Loading models..." : "Chargement des modèles…"
-              }
-              placeholder={t("telephones.tousLesModeles")}
-              placeholderRecherche={
-                lang === "en" ? "Filter model..." : "Filtrer un modèle…"
-              }
-            />
-          </div>
-        </CardContent>
-      </Card>
-
+            {aDesAppareils && (
+              <div className="w-full sm:w-56">
+                <SelectRecherche
+                  options={optionsModeles}
+                  valeur={modeleId}
+                  onChange={(v) => {
+                    setModeleId(v || "tous");
+                    setPage(1);
+                  }}
+                  disabled={chargementModeles}
+                  chargement={chargementModeles}
+                  texteChargement={
+                    lang === "en"
+                      ? "Loading models..."
+                      : "Chargement des modèles…"
+                  }
+                  placeholder={t("telephones.tousLesModeles")}
+                  placeholderRecherche={
+                    lang === "en" ? "Filter model..." : "Filtrer un modèle…"
+                  }
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
       {erreur ? (
         <EtatErreur message={erreur} onReessayer={recharger} />
       ) : chargement ? (
@@ -219,7 +256,10 @@ export default function PageParc() {
               : t("telephones.aucunAppareilDesc")
           }
         >
-          <Button nativeButton={false} render={<Link href="/telephones/nouveau" />}>
+          <Button
+            nativeButton={false}
+            render={<Link href="/telephones/nouveau" />}
+          >
             <Smartphone className="mr-2 h-4 w-4" />
             {t("telephones.nouvelAppareil")}
           </Button>

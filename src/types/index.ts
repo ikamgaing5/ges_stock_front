@@ -261,6 +261,7 @@ export interface Page<T> {
     last_page: number;
     per_page: number;
     total: number;
+    total_boutique?: number;
     from: number | null;
     to: number | null;
   };
