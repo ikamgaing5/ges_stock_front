@@ -214,6 +214,13 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
     entetes["Authorization"] = `Bearer ${token}`;
   }
 
+  if (typeof window !== "undefined") {
+    const tokenVerif = window.sessionStorage.getItem("telora_invitation_token");
+    if (tokenVerif) {
+      entetes["X-Verification-Token"] = tokenVerif;
+    }
+  }
+
   let methodeEffective = methode;
   let corpsEffectif: BodyInit | undefined = undefined;
 

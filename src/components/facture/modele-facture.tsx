@@ -250,13 +250,13 @@ export function ModeleFacture({
                       <p className="text-sm font-bold text-neutral-900 leading-tight mb-0.5">
                         {boutique?.nom ?? "—"}
                       </p>
-                      {boutique?.niu && (
+                      {boutique?.niu && (boutique.afficher_niu_facture ?? true) && (
                         <p>
                           <span className="font-semibold text-neutral-800">{t("factures.niu")} :</span>{" "}
                           <span className="font-mono">{boutique.niu}</span>
                         </p>
                       )}
-                      {boutique?.registre_commerce && (
+                      {boutique?.registre_commerce && (boutique.afficher_rccm_facture ?? true) && (
                         <p>
                           <span className="font-semibold text-neutral-800">{t("factures.rccm")} :</span>{" "}
                           <span className="font-mono">{boutique.registre_commerce}</span>

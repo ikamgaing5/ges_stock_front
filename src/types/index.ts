@@ -60,6 +60,8 @@ export interface Boutique {
   logo_url?: string | null;
   niu?: string | null;
   registre_commerce?: string | null;
+  afficher_niu_facture?: boolean;
+  afficher_rccm_facture?: boolean;
   nb_employes?: number;
   nb_en_stock?: number;
   created_at: string;
@@ -75,6 +77,8 @@ export interface Utilisateur {
   pays?: string | null;
   niu?: string | null;
   registre_commerce?: string | null;
+  afficher_niu_facture?: boolean;
+  afficher_rccm_facture?: boolean;
   logo_url?: string | null;
   actif: boolean;
   proprietaire_id: number | null;
@@ -100,6 +104,9 @@ export interface InvitationEmploye {
   boutiques: { id: string; nom: string }[];
   expire_le: string;
   est_expiree: boolean;
+  email_envoye?: boolean;
+  email_envoye_le?: string | null;
+  lien_invitation?: string;
   created_at: string;
 }
 

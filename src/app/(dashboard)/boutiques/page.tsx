@@ -150,11 +150,21 @@ export default function PageBoutiques() {
                     {boutique.niu && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted/60 border border-border/50">
                         <strong className="font-medium mr-1">NIU :</strong> {boutique.niu}
+                        {boutique.afficher_niu_facture === false && (
+                          <span className="ml-1.5 text-[10px] text-muted-foreground italic font-normal">
+                            ({lang === "en" ? "hidden on invoices" : "masqué sur factures"})
+                          </span>
+                        )}
                       </span>
                     )}
                     {boutique.registre_commerce && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted/60 border border-border/50">
                         <strong className="font-medium mr-1">RCCM :</strong> {boutique.registre_commerce}
+                        {boutique.afficher_rccm_facture === false && (
+                          <span className="ml-1.5 text-[10px] text-muted-foreground italic font-normal">
+                            ({lang === "en" ? "hidden on invoices" : "masqué sur factures"})
+                          </span>
+                        )}
                       </span>
                     )}
                   </div>
@@ -311,6 +321,8 @@ function FenetreBoutique({
     active: true,
     niu: "",
     registre_commerce: "",
+    afficher_niu_facture: boutique?.afficher_niu_facture ?? (utilisateur?.afficher_niu_facture ?? true),
+    afficher_rccm_facture: boutique?.afficher_rccm_facture ?? (utilisateur?.afficher_rccm_facture ?? true),
   });
 
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
@@ -328,9 +340,11 @@ function FenetreBoutique({
       active: boutique.active ?? true,
       niu: boutique.niu ?? "",
       registre_commerce: boutique.registre_commerce ?? "",
+      afficher_niu_facture: boutique.afficher_niu_facture ?? (utilisateur?.afficher_niu_facture ?? true),
+      afficher_rccm_facture: boutique.afficher_rccm_facture ?? (utilisateur?.afficher_rccm_facture ?? true),
     });
     setErreurs({});
-  }, [boutique, nomEntreprise, utilisateur?.pays]);
+  }, [boutique, nomEntreprise, utilisateur?.pays, utilisateur?.afficher_niu_facture, utilisateur?.afficher_rccm_facture]);
 
   function modifier<K extends keyof typeof champs>(
     champ: K,
@@ -417,6 +431,14 @@ function FenetreBoutique({
     formData.append("telephone", champs.telephone.trim());
     formData.append("devise", champs.devise);
     formData.append("active", champs.active ? "1" : "0");
+    formData.append(
+      "afficher_niu_facture",
+      champs.afficher_niu_facture ? "1" : "0",
+    );
+    formData.append(
+      "afficher_rccm_facture",
+      champs.afficher_rccm_facture ? "1" : "0",
+    );
     if (!memePays || champs.niu) {
       formData.append("niu", nettoyerNiu(champs.niu));
     }
@@ -645,6 +667,48 @@ function FenetreBoutique({
                 </div>
               </div>
             )}
+
+            {/* Options d'affichage factures pour le NIU et le RCCM */}
+            <div className="rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-2.5">
+              <div className="text-xs font-semibold text-foreground">
+                {lang === "en"
+                  ? "Invoices & Receipts Display"
+                  : "Affichage sur les factures et reçus"}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex items-center gap-2.5">
+                  <Switch
+                    id="b-afficher-niu"
+                    checked={champs.afficher_niu_facture}
+                    onCheckedChange={(v) => modifier("afficher_niu_facture", v)}
+                  />
+                  <Label
+                    htmlFor="b-afficher-niu"
+                    className="text-xs font-normal text-muted-foreground cursor-pointer"
+                  >
+                    {lang === "en"
+                      ? "Display NIU on invoices"
+                      : "Afficher le NIU sur les factures"}
+                  </Label>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  <Switch
+                    id="b-afficher-rccm"
+                    checked={champs.afficher_rccm_facture}
+                    onCheckedChange={(v) => modifier("afficher_rccm_facture", v)}
+                  />
+                  <Label
+                    htmlFor="b-afficher-rccm"
+                    className="text-xs font-normal text-muted-foreground cursor-pointer"
+                  >
+                    {lang === "en"
+                      ? "Display RCCM on invoices"
+                      : "Afficher le RCCM sur les factures"}
+                  </Label>
+                </div>
+              </div>
+            </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="b-tel">

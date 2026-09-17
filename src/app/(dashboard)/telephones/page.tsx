@@ -180,9 +180,9 @@ export default function PageParc() {
           {t("telephones.nouvelAppareil")}
         </Button>
       </TitrePage>
-      {aDesAppareils && (
-        <Card className="mb-4">
-          <CardContent className="flex flex-wrap gap-2.5 p-3 sm:flex-row sm:gap-3 sm:p-5">
+      <Card className="mb-4">
+        <CardContent className="flex flex-wrap gap-2.5 p-3 sm:flex-row sm:gap-3 sm:p-5">
+          {aDesAppareils && (
             <div className="relative min-w-48 flex-1 basis-full sm:basis-auto">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -195,53 +195,53 @@ export default function PageParc() {
                 }}
               />
             </div>
+          )}
 
-            <Select
-              items={optionsStatut}
-              value={statut}
-              onValueChange={(v) => {
-                setStatut(v ?? "tous");
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="h-9 w-full sm:h-10 sm:w-44">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(optionsStatut).map(([valeur, libelle]) => (
-                  <SelectItem key={valeur} value={valeur}>
-                    {libelle}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <Select
+            items={optionsStatut}
+            value={statut}
+            onValueChange={(v) => {
+              setStatut(v ?? "tous");
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="h-9 w-full sm:h-10 sm:w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(optionsStatut).map(([valeur, libelle]) => (
+                <SelectItem key={valeur} value={valeur}>
+                  {libelle}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            {aDesAppareils && (
-              <div className="w-full sm:w-56">
-                <SelectRecherche
-                  options={optionsModeles}
-                  valeur={modeleId}
-                  onChange={(v) => {
-                    setModeleId(v || "tous");
-                    setPage(1);
-                  }}
-                  disabled={chargementModeles}
-                  chargement={chargementModeles}
-                  texteChargement={
-                    lang === "en"
-                      ? "Loading models..."
-                      : "Chargement des modèles…"
-                  }
-                  placeholder={t("telephones.tousLesModeles")}
-                  placeholderRecherche={
-                    lang === "en" ? "Filter model..." : "Filtrer un modèle…"
-                  }
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+          {aDesAppareils && (
+            <div className="w-full sm:w-56">
+              <SelectRecherche
+                options={optionsModeles}
+                valeur={modeleId}
+                onChange={(v) => {
+                  setModeleId(v || "tous");
+                  setPage(1);
+                }}
+                disabled={chargementModeles}
+                chargement={chargementModeles}
+                texteChargement={
+                  lang === "en"
+                    ? "Loading models..."
+                    : "Chargement des modèles…"
+                }
+                placeholder={t("telephones.tousLesModeles")}
+                placeholderRecherche={
+                  lang === "en" ? "Filter model..." : "Filtrer un modèle…"
+                }
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
       {erreur ? (
         <EtatErreur message={erreur} onReessayer={recharger} />
       ) : chargement ? (

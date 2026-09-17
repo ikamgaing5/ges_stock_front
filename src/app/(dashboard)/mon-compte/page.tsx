@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { ChampTelephone } from "@/components/champ-telephone";
 import { SelecteurDevise } from "@/components/layout/selecteur-devise";
 import { SelectRecherche } from "@/components/ui/select-recherche";
@@ -478,6 +479,12 @@ function SectionIdentiteEntreprise({
   const [registreCommerce, setRegistreCommerce] = useState(
     utilisateur.registre_commerce || "",
   );
+  const [afficherNiuFacture, setAfficherNiuFacture] = useState(
+    utilisateur.afficher_niu_facture ?? true,
+  );
+  const [afficherRccmFacture, setAfficherRccmFacture] = useState(
+    utilisateur.afficher_rccm_facture ?? true,
+  );
   const [logoFichier, setLogoFichier] = useState<File | null>(null);
   const [supprimerLogo, setSupprimerLogo] = useState(false);
   const [chargement, setChargement] = useState(false);
@@ -488,6 +495,8 @@ function SectionIdentiteEntreprise({
     setPays(utilisateur.pays || "CM");
     setNiu(utilisateur.niu || "");
     setRegistreCommerce(utilisateur.registre_commerce || "");
+    setAfficherNiuFacture(utilisateur.afficher_niu_facture ?? true);
+    setAfficherRccmFacture(utilisateur.afficher_rccm_facture ?? true);
     setLogoFichier(null);
     setSupprimerLogo(false);
     setErreurs({});
@@ -523,6 +532,8 @@ function SectionIdentiteEntreprise({
     formData.append("pays", pays);
     formData.append("niu", nettoyerNiu(niu));
     formData.append("registre_commerce", nettoyerRccm(registreCommerce));
+    formData.append("afficher_niu_facture", afficherNiuFacture ? "1" : "0");
+    formData.append("afficher_rccm_facture", afficherRccmFacture ? "1" : "0");
     if (logoFichier) {
       formData.append("logo", logoFichier);
     }
@@ -646,61 +657,95 @@ function SectionIdentiteEntreprise({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="ent-niu">
-                {t("auth.niuBoutique")}
-                <span className="ml-0.5 text-destructive">*</span>
-              </Label>
-              <Input
-                id="ent-niu"
-                className={`h-10 font-mono uppercase ${erreurs.niu ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
-                value={niu}
-                onChange={(e) => {
-                  setNiu(nettoyerNiu(e.target.value));
-                  if (erreurs.niu) {
-                    setErreurs((prev) => {
-                      const copy = { ...prev };
-                      delete copy.niu;
-                      return copy;
-                    });
-                  }
-                }}
-                placeholder="ex: M052012345678X"
-              />
-              {erreurs.niu && (
-                <p className="text-xs text-destructive">{erreurs.niu}</p>
-              )}
+            <div className="space-y-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="ent-niu">
+                  {t("auth.niuBoutique")}
+                  <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                <Input
+                  id="ent-niu"
+                  className={`h-10 font-mono uppercase ${erreurs.niu ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
+                  value={niu}
+                  onChange={(e) => {
+                    setNiu(nettoyerNiu(e.target.value));
+                    if (erreurs.niu) {
+                      setErreurs((prev) => {
+                        const copy = { ...prev };
+                        delete copy.niu;
+                        return copy;
+                      });
+                    }
+                  }}
+                  placeholder="ex: M052012345678X"
+                />
+                {erreurs.niu && (
+                  <p className="text-xs text-destructive">{erreurs.niu}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 pt-0.5">
+                <Switch
+                  id="ent-afficher-niu"
+                  checked={afficherNiuFacture}
+                  onCheckedChange={setAfficherNiuFacture}
+                />
+                <Label
+                  htmlFor="ent-afficher-niu"
+                  className="text-xs font-normal text-muted-foreground cursor-pointer"
+                >
+                  {lang === "en"
+                    ? "Display NIU on invoices & receipts"
+                    : "Afficher le NIU sur les factures et reçus"}
+                </Label>
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="ent-rccm">
-                {t("auth.registreCommerce")}
-                <span className="ml-0.5 text-destructive">*</span>
-              </Label>
-              <Input
-                id="ent-rccm"
-                className={`h-10 font-mono uppercase ${erreurs.registre_commerce ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
-                value={registreCommerce}
-                onChange={(e) => {
-                  setRegistreCommerce(e.target.value.toUpperCase());
-                  if (erreurs.registre_commerce) {
-                    setErreurs((prev) => {
-                      const copy = { ...prev };
-                      delete copy.registre_commerce;
-                      return copy;
-                    });
+            <div className="space-y-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="ent-rccm">
+                  {t("auth.registreCommerce")}
+                  <span className="ml-0.5 text-destructive">*</span>
+                </Label>
+                <Input
+                  id="ent-rccm"
+                  className={`h-10 font-mono uppercase ${erreurs.registre_commerce ? "border-destructive focus-visible:ring-destructive/30" : ""}`}
+                  value={registreCommerce}
+                  onChange={(e) => {
+                    setRegistreCommerce(e.target.value.toUpperCase());
+                    if (erreurs.registre_commerce) {
+                      setErreurs((prev) => {
+                        const copy = { ...prev };
+                        delete copy.registre_commerce;
+                        return copy;
+                      });
+                    }
+                  }}
+                  onBlur={() =>
+                    setRegistreCommerce(nettoyerRccm(registreCommerce))
                   }
-                }}
-                onBlur={() =>
-                  setRegistreCommerce(nettoyerRccm(registreCommerce))
-                }
-                placeholder="ex: RC/DLA/2023/B/1234"
-              />
-              {erreurs.registre_commerce && (
-                <p className="text-xs text-destructive">
-                  {erreurs.registre_commerce}
-                </p>
-              )}
+                  placeholder="ex: RC/DLA/2023/B/1234"
+                />
+                {erreurs.registre_commerce && (
+                  <p className="text-xs text-destructive">
+                    {erreurs.registre_commerce}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 pt-0.5">
+                <Switch
+                  id="ent-afficher-rccm"
+                  checked={afficherRccmFacture}
+                  onCheckedChange={setAfficherRccmFacture}
+                />
+                <Label
+                  htmlFor="ent-afficher-rccm"
+                  className="text-xs font-normal text-muted-foreground cursor-pointer"
+                >
+                  {lang === "en"
+                    ? "Display RCCM on invoices & receipts"
+                    : "Afficher le RCCM sur les factures et reçus"}
+                </Label>
+              </div>
             </div>
           </div>
 

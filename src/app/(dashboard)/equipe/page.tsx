@@ -10,12 +10,17 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   AlertCircle,
+  CheckCircle2,
   Clock,
+  Copy,
   Loader2,
+  Lock,
   Mail,
+  MailCheck,
   Pencil,
   Plus,
   RefreshCw,
+  ShieldCheck,
   Trash2,
   Users,
 } from "lucide-react";
@@ -26,6 +31,7 @@ import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
 import { permissions } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
+import { VerificationSecuriteInvitation } from "@/components/equipe/verification-securite-invitation";
 import {
   Apparait,
   EtatErreur,
@@ -72,6 +78,11 @@ export default function PageEquipe() {
   const [chargementInvitations, setChargementInvitations] = useState(false);
   const [invitationEnRenvoi, setInvitationEnRenvoi] = useState<string | null>(null);
   const [invitationASupprimer, setInvitationASupprimer] = useState<InvitationEmploye | null>(null);
+  const [invitationRecente, setInvitationRecente] = useState<InvitationEmploye | null>(null);
+
+  // Sécurité et déverrouillage préalable des invitations
+  const [estVerifie, setEstVerifie] = useState(false);
+  const [verifModalOuvert, setVerifModalOuvert] = useState(false);
 
   const peutGerer = Boolean(moi && permissions.gererEmployes(moi.role));
 
@@ -83,22 +94,65 @@ export default function PageEquipe() {
 
   const equipe = donnees?.data ?? [];
 
+  // Vérifier si le propriétaire a déjà validé l'accès dans la session actuelle
+  useEffect(() => {
+    if (!peutGerer) return;
+    api
+      .get<{ verifie: boolean }>("/employes/invitations/statut-acces")
+      .then((res) => {
+        setEstVerifie(res.verifie);
+        if (!res.verifie && typeof window !== "undefined") {
+          window.sessionStorage.removeItem("telora_invitation_token");
+        }
+      })
+      .catch(() => {
+        setEstVerifie(false);
+      });
+  }, [peutGerer]);
+
   const chargerInvitations = useCallback(async () => {
     if (!peutGerer) return;
     setChargementInvitations(true);
     try {
       const res = await api.get<{ data: InvitationEmploye[] }>("/employes/invitations");
       setInvitations(res.data);
-    } catch {
-      // Ignorer si non accessible
+      setEstVerifie(true);
+    } catch (e) {
+      if (e instanceof ErreurApi && (e.statut === 403 || e.donnees?.verification_requise)) {
+        setEstVerifie(false);
+      }
     } finally {
       setChargementInvitations(false);
     }
   }, [peutGerer]);
 
   useEffect(() => {
-    void chargerInvitations();
-  }, [chargerInvitations]);
+    if (estVerifie) {
+      void chargerInvitations();
+    }
+  }, [estVerifie, chargerInvitations]);
+
+  function ouvrirAjoutMembre() {
+    if (!estVerifie) {
+      setVerifModalOuvert(true);
+      return;
+    }
+    setEnEdition({});
+  }
+
+  async function reverrouiller() {
+    try {
+      await api.post("/employes/invitations/verrouiller-acces");
+    } catch {
+      // Ignorer
+    }
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem("telora_invitation_token");
+    }
+    setEstVerifie(false);
+    setInvitations([]);
+    toast.success(t("equipe.verrouilleSucces"));
+  }
 
   async function supprimer() {
     if (!aSupprimer) return;
@@ -155,7 +209,7 @@ export default function PageEquipe() {
         description={t("equipe.description")}
       >
         {peutGerer && (
-          <Button onClick={() => setEnEdition({})}>
+          <Button onClick={ouvrirAjoutMembre}>
             <Plus className="mr-2 h-4 w-4" />
             {t("equipe.ajouterPersonne")}
           </Button>
@@ -213,7 +267,7 @@ export default function PageEquipe() {
             description={t("equipe.aucunMembreDesc")}
           >
             {peutGerer && (
-              <Button onClick={() => setEnEdition({})}>
+              <Button onClick={ouvrirAjoutMembre}>
                 <Plus className="mr-2 h-4 w-4" />
                 {t("equipe.ajouterPersonne")}
               </Button>
@@ -331,133 +385,225 @@ export default function PageEquipe() {
         )
       ) : (
         /* Onglet des invitations */
-        chargementInvitations ? (
+        !estVerifie ? (
+          <div className="py-6">
+            <VerificationSecuriteInvitation
+              mode="carte"
+              onSucces={() => {
+                setEstVerifie(true);
+                void chargerInvitations();
+              }}
+            />
+          </div>
+        ) : chargementInvitations ? (
           <SquelettesTableau lignes={4} colonnes={5} />
-        ) : invitations.length === 0 ? (
-          <EtatVide
-            icone={<Mail className="h-5 w-5" />}
-            titre={t("equipe.aucuneInvitation")}
-            description={t("equipe.aucuneInvitationDesc")}
-          >
-            {peutGerer && (
-              <Button onClick={() => setEnEdition({})}>
-                <Plus className="mr-2 h-4 w-4" />
-                {t("equipe.ajouterPersonne")}
-              </Button>
-            )}
-          </EtatVide>
         ) : (
-          <Apparait>
-            <Card>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{t("equipe.tableauEmail")}</TableHead>
-                        <TableHead>{t("equipe.tableauRole")}</TableHead>
-                        <TableHead>{t("equipe.tableauBoutiques")}</TableHead>
-                        <TableHead>{t("equipe.tableauExpireLe")}</TableHead>
-                        <TableHead className="text-right">
-                          {t("commun.actions")}
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {invitations.map((invitation) => (
-                        <TableRow key={invitation.id}>
-                          <TableCell>
-                            <p className="font-medium">{invitation.email}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {t("equipe.tableauEnvoyeLe")}{" "}
-                              {formatDate(invitation.created_at)}
-                            </p>
-                          </TableCell>
-                          <TableCell>
-                            <p>{libelleRole(invitation.role)}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {descriptionRole(invitation.role)}
-                            </p>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {invitation.boutiques.map((b) => (
-                                <span
-                                  key={b.id}
-                                  className="rounded-full bg-muted px-2 py-0.5 text-xs"
-                                >
-                                  {b.nom}
-                                </span>
-                              ))}
-                              {invitation.boutiques.length === 0 && (
-                                <span className="text-xs text-muted-foreground">
-                                  {t("equipe.toutesLesBoutiques")}
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {invitation.est_expiree ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
-                                <AlertCircle className="h-3 w-3" />
-                                {t("equipe.expiree")}
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                                <Clock className="h-3.5 w-3.5 text-amber-500" />
-                                {formatDate(invitation.expire_le)}
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1.5">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={invitationEnRenvoi === invitation.id}
-                                onClick={() => void renvoyer(invitation)}
-                              >
-                                {invitationEnRenvoi === invitation.id ? (
-                                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-medium text-foreground">
+                  {t("equipe.accesDeverrouille")}
+                </span>
+                <span className="hidden sm:inline text-muted-foreground">
+                  — {t("equipe.sessionDeverrouilleeInfo")}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void reverrouiller()}
+                className="h-7 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Lock className="mr-1.5 h-3.5 w-3.5" />
+                {t("equipe.verrouillerAcces")}
+              </Button>
+            </div>
+
+            {invitations.length === 0 ? (
+              <EtatVide
+                icone={<Mail className="h-5 w-5" />}
+                titre={t("equipe.aucuneInvitation")}
+                description={t("equipe.aucuneInvitationDesc")}
+              >
+                {peutGerer && (
+                  <Button onClick={ouvrirAjoutMembre}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t("equipe.ajouterPersonne")}
+                  </Button>
+                )}
+              </EtatVide>
+            ) : (
+              <Apparait>
+                <Card>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>{t("equipe.tableauEmail")}</TableHead>
+                            <TableHead>{t("equipe.tableauRole")}</TableHead>
+                            <TableHead>{t("equipe.tableauBoutiques")}</TableHead>
+                            <TableHead>{t("equipe.tableauStatutEmail")}</TableHead>
+                            <TableHead>{t("equipe.tableauExpireLe")}</TableHead>
+                            <TableHead className="text-right">
+                              {t("commun.actions")}
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {invitations.map((invitation) => (
+                            <TableRow key={invitation.id}>
+                              <TableCell>
+                                <p className="font-medium">{invitation.email}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {t("equipe.tableauEnvoyeLe")}{" "}
+                                  {formatDate(invitation.created_at)}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p>{libelleRole(invitation.role)}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {descriptionRole(invitation.role)}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-1">
+                                  {invitation.boutiques.map((b) => (
+                                    <span
+                                      key={b.id}
+                                      className="rounded-full bg-muted px-2 py-0.5 text-xs"
+                                    >
+                                      {b.nom}
+                                    </span>
+                                  ))}
+                                  {invitation.boutiques.length === 0 && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {t("equipe.toutesLesBoutiques")}
+                                    </span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {invitation.email_envoye ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                    <MailCheck className="h-3 w-3" />
+                                    {t("equipe.emailEnvoye")}
+                                    {invitation.email_envoye_le && (
+                                      <span className="hidden sm:inline text-[10px] text-emerald-600/75 dark:text-emerald-400/75">
+                                        ({formatDate(invitation.email_envoye_le)})
+                                      </span>
+                                    )}
+                                  </span>
                                 ) : (
-                                  <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                                    <Mail className="h-3 w-3" />
+                                    {t("equipe.emailNonEnvoye")}
+                                  </span>
                                 )}
-                                {t("equipe.renvoyerInvitation")}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                onClick={() => setInvitationASupprimer(invitation)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">
-                                  {t("equipe.annulerInvitation")}
-                                </span>
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </Apparait>
+                              </TableCell>
+                              <TableCell>
+                                {invitation.est_expiree ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
+                                    <AlertCircle className="h-3 w-3" />
+                                    {t("equipe.expiree")}
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Clock className="h-3.5 w-3.5 text-amber-500" />
+                                    {formatDate(invitation.expire_le)}
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end items-center gap-1.5">
+                                  {invitation.lien_invitation && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                                      onClick={() => {
+                                        void navigator.clipboard.writeText(invitation.lien_invitation!);
+                                        toast.success(t("equipe.lienCopie"));
+                                      }}
+                                      title={t("equipe.copierLien")}
+                                    >
+                                      <Copy className="h-3.5 w-3.5 mr-1" />
+                                      <span className="hidden md:inline">{t("equipe.copierLien")}</span>
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant={invitation.email_envoye ? "outline" : "default"}
+                                    size="sm"
+                                    className="h-8 text-xs"
+                                    disabled={invitationEnRenvoi === invitation.id}
+                                    onClick={() => void renvoyer(invitation)}
+                                  >
+                                    {invitationEnRenvoi === invitation.id ? (
+                                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                    ) : invitation.email_envoye ? (
+                                      <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                                    ) : (
+                                      <Mail className="mr-1.5 h-3.5 w-3.5" />
+                                    )}
+                                    {invitation.email_envoye ? t("equipe.renvoyerEmail") : t("equipe.envoyerEmailMaintenant")}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={() => setInvitationASupprimer(invitation)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="sr-only">
+                                      {t("equipe.annulerInvitation")}
+                                    </span>
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Apparait>
+            )}
+          </div>
         )
       )}
 
       <FenetreEmploye
         cible={enEdition}
         onFermer={() => setEnEdition(null)}
-        onSucces={(estNouvelleInvitation) => {
+        onSucces={(estNouvelleInvitation, invitationCreee) => {
           setEnEdition(null);
           recharger();
           void chargerInvitations();
           if (estNouvelleInvitation) {
             setOnglet("invitations");
+            if (invitationCreee) {
+              setInvitationRecente(invitationCreee);
+            }
           }
+        }}
+        onVerifRequise={() => {
+          setEnEdition(null);
+          setEstVerifie(false);
+          setVerifModalOuvert(true);
+        }}
+      />
+
+      <VerificationSecuriteInvitation
+        ouvert={verifModalOuvert}
+        mode="modal"
+        onFermer={() => setVerifModalOuvert(false)}
+        onSucces={() => {
+          setEstVerifie(true);
+          setVerifModalOuvert(false);
+          setEnEdition({});
+          void chargerInvitations();
         }}
       />
 
@@ -516,6 +662,108 @@ export default function PageEquipe() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog
+        open={invitationRecente !== null}
+        onOpenChange={(o) => !o && setInvitationRecente(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+              {t("equipe.invitationModalTitre")}
+            </DialogTitle>
+            <DialogDescription>
+              {invitationRecente?.email_envoye
+                ? t("equipe.invitationModalAvecEmailDesc")
+                : t("equipe.invitationModalSansEmailDesc")}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">
+                {t("equipe.tableauEmail")}
+              </Label>
+              <div className="font-medium text-sm text-foreground">
+                {invitationRecente?.email}
+              </div>
+            </div>
+
+            {invitationRecente?.lien_invitation && (
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">
+                  {t("equipe.copierLien")}
+                </Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    readOnly
+                    value={invitationRecente.lien_invitation}
+                    className="h-9 font-mono text-xs select-all bg-muted/50"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => {
+                      if (invitationRecente.lien_invitation) {
+                        void navigator.clipboard.writeText(invitationRecente.lien_invitation);
+                        toast.success(t("equipe.lienCopie"));
+                      }
+                    }}
+                  >
+                    <Copy className="h-4 w-4 mr-1.5" />
+                    {t("equipe.copierLien")}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {!invitationRecente?.email_envoye && (
+              <div className="rounded-xl border border-dashed border-border bg-muted/30 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Mail className="h-4 w-4 shrink-0 text-primary" />
+                  <span>{t("equipe.emailNonEnvoye")}</span>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={invitationEnRenvoi === invitationRecente?.id}
+                  onClick={async () => {
+                    if (!invitationRecente) return;
+                    await renvoyer(invitationRecente);
+                    setInvitationRecente((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            email_envoye: true,
+                            email_envoye_le: new Date().toISOString(),
+                          }
+                        : null
+                    );
+                  }}
+                  className="h-8 text-xs shrink-0"
+                >
+                  {invitationEnRenvoi === invitationRecente?.id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                  ) : (
+                    <Mail className="h-3.5 w-3.5 mr-1.5" />
+                  )}
+                  {t("equipe.envoyerEmailMaintenant")}
+                </Button>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              onClick={() => setInvitationRecente(null)}
+            >
+              {t("commun.fermer")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -524,10 +772,12 @@ function FenetreEmploye({
   cible,
   onFermer,
   onSucces,
+  onVerifRequise,
 }: {
   cible: Partial<Utilisateur> | null;
   onFermer: () => void;
-  onSucces: (estNouvelleInvitation?: boolean) => void;
+  onSucces: (estNouvelleInvitation?: boolean, invitationCreee?: InvitationEmploye) => void;
+  onVerifRequise?: () => void;
 }) {
   const { boutiques } = useAuth();
   const { t, libelleRole, descriptionRole } = useI18n();
@@ -572,8 +822,8 @@ function FenetreEmploye({
     });
   }
 
-  async function envoyer(evenement: React.FormEvent) {
-    evenement.preventDefault();
+  async function envoyer(evenement?: React.FormEvent, avecEmail: boolean = false) {
+    if (evenement) evenement.preventDefault();
     setErreurs({});
 
     const errs: Record<string, string> = {};
@@ -609,7 +859,7 @@ function FenetreEmploye({
           boutiques: choisies,
           ...(motDePasse ? { password: motDePasse } : {}),
         }
-      : { email, role, boutiques: choisies };
+      : { email, role, boutiques: choisies, envoyer_email: avecEmail };
 
     if (motDePasse) corps.password = motDePasse;
 
@@ -619,16 +869,20 @@ function FenetreEmploye({
         toast.success(t("equipe.compteModifie"));
         onSucces(false);
       } else {
-        await api.post("/employes", {
-          email,
-          role,
-          boutiques: choisies,
-        });
-        toast.success(t("equipe.invitationEnvoyee"));
-        onSucces(true);
+        const reponse = await api.post<{ message: string; data?: InvitationEmploye }>("/employes", corps);
+        toast.success(avecEmail ? t("equipe.invitationEnvoyee") : t("equipe.invitationCreeeSucces"));
+        onSucces(true, reponse.data);
       }
     } catch (e) {
       if (e instanceof ErreurApi) {
+        if (
+          e.statut === 403 &&
+          (e.donnees?.verification_requise || e.message?.includes("confirmation"))
+        ) {
+          toast.error(e.message || "Vérification de sécurité requise ou expirée.");
+          onVerifRequise?.();
+          return;
+        }
         setErreurs(e.parChamp());
         toast.error(e.resume());
       }
@@ -797,16 +1051,44 @@ function FenetreEmploye({
             </div>
           </DialogCorps>
 
-          <DialogFooter>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
             <Button type="button" variant="outline" onClick={onFermer}>
               {t("commun.annuler")}
             </Button>
-            <Button type="submit" disabled={envoiEnCours}>
-              {envoiEnCours && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {modification ? t("commun.enregistrer") : t("equipe.inviter")}
-            </Button>
+            {modification ? (
+              <Button type="submit" disabled={envoiEnCours}>
+                {envoiEnCours && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {t("commun.enregistrer")}
+              </Button>
+            ) : (
+              <>
+                {/* <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={envoiEnCours}
+                  onClick={(e) => void envoyer(e, false)}
+                >
+                  {envoiEnCours && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {t("equipe.creerSansEmail")}
+                </Button> */}
+                <Button
+                  type="button"
+                  disabled={envoiEnCours}
+                  onClick={(e) => void envoyer(e, true)}
+                >
+                  {envoiEnCours ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="mr-2 h-4 w-4" />
+                  )}
+                  {t("equipe.envoyerEmailInvitation")}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

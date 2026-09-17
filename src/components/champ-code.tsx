@@ -11,36 +11,36 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
-const LONGUEUR = 6;
-
 export function ChampCode({
   valeur,
   onChange,
   onComplet,
   erreur,
   autoFocus = true,
+  longueur = 6,
 }: {
   valeur: string;
   onChange: (code: string) => void;
-  /** Appelé dès que les 6 chiffres sont saisis. */
+  /** Appelé dès que tous les chiffres sont saisis. */
   onComplet?: (code: string) => void;
   erreur?: boolean;
   autoFocus?: boolean;
+  longueur?: number;
 }) {
   const cases = useRef<(HTMLInputElement | null)[]>([]);
   const dejaSignale = useRef(false);
 
-  const chiffres = valeur.replace(/\D/g, "").slice(0, LONGUEUR);
+  const chiffres = valeur.replace(/\D/g, "").slice(0, longueur);
 
   useEffect(() => {
-    if (chiffres.length === LONGUEUR && !dejaSignale.current) {
+    if (chiffres.length === longueur && !dejaSignale.current) {
       dejaSignale.current = true;
       onComplet?.(chiffres);
     }
-    if (chiffres.length < LONGUEUR) {
+    if (chiffres.length < longueur) {
       dejaSignale.current = false;
     }
-  }, [chiffres, onComplet]);
+  }, [chiffres, longueur, onComplet]);
 
   function ecrire(index: number, saisie: string) {
     const propre = saisie.replace(/\D/g, "");
@@ -51,11 +51,11 @@ export function ChampCode({
       chiffres.slice(0, index) +
       propre +
       chiffres.slice(index + propre.length)
-    ).slice(0, LONGUEUR);
+    ).slice(0, longueur);
 
     onChange(suite);
 
-    const suivante = Math.min(index + propre.length, LONGUEUR - 1);
+    const suivante = Math.min(index + propre.length, longueur - 1);
     cases.current[suivante]?.focus();
   }
 
@@ -82,15 +82,22 @@ export function ChampCode({
       cases.current[index - 1]?.focus();
     }
 
-    if (evenement.key === "ArrowRight" && index < LONGUEUR - 1) {
+    if (evenement.key === "ArrowRight" && index < longueur - 1) {
       evenement.preventDefault();
       cases.current[index + 1]?.focus();
     }
   }
 
   return (
-    <div className="flex justify-between gap-2" role="group" aria-label="Code de vérification">
-      {Array.from({ length: LONGUEUR }).map((_, index) => (
+    <div
+      className={cn(
+        "flex justify-between",
+        longueur > 6 ? "gap-1 sm:gap-2" : "gap-2",
+      )}
+      role="group"
+      aria-label="Code de vérification"
+    >
+      {Array.from({ length: longueur }).map((_, index) => (
         <input
           key={index}
           ref={(el) => {
@@ -99,7 +106,7 @@ export function ChampCode({
           type="text"
           inputMode="numeric"
           autoComplete={index === 0 ? "one-time-code" : "off"}
-          maxLength={LONGUEUR}
+          maxLength={longueur}
           autoFocus={autoFocus && index === 0}
           value={chiffres[index] ?? ""}
           onChange={(e) => ecrire(index, e.target.value)}
@@ -107,7 +114,8 @@ export function ChampCode({
           onFocus={(e) => e.target.select()}
           aria-label={`Chiffre ${index + 1}`}
           className={cn(
-            "chiffres h-14 w-full rounded-lg border bg-transparent text-center font-mono text-xl transition-colors",
+            "chiffres w-full rounded-lg border bg-transparent text-center font-mono transition-colors",
+            longueur > 6 ? "h-11 sm:h-14 text-lg sm:text-xl" : "h-14 text-xl",
             "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
             erreur ? "border-destructive" : "border-input",
           )}

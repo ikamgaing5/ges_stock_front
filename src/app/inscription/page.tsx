@@ -82,6 +82,8 @@ export default function PageInscription() {
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [erreurGenerale, setErreurGenerale] = useState<string | null>(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const [verificationEmailEnCours, setVerificationEmailEnCours] = useState(false);
+  const [emailVerifie, setEmailVerifie] = useState<{ email: string; disponible: boolean } | null>(null);
 
   // Rate limiting dynamique sur les différentes étapes
   const rateLimitFormulaire = useRateLimit();
@@ -97,6 +99,12 @@ export default function PageInscription() {
     }
 
     setChamps((precedent) => ({ ...precedent, [champ]: valeurAjustee }));
+    if (champ === "email") {
+      const emailNormalise = valeurAjustee.trim().toLowerCase();
+      if (emailVerifie && emailVerifie.email !== emailNormalise) {
+        setEmailVerifie(null);
+      }
+    }
     if (erreurs[champ]) {
       setErreurs((precedent) => {
         const copie = { ...precedent };
@@ -105,6 +113,89 @@ export default function PageInscription() {
       });
     }
   }
+
+  /**
+   * Vérifie auprès du serveur si l'adresse email est déjà utilisée en base.
+   * Affiche immédiatement 'Impossible d’utiliser cette adresse e-mail' si indisponible.
+   */
+  const verifierDisponibiliteEmail = useCallback(
+    async (emailSaisi: string): Promise<boolean> => {
+      const emailNormalise = emailSaisi.trim().toLowerCase();
+      if (!emailNormalise || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalise)) {
+        return false;
+      }
+
+      if (emailVerifie && emailVerifie.email === emailNormalise) {
+        if (!emailVerifie.disponible) {
+          setErreurs((precedent) => ({
+            ...precedent,
+            email: t("auth.emailIndisponible"),
+          }));
+          return false;
+        }
+        return true;
+      }
+
+      setVerificationEmailEnCours(true);
+      try {
+        const reponse = await api.post<{ disponible: boolean; message?: string }>(
+          "/inscription/verifier-email",
+          { email: emailNormalise }
+        );
+
+        setEmailVerifie({ email: emailNormalise, disponible: reponse.disponible });
+
+        if (!reponse.disponible) {
+          const msg = reponse.message || t("auth.emailIndisponible");
+          setErreurs((precedent) => ({
+            ...precedent,
+            email: msg,
+          }));
+          return false;
+        } else {
+          setErreurs((precedent) => {
+            if (precedent.email) {
+              const copie = { ...precedent };
+              delete copie.email;
+              return copie;
+            }
+            return precedent;
+          });
+          return true;
+        }
+      } catch (e) {
+        if (e instanceof ErreurApi) {
+          const parChamp = e.parChamp();
+          if (parChamp.email) {
+            setEmailVerifie({ email: emailNormalise, disponible: false });
+            setErreurs((precedent) => ({
+              ...precedent,
+              email: parChamp.email || t("auth.emailIndisponible"),
+            }));
+            return false;
+          }
+        }
+        return false;
+      } finally {
+        setVerificationEmailEnCours(false);
+      }
+    },
+    [emailVerifie, t]
+  );
+
+  // Vérification automatique après une courte pause de saisie (debounce)
+  useEffect(() => {
+    const emailActuel = champs.email.trim().toLowerCase();
+    if (!emailActuel || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailActuel)) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      void verifierDisponibiliteEmail(emailActuel);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [champs.email, verifierDisponibiliteEmail]);
 
   // Score de robustesse du mot de passe, de 0 (vide) à 4.
   const forceMotDePasse = useMemo(() => {
@@ -145,8 +236,9 @@ export default function PageInscription() {
   }, [champs.password, lang]);
 
   /** Étape 1 : validation des coordonnées utilisateur et passage à l'étape boutique */
-  function passerAEtapeBoutique(evenement: React.FormEvent) {
+  async function passerAEtapeBoutique(evenement: React.FormEvent) {
     evenement.preventDefault();
+
     const errs: Record<string, string> = {};
 
     if (!champs.name.trim()) {
@@ -156,16 +248,19 @@ export default function PageInscription() {
           : "Indiquez votre nom.";
     }
 
-    if (!champs.email.trim()) {
+    const emailNormalise = champs.email.trim().toLowerCase();
+    if (!emailNormalise) {
       errs.email =
         lang === "en"
           ? "Please enter your email address."
           : "Votre adresse email est nécessaire pour recevoir votre code.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(champs.email.trim())) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalise)) {
       errs.email =
         lang === "en"
           ? "Check this address, for example name@domain.com."
           : "Il manque quelque chose dans cette adresse, par exemple nom@domaine.com.";
+    } else if (erreurs.email) {
+      errs.email = erreurs.email;
     }
 
     if (!champs.telephone.trim()) {
@@ -201,6 +296,16 @@ export default function PageInscription() {
 
     if (Object.keys(errs).length > 0) {
       setErreurs(errs);
+      return;
+    }
+
+    // Vérifier si l'adresse email est déjà enregistrée en base avant d'autoriser l'étape boutique
+    const disponible = await verifierDisponibiliteEmail(emailNormalise);
+    if (!disponible) {
+      setErreurs((precedent) => ({
+        ...precedent,
+        email: t("auth.emailIndisponible"),
+      }));
       return;
     }
 
@@ -524,18 +629,37 @@ export default function PageInscription() {
                     erreur={erreurs.email}
                     obligatoire
                   >
-                    <Input
-                      type="email"
-                      className={`h-10 ${
-                        erreurs.email
-                          ? "border-destructive focus-visible:ring-destructive/30"
-                          : ""
-                      }`}
-                      autoComplete="username"
-                      value={champs.email}
-                      onChange={(e) => modifier("email", e.target.value)}
-                      placeholder={t("auth.emailPlaceholder")}
-                    />
+                    <div className="relative">
+                      <Input
+                        type="email"
+                        className={`h-10 pr-9 ${
+                          erreurs.email
+                            ? "border-destructive focus-visible:ring-destructive/30"
+                            : emailVerifie?.email === champs.email.trim().toLowerCase() && emailVerifie?.disponible
+                            ? "border-emerald-500 focus-visible:ring-emerald-500/30"
+                            : ""
+                        }`}
+                        autoComplete="username"
+                        value={champs.email}
+                        onChange={(e) => modifier("email", e.target.value)}
+                        onBlur={() => {
+                          const normalise = champs.email.trim().toLowerCase();
+                          if (normalise && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalise)) {
+                            void verifierDisponibiliteEmail(normalise);
+                          }
+                        }}
+                        placeholder={t("auth.emailPlaceholder")}
+                      />
+                      {verificationEmailEnCours ? (
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                        </div>
+                      ) : emailVerifie?.email === champs.email.trim().toLowerCase() && emailVerifie?.disponible && !erreurs.email ? (
+                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500">
+                          <CheckCircle2 className="h-4 w-4" />
+                        </div>
+                      ) : null}
+                    </div>
                   </Champ>
 
                   <Champ
@@ -667,12 +791,24 @@ export default function PageInscription() {
                 <Button
                   type="submit"
                   size="lg"
+                  disabled={verificationEmailEnCours}
                   className="w-full text-base font-semibold shadow-md transition-all hover:shadow-lg cursor-pointer"
                 >
-                  <span>
-                    {lang === "en" ? "Continue: set up store" : "Continuer : configurer ma boutique"}
-                  </span>
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  {verificationEmailEnCours ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <span>
+                        {lang === "en" ? "Checking email..." : "Vérification de l'e-mail..."}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span>
+                        {lang === "en" ? "Continue: set up store" : "Continuer : configurer ma boutique"}
+                      </span>
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
                 </Button>
               </div>
             </form>
