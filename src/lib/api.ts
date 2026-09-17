@@ -215,9 +215,16 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
   }
 
   if (typeof window !== "undefined") {
-    const tokenVerif = window.sessionStorage.getItem("telora_invitation_token");
-    if (tokenVerif) {
-      entetes["X-Verification-Token"] = tokenVerif;
+    const tokenInvitation = window.sessionStorage.getItem("telora_invitation_token");
+    if (tokenInvitation) {
+      entetes["X-Verification-Token"] = tokenInvitation;
+    }
+    const tokenBoutique = window.sessionStorage.getItem("telora_boutique_token");
+    if (tokenBoutique) {
+      entetes["X-Verification-Boutique-Token"] = tokenBoutique;
+      if (!entetes["X-Verification-Token"]) {
+        entetes["X-Verification-Token"] = tokenBoutique;
+      }
     }
   }
 

@@ -3,11 +3,12 @@
 /** Les boutiques du propriétaire (/boutiques). */
 
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, Loader2, Pencil, Plus, Store, Trash2 } from "lucide-react";
+import { CheckCircle2, Loader2, Lock, Pencil, Plus, Store, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
+import { VerificationSecuriteBoutique } from "@/components/boutiques/verification-securite-boutique";
 import {
   Apparait,
   EtatErreur,
@@ -51,6 +52,11 @@ export default function PageBoutiques() {
   const [enEdition, setEnEdition] = useState<Partial<Boutique> | null>(null);
   const [aSupprimer, setASupprimer] = useState<Boutique | null>(null);
 
+  // Sécurité et déverrouillage préalable de la gestion des boutiques
+  const [estVerifie, setEstVerifie] = useState(false);
+  const [verifModalOuvert, setVerifModalOuvert] = useState(false);
+  const [actionEnAttente, setActionEnAttente] = useState<(() => void) | null>(null);
+
   const charger = useCallback(async () => {
     setErreur(null);
     try {
@@ -67,15 +73,62 @@ export default function PageBoutiques() {
     void charger();
   }, [charger]);
 
+  // Vérifier au chargement si le propriétaire est déjà vérifié
+  useEffect(() => {
+    api
+      .get<{ verifie: boolean }>("/boutiques/statut-acces")
+      .then((res) => {
+        setEstVerifie(res.verifie);
+        if (!res.verifie && typeof window !== "undefined") {
+          window.sessionStorage.removeItem("telora_boutique_token");
+        }
+      })
+      .catch(() => {
+        setEstVerifie(false);
+      });
+  }, []);
+
+  function executerAvecSecurite(action: () => void) {
+    if (!estVerifie) {
+      setActionEnAttente(() => action);
+      setVerifModalOuvert(true);
+      return;
+    }
+    action();
+  }
+
+  async function reverrouiller() {
+    try {
+      await api.post("/boutiques/verrouiller-acces");
+    } catch {
+      // Ignorer
+    }
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem("telora_boutique_token");
+    }
+    setEstVerifie(false);
+    toast.success(t("boutiques.verrouilleSucces"));
+  }
+
   async function supprimer() {
     if (!aSupprimer) return;
     try {
-      await api.delete(`/boutiques/${aSupprimer.id}`);
+      await api.delete(`/boutiques/${aSupprimer.uuid || aSupprimer.id}`);
       toast.success(t("boutiques.boutiqueSupprimee"));
       setASupprimer(null);
       void charger();
       void rafraichir();
     } catch (e) {
+      if (e instanceof ErreurApi && (e.statut === 403 || e.donnees?.verification_requise)) {
+        setEstVerifie(false);
+        if (typeof window !== "undefined") {
+          window.sessionStorage.removeItem("telora_boutique_token");
+        }
+        setASupprimer(null);
+        toast.error("Confirmation préalable de votre identité requise.");
+        setVerifModalOuvert(true);
+        return;
+      }
       toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
     }
   }
@@ -88,11 +141,34 @@ export default function PageBoutiques() {
         titre={t("boutiques.titre")}
         description={t("boutiques.description")}
       >
-        <Button onClick={() => setEnEdition({})}>
+        <Button onClick={() => executerAvecSecurite(() => setEnEdition({}))}>
           <Plus className="mr-2 h-4 w-4" />
           {t("boutiques.ajouterBoutique")}
         </Button>
       </TitrePage>
+
+      {estVerifie && (
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-medium text-foreground">
+              {t("boutiques.accesDeverrouille")}
+            </span>
+            <span className="hidden sm:inline text-muted-foreground">
+              — {t("boutiques.sessionDeverrouilleeInfo")}
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void reverrouiller()}
+            className="h-7 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <Lock className="mr-1.5 h-3.5 w-3.5" />
+            {t("boutiques.verrouillerAcces")}
+          </Button>
+        </div>
+      )}
 
       {erreur ? (
         <EtatErreur message={erreur} onReessayer={() => void charger()} />
@@ -102,7 +178,7 @@ export default function PageBoutiques() {
           titre={t("boutiques.aucuneBoutique")}
           description={t("boutiques.aucuneBoutiqueDesc")}
         >
-          <Button onClick={() => setEnEdition({})}>
+          <Button onClick={() => executerAvecSecurite(() => setEnEdition({}))}>
             <Plus className="mr-2 h-4 w-4" />
             {t("boutiques.ajouterBoutique")}
           </Button>
@@ -194,11 +270,11 @@ export default function PageBoutiques() {
                     </p>
                   )}
 
-                  <div className="mt-auto flex gap-2 border-t pt-4">
+                    <div className="mt-auto flex gap-2 border-t pt-4">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setEnEdition(boutique)}
+                      onClick={() => executerAvecSecurite(() => setEnEdition(boutique))}
                     >
                       <Pencil className="mr-2 h-3.5 w-3.5" />
                       {t("commun.modifier")}
@@ -206,7 +282,7 @@ export default function PageBoutiques() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      onClick={() => setASupprimer(boutique)}
+                      onClick={() => executerAvecSecurite(() => setASupprimer(boutique))}
                     >
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">{t("commun.supprimer")}</span>
@@ -226,6 +302,31 @@ export default function PageBoutiques() {
           setEnEdition(null);
           void charger();
           void rafraichir();
+        }}
+        onVerificationRequise={() => {
+          setEstVerifie(false);
+          if (typeof window !== "undefined") {
+            window.sessionStorage.removeItem("telora_boutique_token");
+          }
+          setVerifModalOuvert(true);
+          toast.error("Confirmation d'identité requise.");
+        }}
+      />
+
+      <VerificationSecuriteBoutique
+        ouvert={verifModalOuvert}
+        onFermer={() => {
+          setVerifModalOuvert(false);
+          setActionEnAttente(null);
+        }}
+        onSucces={(_token) => {
+          setEstVerifie(true);
+          setVerifModalOuvert(false);
+          if (actionEnAttente) {
+            const action = actionEnAttente;
+            setActionEnAttente(null);
+            action();
+          }
         }}
       />
 
@@ -300,10 +401,12 @@ function FenetreBoutique({
   boutique,
   onFermer,
   onSucces,
+  onVerificationRequise,
 }: {
   boutique: Partial<Boutique> | null;
   onFermer: () => void;
   onSucces: () => void;
+  onVerificationRequise?: () => void;
 }) {
   const { utilisateur } = useAuth();
   const { t, lang } = useI18n();
@@ -451,7 +554,7 @@ function FenetreBoutique({
 
     try {
       if (modification) {
-        await api.put(`/boutiques/${boutique!.id}`, formData);
+        await api.put(`/boutiques/${boutique!.uuid || boutique!.id}`, formData);
         toast.success(
           lang === "en" ? "Store updated." : "Boutique mise à jour.",
         );
@@ -462,6 +565,10 @@ function FenetreBoutique({
       onSucces();
     } catch (e) {
       if (e instanceof ErreurApi) {
+        if (e.statut === 403 || e.donnees?.verification_requise) {
+          onVerificationRequise?.();
+          return;
+        }
         setErreurs(e.parChamp());
         toast.error(e.resume());
       }
