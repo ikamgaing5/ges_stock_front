@@ -80,9 +80,10 @@ export default function PageEquipe() {
   const [invitationASupprimer, setInvitationASupprimer] = useState<InvitationEmploye | null>(null);
   const [invitationRecente, setInvitationRecente] = useState<InvitationEmploye | null>(null);
 
-  // Sécurité et déverrouillage préalable des invitations
+  // Sécurité et déverrouillage préalable de la gestion de l'équipe
   const [estVerifie, setEstVerifie] = useState(false);
   const [verifModalOuvert, setVerifModalOuvert] = useState(false);
+  const [actionEnAttente, setActionEnAttente] = useState<(() => void) | null>(null);
 
   const peutGerer = Boolean(moi && permissions.gererEmployes(moi.role));
 
@@ -132,12 +133,17 @@ export default function PageEquipe() {
     }
   }, [estVerifie, chargerInvitations]);
 
-  function ouvrirAjoutMembre() {
+  function executerAvecSecurite(action: () => void) {
     if (!estVerifie) {
+      setActionEnAttente(() => action);
       setVerifModalOuvert(true);
       return;
     }
-    setEnEdition({});
+    action();
+  }
+
+  function ouvrirAjoutMembre() {
+    executerAvecSecurite(() => setEnEdition({}));
   }
 
   async function reverrouiller() {
@@ -162,6 +168,18 @@ export default function PageEquipe() {
       setASupprimer(null);
       recharger();
     } catch (e) {
+      if (e instanceof ErreurApi && (e.statut === 403 || e.donnees?.verification_requise)) {
+        setEstVerifie(false);
+        if (typeof window !== "undefined") {
+          window.sessionStorage.removeItem("telora_invitation_token");
+        }
+        const cible = aSupprimer;
+        setASupprimer(null);
+        toast.error("Confirmation préalable de votre identité requise.");
+        setActionEnAttente(() => setASupprimer(cible));
+        setVerifModalOuvert(true);
+        return;
+      }
       toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
     }
   }
@@ -215,6 +233,29 @@ export default function PageEquipe() {
           </Button>
         )}
       </TitrePage>
+
+      {peutGerer && estVerifie && (
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-medium text-foreground">
+              {t("equipe.accesDeverrouille")}
+            </span>
+            <span className="hidden sm:inline text-muted-foreground">
+              — {t("equipe.sessionDeverrouilleeInfo")}
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void reverrouiller()}
+            className="h-7 text-xs text-muted-foreground hover:text-foreground"
+          >
+            <Lock className="mr-1.5 h-3.5 w-3.5" />
+            {t("equipe.verrouillerAcces")}
+          </Button>
+        </div>
+      )}
 
       {peutGerer && (
         <div className="mb-4 flex border-b border-border">
@@ -354,7 +395,7 @@ export default function PageEquipe() {
                                 <Button
                                   variant="ghost"
                                   size="icon-sm"
-                                  onClick={() => setEnEdition(personne)}
+                                  onClick={() => executerAvecSecurite(() => setEnEdition(personne))}
                                 >
                                   <Pencil className="h-4 w-4" />
                                   <span className="sr-only">
@@ -364,7 +405,7 @@ export default function PageEquipe() {
                                 <Button
                                   variant="ghost"
                                   size="icon-sm"
-                                  onClick={() => setASupprimer(personne)}
+                                  onClick={() => executerAvecSecurite(() => setASupprimer(personne))}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                   <span className="sr-only">
@@ -392,6 +433,10 @@ export default function PageEquipe() {
               onSucces={() => {
                 setEstVerifie(true);
                 void chargerInvitations();
+                if (actionEnAttente) {
+                  actionEnAttente();
+                  setActionEnAttente(null);
+                }
               }}
             />
           </div>
@@ -399,27 +444,6 @@ export default function PageEquipe() {
           <SquelettesTableau lignes={4} colonnes={5} />
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="font-medium text-foreground">
-                  {t("equipe.accesDeverrouille")}
-                </span>
-                <span className="hidden sm:inline text-muted-foreground">
-                  — {t("equipe.sessionDeverrouilleeInfo")}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => void reverrouiller()}
-                className="h-7 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <Lock className="mr-1.5 h-3.5 w-3.5" />
-                {t("equipe.verrouillerAcces")}
-              </Button>
-            </div>
-
             {invitations.length === 0 ? (
               <EtatVide
                 icone={<Mail className="h-5 w-5" />}
@@ -589,8 +613,15 @@ export default function PageEquipe() {
           }
         }}
         onVerifRequise={() => {
+          const cibleActuelle = enEdition;
           setEnEdition(null);
           setEstVerifie(false);
+          if (typeof window !== "undefined") {
+            window.sessionStorage.removeItem("telora_invitation_token");
+          }
+          if (cibleActuelle) {
+            setActionEnAttente(() => setEnEdition(cibleActuelle));
+          }
           setVerifModalOuvert(true);
         }}
       />
@@ -598,12 +629,18 @@ export default function PageEquipe() {
       <VerificationSecuriteInvitation
         ouvert={verifModalOuvert}
         mode="modal"
-        onFermer={() => setVerifModalOuvert(false)}
+        onFermer={() => {
+          setVerifModalOuvert(false);
+          setActionEnAttente(null);
+        }}
         onSucces={() => {
           setEstVerifie(true);
           setVerifModalOuvert(false);
-          setEnEdition({});
           void chargerInvitations();
+          if (actionEnAttente) {
+            actionEnAttente();
+            setActionEnAttente(null);
+          }
         }}
       />
 

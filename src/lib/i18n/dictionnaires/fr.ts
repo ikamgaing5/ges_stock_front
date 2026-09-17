@@ -498,7 +498,7 @@ export const fr = {
       "Cette personne ne pourra plus se connecter. Les mouvements qu'elle a enregistrés restent dans l'historique.",
     verificationRequiseTitre: "Confirmation d'identité requise",
     verificationRequiseDesc:
-      "Pour accéder aux invitations et ajouter un collaborateur, veuillez confirmer votre identité.",
+      "Pour gérer les membres de l'équipe (ajouter, modifier ou supprimer un membre) et accéder aux invitations, veuillez confirmer votre identité.",
     methodeMotDePasse: "Mot de passe",
     methodeCodeEmail: "Code reçu par e-mail",
     motDePasseLabel: "Votre mot de passe de connexion",
@@ -514,9 +514,9 @@ export const fr = {
     codeEnvoyeA: "Un code à 8 chiffres a été envoyé à {email}.",
     entrezCode8Chiffres: "Saisissez le code à 8 chiffres reçu par e-mail :",
     validerCode: "Valider le code",
-    accesDeverrouille: "Accès aux invitations déverrouillé",
+    accesDeverrouille: "Gestion de l'équipe déverrouillée",
     verrouillerAcces: "Reverrouiller",
-    verrouilleSucces: "Accès aux invitations reverrouillé.",
+    verrouilleSucces: "Accès à la gestion de l'équipe reverrouillé.",
     sessionDeverrouilleeInfo: "Session sécurisée active pour 30 minutes.",
   },
   boutiques: {

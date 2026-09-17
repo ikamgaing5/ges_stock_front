@@ -113,7 +113,7 @@ export default function PageBoutiques() {
   async function supprimer() {
     if (!aSupprimer) return;
     try {
-      await api.delete(`/boutiques/${aSupprimer.uuid || aSupprimer.id}`);
+      await api.delete(`/boutiques/${aSupprimer.id}`);
       toast.success(t("boutiques.boutiqueSupprimee"));
       setASupprimer(null);
       void charger();
@@ -554,7 +554,7 @@ function FenetreBoutique({
 
     try {
       if (modification) {
-        await api.put(`/boutiques/${boutique!.uuid || boutique!.id}`, formData);
+        await api.put(`/boutiques/${boutique!.id}`, formData);
         toast.success(
           lang === "en" ? "Store updated." : "Boutique mise à jour.",
         );

@@ -489,7 +489,7 @@ export const en = {
       "This person will no longer be able to log in. Stock movements recorded by them remain in the history.",
     verificationRequiseTitre: "Identity confirmation required",
     verificationRequiseDesc:
-      "To access invitations and invite a team member, please confirm your identity.",
+      "To manage team members (add, modify or delete a member) and access invitations, please confirm your identity.",
     methodeMotDePasse: "Password",
     methodeCodeEmail: "Email security code",
     motDePasseLabel: "Your account password",
@@ -505,9 +505,9 @@ export const en = {
     codeEnvoyeA: "An 8-digit code has been sent to {email}.",
     entrezCode8Chiffres: "Enter the 8-digit code received by email:",
     validerCode: "Verify code",
-    accesDeverrouille: "Invitations access unlocked",
+    accesDeverrouille: "Team management unlocked",
     verrouillerAcces: "Lock access",
-    verrouilleSucces: "Invitations access locked.",
+    verrouilleSucces: "Team management access locked.",
     sessionDeverrouilleeInfo: "Secure session active for 30 minutes.",
   },
   boutiques: {
