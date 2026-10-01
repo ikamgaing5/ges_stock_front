@@ -262,7 +262,7 @@ export default function PageAbonnement() {
         >
           <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 sm:p-6">
             <div className="flex items-start gap-3.5">
-              <div
+              {/* <div
                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
                   statut.est_expire
                     ? "bg-destructive text-white"
@@ -278,7 +278,7 @@ export default function PageAbonnement() {
                 ) : (
                   <ShieldCheck className="h-6 w-6" />
                 )}
-              </div>
+              </div> */}
 
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -400,9 +400,9 @@ export default function PageAbonnement() {
                       : "Idéal pour sécuriser 1 magasin et en finir avec les pertes"}
                   </p>
                 </div>
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                {/* <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                   <Store className="h-5 w-5" />
-                </div>
+                </div> */}
               </div>
 
               <div className="pt-4">
@@ -525,9 +525,9 @@ export default function PageAbonnement() {
                       : "Pour les commerçants qui ont 2 boutiques ou plus (Akwa, Yaoundé, etc.)"}
                   </p>
                 </div>
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                {/* <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                   <Store className="h-5 w-5" />
-                </div>
+                </div> */}
               </div>
 
               <div className="pt-4">

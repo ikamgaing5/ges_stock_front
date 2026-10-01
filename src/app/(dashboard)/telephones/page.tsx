@@ -5,12 +5,13 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Search, Smartphone } from "lucide-react";
+import { Boxes, Laptop, Plus, Search, Smartphone } from "lucide-react";
 import { api } from "@/lib/api";
 import { useListe } from "@/lib/useListe";
 import { formaterImei } from "@/lib/imei";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 import {
   Apparait,
   EtatErreur,
@@ -50,6 +51,7 @@ export default function PageParc() {
 
   // Le tableau de bord renvoie ici avec un statut pré-filtré.
   const [statut, setStatut] = useState(parametresUrl.get("statut") ?? "en_stock");
+  const [typeAppareil, setTypeAppareil] = useState<string>("tous");
   const [recherche, setRecherche] = useState("");
   const [modeleId, setModeleId] = useState("tous");
   const [page, setPage] = useState(1);
@@ -77,6 +79,7 @@ export default function PageParc() {
         "/telephones",
         {
           boutique_id: boutiqueId,
+          type_appareil: typeAppareil === "tous" ? undefined : typeAppareil,
           recherche,
           statut: statut === "tous" ? undefined : statut,
           modele_id: modeleId === "tous" ? undefined : modeleId,
@@ -84,7 +87,7 @@ export default function PageParc() {
         },
         signal,
       ),
-    [boutiqueId, recherche, statut, modeleId, page],
+    [boutiqueId, typeAppareil, recherche, statut, modeleId, page],
     { attente: 300 },
   );
 
@@ -93,12 +96,12 @@ export default function PageParc() {
   const total = donnees?.meta.total ?? 0;
   const totalBoutique = donnees?.meta.total_boutique;
 
-  // Réinitialiser le modèle sélectionné et la recherche si la boutique ou le statut change
+  // Réinitialiser le modèle sélectionné et la recherche si la boutique, le type ou le statut change
   useEffect(() => {
     setModeleId("tous");
     setRecherche("");
     setPage(1);
-  }, [boutiqueId, statut]);
+  }, [boutiqueId, statut, typeAppareil]);
 
   // S'il n'y a pas d'appareils dans la boutique (pour la vue actuelle ou au global),
   // on masque le champ de recherche et le filtre des modèles, sauf si une recherche est en cours.
@@ -117,6 +120,7 @@ export default function PageParc() {
         "/modeles",
         {
           boutique_id: boutiqueId,
+          type_appareil: typeAppareil === "tous" ? undefined : typeAppareil,
           statut_telephone: statut,
         },
         controleur.signal,
@@ -126,7 +130,7 @@ export default function PageParc() {
       .finally(() => setChargementModeles(false));
 
     return () => controleur.abort();
-  }, [boutiqueId, statut]);
+  }, [boutiqueId, statut, typeAppareil]);
 
   // Sécurité supplémentaire si le modèle sélectionné n'existe pas dans les modèles chargés
   useEffect(() => {
@@ -176,10 +180,53 @@ export default function PageParc() {
           nativeButton={false}
           render={<Link href="/telephones/nouveau" />}
         >
-          <Smartphone className="mr-2 h-4 w-4" />
+          <Plus className="mr-2 h-4 w-4" />
           {t("telephones.nouvelAppareil")}
         </Button>
       </TitrePage>
+
+      {/* Sélecteur de type d'appareil */}
+      <div className="mb-3 flex items-center gap-1.5 rounded-lg border bg-muted/40 p-1 w-fit">
+        <button
+          type="button"
+          onClick={() => setTypeAppareil("tous")}
+          className={cn(
+            "rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+            typeAppareil === "tous"
+              ? "bg-background text-foreground shadow-xs font-semibold"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {t("telephones.tousTypes")}
+        </button>
+        <button
+          type="button"
+          onClick={() => setTypeAppareil("telephone")}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+            typeAppareil === "telephone"
+              ? "bg-background text-foreground shadow-xs font-semibold"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Smartphone className="h-3.5 w-3.5" />
+          {t("telephones.typeTelephone")}s
+        </button>
+        <button
+          type="button"
+          onClick={() => setTypeAppareil("ordinateur_portable")}
+          className={cn(
+            "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+            typeAppareil === "ordinateur_portable"
+              ? "bg-background text-foreground shadow-xs font-semibold"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Laptop className="h-3.5 w-3.5" />
+          {t("telephones.typeOrdinateur")}s
+        </button>
+      </div>
+
       <Card className="mb-4">
         <CardContent className="flex flex-wrap gap-2.5 p-3 sm:flex-row sm:gap-3 sm:p-5">
           {aDesAppareils && (
@@ -248,19 +295,15 @@ export default function PageParc() {
         <SquelettesTableau lignes={8} colonnes={7} />
       ) : appareils.length === 0 ? (
         <EtatVide
-          icone={<Smartphone className="h-5 w-5" />}
+          icone={<Boxes className="h-5 w-5" />}
           titre={t("telephones.aucunAppareil")}
-          description={
-            recherche
-              ? t("telephones.aucunAppareilDesc")
-              : t("telephones.aucunAppareilDesc")
-          }
+          description={t("telephones.aucunAppareilDesc")}
         >
           <Button
             nativeButton={false}
             render={<Link href="/telephones/nouveau" />}
           >
-            <Smartphone className="mr-2 h-4 w-4" />
+            <Plus className="mr-2 h-4 w-4" />
             {t("telephones.nouvelAppareil")}
           </Button>
         </EtatVide>
@@ -290,47 +333,78 @@ export default function PageParc() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {appareils.map((appareil) => (
-                      <TableRow key={appareil.id}>
-                        <TableCell>
-                          <Link
-                            href={`/telephones/${appareil.id}`}
-                            className="font-medium hover:underline"
-                          >
-                            {appareil.modele?.libelle ?? "—"}
-                          </Link>
-                          {appareil.couleur && (
-                            <p className="text-xs text-muted-foreground">
-                              {appareil.couleur}
-                            </p>
-                          )}
-                        </TableCell>
-                        <TableCell className="chiffres whitespace-nowrap font-mono text-xs">
-                          {formaterImei(appareil.imei)}
-                        </TableCell>
-                        <TableCell className="hidden text-muted-foreground lg:table-cell">
-                          {appareil.boutique?.nom ?? "—"}
-                        </TableCell>
-                        <TableCell className="hidden text-muted-foreground md:table-cell">
-                          {libelleEtat(appareil.etat)}
-                        </TableCell>
-                        <TableCell className="chiffres whitespace-nowrap text-right">
-                          {formatMontant(
-                            appareil.prix_vente_reel ?? appareil.prix_vente,
-                            devise,
-                            appareil.boutique?.devise ?? deviseBoutique,
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <PastilleStatut statut={appareil.statut} />
-                        </TableCell>
-                        <TableCell className="hidden whitespace-nowrap text-xs text-muted-foreground xl:table-cell">
-                          {appareil.entre_le
-                            ? formatDate(appareil.entre_le)
-                            : "—"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {appareils.map((appareil) => {
+                      const estPc = appareil.type_appareil === "ordinateur_portable";
+                      return (
+                        <TableRow key={appareil.id}>
+                          <TableCell>
+                            <div className="flex items-start gap-2.5">
+                              <div className="mt-0.5 shrink-0 text-muted-foreground">
+                                {estPc ? (
+                                  <Laptop className="h-4 w-4 text-primary" />
+                                ) : (
+                                  <Smartphone className="h-4 w-4" />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <Link
+                                  href={`/telephones/${appareil.id}`}
+                                  className="font-medium hover:underline block truncate"
+                                >
+                                  {appareil.modele?.libelle ?? "—"}
+                                </Link>
+                                <div className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                                  {appareil.couleur && <span>{appareil.couleur}</span>}
+                                  {estPc && appareil.specs_ordinateur && (
+                                    <span className="font-mono text-[11px] text-foreground/80 font-normal">
+                                      • {appareil.specs_ordinateur}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="chiffres whitespace-nowrap font-mono text-xs">
+                            {estPc ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-sans font-medium text-muted-foreground">
+                                  S/N
+                                </span>
+                                <span>{appareil.numero_serie || "—"}</span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5">
+                                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-sans font-medium text-muted-foreground">
+                                  IMEI
+                                </span>
+                                <span>{formaterImei(appareil.imei)}</span>
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="hidden text-muted-foreground lg:table-cell">
+                            {appareil.boutique?.nom ?? "—"}
+                          </TableCell>
+                          <TableCell className="hidden text-muted-foreground md:table-cell">
+                            {libelleEtat(appareil.etat)}
+                          </TableCell>
+                          <TableCell className="chiffres whitespace-nowrap text-right">
+                            {formatMontant(
+                              appareil.prix_vente_reel ?? appareil.prix_vente,
+                              devise,
+                              appareil.boutique?.devise ?? deviseBoutique,
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <PastilleStatut statut={appareil.statut} />
+                          </TableCell>
+                          <TableCell className="hidden whitespace-nowrap text-xs text-muted-foreground xl:table-cell">
+                            {appareil.entre_le
+                              ? formatDate(appareil.entre_le)
+                              : "—"}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>

@@ -359,33 +359,51 @@ export function ModeleFacture({
                           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
                             <span className="font-bold text-neutral-900 text-sm">{nomArticle}</span>
 
-                            {/* Bloc IMEI à côté du nom de l'article */}
-                            {telephone?.imei && (
-                              <div className="inline-flex flex-wrap items-baseline gap-x-2.5 text-[11px] text-neutral-700 font-mono">
-                                <span>
-                                  <strong className="font-sans font-semibold text-neutral-800">
-                                    {t("factures.imei")} :
-                                  </strong>{" "}
-                                  {formaterImei(telephone.imei)}
+                            {/* Bloc Identifiants & Spécifications */}
+                            <div className="inline-flex flex-wrap items-baseline gap-x-2.5 text-[11px] text-neutral-700 font-mono">
+                              {telephone?.imei ? (
+                                <>
+                                  <span>
+                                    <strong className="font-sans font-semibold text-neutral-800">
+                                      {t("factures.imei")} :
+                                    </strong>{" "}
+                                    {formaterImei(telephone.imei)}
+                                  </span>
+                                  {telephone.imei2 && (
+                                    <span>
+                                      <strong className="font-sans font-semibold text-neutral-800">
+                                        IMEI 2 :
+                                      </strong>{" "}
+                                      {formaterImei(telephone.imei2)}
+                                    </span>
+                                  )}
+                                  {telephone.numero_serie && (
+                                    <span>
+                                      <strong className="font-sans font-semibold text-neutral-800">
+                                        S/N :
+                                      </strong>{" "}
+                                      {telephone.numero_serie}
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  {telephone?.numero_serie && (
+                                    <span>
+                                      <strong className="font-sans font-semibold text-neutral-800">
+                                        S/N :
+                                      </strong>{" "}
+                                      {telephone.numero_serie}
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                              {telephone?.specs_ordinateur && (
+                                <span className="font-sans text-neutral-600">
+                                  ({telephone.specs_ordinateur})
                                 </span>
-                                {telephone.imei2 && (
-                                  <span>
-                                    <strong className="font-sans font-semibold text-neutral-800">
-                                      IMEI 2 :
-                                    </strong>{" "}
-                                    {formaterImei(telephone.imei2)}
-                                  </span>
-                                )}
-                                {telephone.numero_serie && (
-                                  <span>
-                                    <strong className="font-sans font-semibold text-neutral-800">
-                                      S/N :
-                                    </strong>{" "}
-                                    {telephone.numero_serie}
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="py-3 px-3 text-right align-middle font-mono font-medium text-neutral-900 text-xs">

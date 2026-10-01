@@ -11,12 +11,13 @@
  */
 
 /** Ne garde que les chiffres : une douchette peut ajouter espaces ou tirets. */
-export function nettoyerImei(saisie: string): string {
+export function nettoyerImei(saisie?: string | null): string {
+  if (!saisie) return "";
   return saisie.replace(/\D/g, "");
 }
 
 /** L'IMEI est-il plausible ? 15 chiffres et clé de Luhn correcte. */
-export function imeiValide(saisie: string): boolean {
+export function imeiValide(saisie?: string | null): boolean {
   const chiffres = nettoyerImei(saisie);
 
   if (chiffres.length !== 15) return false;
@@ -44,7 +45,7 @@ import type { Langue } from "@/lib/i18n/types";
  * Explique pourquoi une saisie est refusée, en une phrase utilisable
  * telle quelle dans l'interface.
  */
-export function messageImei(saisie: string, lang: Langue = "fr"): string | null {
+export function messageImei(saisie?: string | null, lang: Langue = "fr"): string | null {
   const chiffres = nettoyerImei(saisie);
 
   if (chiffres.length === 0) return null;
@@ -71,7 +72,8 @@ export function messageImei(saisie: string, lang: Langue = "fr"): string | null 
 }
 
 /** 356938035643809 -> « 35 693803 564380 9 », plus facile à relire à voix haute. */
-export function formaterImei(saisie: string): string {
+export function formaterImei(saisie?: string | null): string {
+  if (!saisie) return "—";
   const c = nettoyerImei(saisie);
 
   if (c.length !== 15) return c;

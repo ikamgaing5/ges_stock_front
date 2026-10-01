@@ -73,7 +73,10 @@ export default function PageScanner() {
 
   /** Après une action, on recharge la fiche pour montrer le nouveau statut. */
   const rafraichirFiche = useCallback(() => {
-    if (appareil) void chercher(appareil.imei);
+    if (appareil) {
+      const identifiant = appareil.imei || appareil.numero_serie;
+      if (identifiant) void chercher(identifiant);
+    }
   }, [appareil, chercher]);
 
   return (
@@ -104,7 +107,7 @@ export default function PageScanner() {
               valeur={imei}
               onChange={setImei}
               onScanValide={(valeur) => void chercher(valeur)}
-              label={t("telephones.imei")}
+              label={t("scanner.labelChamp")}
               viderApresScan
             />
           </CardContent>
@@ -123,30 +126,29 @@ export default function PageScanner() {
         />
       )}
 
-
+      {/* Résultat */}
       <div className="mt-4 sm:mt-6">
         {recherche ? (
           <Card>
             <CardHeader className="flex-row items-start justify-between gap-3">
-              <div className="min-w-0 space-y-2">
-                <Skeleton className="h-5 w-48" />
-                <Skeleton className="h-3.5 w-36 font-mono" />
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-48 rounded" />
+                <Skeleton className="h-3 w-36 rounded" />
               </div>
-              <Skeleton className="h-5 w-20 rounded-full" />
+              <Skeleton className="h-6 w-20 rounded-full" />
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
-                {Array.from({ length: 5 }).map((_, i) => (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                {Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="space-y-1">
-                    <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-3 w-16 rounded" />
+                    <Skeleton className="h-4 w-24 rounded" />
                   </div>
                 ))}
               </div>
-              <div className="border-t pt-5 space-y-3">
-                <div className="flex flex-wrap gap-2">
-                  <Skeleton className="h-9 w-28 rounded-lg" />
-                  <Skeleton className="h-9 w-28 rounded-lg" />
+              <div className="border-t pt-5">
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 w-24 rounded-lg" />
                   <Skeleton className="h-9 w-28 rounded-lg" />
                 </div>
               </div>
@@ -161,8 +163,15 @@ export default function PageScanner() {
                     {appareil.modele?.libelle ?? "Appareil"}
                   </CardTitle>
                   <p className="chiffres mt-1 font-mono text-xs text-muted-foreground">
-                    {formaterImei(appareil.imei)}
+                    {appareil.type_appareil === "ordinateur_portable"
+                      ? (appareil.numero_serie ? `S/N: ${appareil.numero_serie}` : "S/N non renseigné")
+                      : formaterImei(appareil.imei)}
                   </p>
+                  {appareil.specs_ordinateur && (
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5 font-medium">
+                      {appareil.specs_ordinateur}
+                    </p>
+                  )}
                 </div>
                 <PastilleStatut statut={appareil.statut} />
               </CardHeader>

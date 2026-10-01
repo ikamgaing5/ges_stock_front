@@ -6,10 +6,12 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   BookOpen,
+  Laptop,
   Loader2,
   Pencil,
   Plus,
   Search,
+  Smartphone,
   Trash2,
   X,
 } from "lucide-react";
@@ -19,6 +21,7 @@ import { useListe } from "@/lib/useListe";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
 import { permissions } from "@/lib/permissions";
+import { cn } from "@/lib/utils";
 import {
   Apparait,
   EtatErreur,
@@ -52,13 +55,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import type { Gamme, Marque, Modele, ModeleStockage } from "@/types";
+import type { Gamme, Marque, Modele, ModeleStockage, TypeAppareil } from "@/types";
 
 export default function PageCatalogue() {
   const { devise, deviseBoutique, utilisateur, parametresBoutique } = useAuth();
   const { t, formatMontant, lang } = useI18n();
   const parametresUrl = useSearchParams();
 
+  const [typeAppareilFiltre, setTypeAppareilFiltre] = useState<string>("tous");
   const [recherche, setRecherche] = useState("");
   const [alertesSeules, setAlertesSeules] = useState(
     parametresUrl.get("statut") === "alerte",
@@ -73,18 +77,20 @@ export default function PageCatalogue() {
 
   const boutiqueId = parametresBoutique.boutique_id;
 
-  function chargerMarques() {
+  function chargerMarques(type?: string) {
     setChargementMarques(true);
     api
-      .get<{ data: Marque[] }>("/marques")
+      .get<{ data: Marque[] }>("/marques", {
+        type_appareil: type && type !== "tous" ? type : undefined,
+      })
       .then((r) => setMarques(r.data))
       .catch(() => setMarques([]))
       .finally(() => setChargementMarques(false));
   }
 
   useEffect(() => {
-    chargerMarques();
-  }, []);
+    chargerMarques(typeAppareilFiltre);
+  }, [typeAppareilFiltre]);
 
   const { donnees, chargement, erreur, recharger } = useListe(
     (signal) =>
@@ -92,12 +98,13 @@ export default function PageCatalogue() {
         "/modeles",
         {
           boutique_id: boutiqueId,
+          type_appareil: typeAppareilFiltre !== "tous" ? typeAppareilFiltre : undefined,
           recherche,
           statut: alertesSeules ? "alerte" : undefined,
         },
         signal,
       ),
-    [boutiqueId, recherche, alertesSeules],
+    [boutiqueId, typeAppareilFiltre, recherche, alertesSeules],
     { attente: 250 },
   );
 
@@ -155,13 +162,66 @@ export default function PageCatalogue() {
         )}
       </TitrePage>
 
+      {/* Sélecteur de type d'appareil */}
+      <div className="mb-3 flex items-center gap-1.5 rounded-lg border bg-muted/40 p-1 w-fit">
+        <button
+          type="button"
+          onClick={() => {
+            setTypeAppareilFiltre("tous");
+            setMarqueFiltre("");
+          }}
+          className={cn(
+            "rounded-md px-3 py-1.5 text-xs font-medium cursor-pointer transition-all",
+            typeAppareilFiltre === "tous"
+              ? "bg-background text-foreground shadow-xs font-semibold"
+              : "text-muted-foreground hover:text-foreground cursor-pointer",
+          )}
+        >
+          {t("telephones.tousTypes")}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setTypeAppareilFiltre("telephone");
+            setMarqueFiltre("");
+          }}
+          className={cn(
+            "flex items-center gap-1.5  rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+            typeAppareilFiltre === "telephone"
+              ? "bg-background text-foreground shadow-xs font-semibold"
+              : "text-muted-foreground hover:text-foreground cursor-pointer",
+          )}
+        >
+          <Smartphone className="h-3.5 w-3.5" />
+          {t("telephones.typeTelephone")}s
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setTypeAppareilFiltre("ordinateur_portable");
+            setMarqueFiltre("");
+          }}
+          className={cn(
+            "flex items-center gap-1.5  rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+            typeAppareilFiltre === "ordinateur_portable"
+              ? "bg-background text-foreground shadow-xs font-semibold"
+              : "text-muted-foreground hover:text-foreground cursor-pointer",
+          )}
+        >
+          <Laptop className="h-3.5 w-3.5" />
+          {t("telephones.typeOrdinateur")}s
+        </button>
+      </div>
+
       <Card className="mb-4">
         <CardContent className="flex flex-wrap items-center gap-2.5 p-3 sm:gap-4 sm:p-5">
           <div className="relative min-w-44 flex-1 basis-full sm:basis-auto">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="h-9 sm:h-10 pl-9"
-              placeholder={lang === "en" ? "Brand or model..." : "Marque ou modèle…"}
+              placeholder={
+                lang === "en" ? "Brand or model..." : "Marque ou modèle…"
+              }
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
             />
@@ -183,9 +243,7 @@ export default function PageCatalogue() {
               texteChargement={
                 lang === "en" ? "Loading brands..." : "Chargement des marques…"
               }
-              placeholder={
-                lang === "en" ? "All brands" : "Toutes les marques"
-              }
+              placeholder={lang === "en" ? "All brands" : "Toutes les marques"}
               placeholderRecherche={
                 lang === "en" ? "Search brand..." : "Rechercher une marque…"
               }
@@ -263,12 +321,16 @@ export default function PageCatalogue() {
                       return (
                         <TableRow key={modele.id}>
                           <TableCell>
-                            <p className="font-medium">{modele.libelle}</p>
-                            {!modele.actif && (
-                              <p className="text-xs text-muted-foreground">
-                                {t("commun.inactif")}
-                              </p>
-                            )}
+                            <div className="flex items-center gap-2">
+                              <div>
+                                <p className="font-medium">{modele.libelle}</p>
+                                {!modele.actif && (
+                                  <p className="text-xs text-muted-foreground">
+                                    {t("commun.inactif")}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </TableCell>
                           <TableCell className="chiffres whitespace-nowrap text-right">
                             {formatMontant(
@@ -336,6 +398,11 @@ export default function PageCatalogue() {
         devise={devise}
         marques={marques}
         chargementMarques={chargementMarques}
+        typeAppareilParDefaut={
+          typeAppareilFiltre !== "tous"
+            ? (typeAppareilFiltre as TypeAppareil)
+            : "telephone"
+        }
         onFermer={() => setEnEdition(null)}
         onSucces={() => {
           setEnEdition(null);
@@ -348,13 +415,18 @@ export default function PageCatalogue() {
         onFermer={() => setMarqueOuverte(false)}
         onSucces={() => {
           setMarqueOuverte(false);
-          chargerMarques();
+          chargerMarques(typeAppareilFiltre);
         }}
       />
 
       <FenetreGamme
         ouverte={gammeOuverte}
         marques={marques}
+        typeAppareilParDefaut={
+          typeAppareilFiltre !== "tous"
+            ? (typeAppareilFiltre as TypeAppareil)
+            : "telephone"
+        }
         onFermer={() => setGammeOuverte(false)}
         onSucces={() => setGammeOuverte(false)}
       />
@@ -395,6 +467,7 @@ function FenetreModele({
   devise,
   marques,
   chargementMarques = false,
+  typeAppareilParDefaut = "telephone",
   onFermer,
   onSucces,
 }: {
@@ -402,6 +475,7 @@ function FenetreModele({
   devise: string;
   marques: Marque[];
   chargementMarques?: boolean;
+  typeAppareilParDefaut?: TypeAppareil;
   onFermer: () => void;
   onSucces: () => void;
 }) {
@@ -413,6 +487,7 @@ function FenetreModele({
   const [chargementGammes, setChargementGammes] = useState(false);
 
   const [champs, setChamps] = useState({
+    type_appareil: typeAppareilParDefaut as TypeAppareil,
     gamme_id: "",
     nom: "",
     ram: "",
@@ -423,8 +498,20 @@ function FenetreModele({
     actif: true,
   });
 
+  const [marquesDisponibles, setMarquesDisponibles] = useState<Marque[]>(marques);
+  const [chargementMarquesLocales, setChargementMarquesLocales] = useState(false);
+
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+
+  useEffect(() => {
+    setChargementMarquesLocales(true);
+    api
+      .get<{ data: Marque[] }>("/marques", { type_appareil: champs.type_appareil })
+      .then((r) => setMarquesDisponibles(r.data))
+      .catch(() => setMarquesDisponibles(marques))
+      .finally(() => setChargementMarquesLocales(false));
+  }, [champs.type_appareil, marques]);
 
   useEffect(() => {
     if (!marqueId) {
@@ -434,17 +521,21 @@ function FenetreModele({
     }
     setChargementGammes(true);
     api
-      .get<{ data: Gamme[] }>("/gammes", { marque_id: marqueId })
+      .get<{ data: Gamme[] }>("/gammes", {
+        marque_id: marqueId,
+        type_appareil: champs.type_appareil,
+      })
       .then((r) => setGammes(r.data))
       .catch(() => setGammes([]))
       .finally(() => setChargementGammes(false));
-  }, [marqueId]);
+  }, [marqueId, champs.type_appareil]);
 
   useEffect(() => {
     if (!modele) return;
 
     setMarqueId(modele.gamme?.marque?.id ?? "");
     setChamps({
+      type_appareil: (modele.type_appareil ?? typeAppareilParDefaut) as TypeAppareil,
       gamme_id: modele.gamme?.id ?? "",
       nom: modele.nom ?? "",
       ram: modele.ram ?? "",
@@ -455,13 +546,19 @@ function FenetreModele({
       actif: modele.actif ?? true,
     });
     setErreurs({});
-  }, [modele]);
+  }, [modele, typeAppareilParDefaut]);
 
   function modifier<K extends keyof typeof champs>(
     champ: K,
     valeur: (typeof champs)[K],
   ) {
     setChamps((precedent) => ({ ...precedent, [champ]: valeur }));
+  }
+
+  function changerTypeAppareil(nouveau: TypeAppareil) {
+    if (nouveau === champs.type_appareil) return;
+    modifier("type_appareil", nouveau);
+    modifier("gamme_id", "");
   }
 
   function choisirMarque(id: string) {
@@ -488,6 +585,7 @@ function FenetreModele({
     setEnvoiEnCours(true);
 
     const corps = {
+      type_appareil: champs.type_appareil,
       gamme_id: champs.gamme_id,
       nom: champs.nom,
       ram: champs.ram || null,
@@ -538,17 +636,50 @@ function FenetreModele({
 
           <DialogCorps>
             <div className="grid gap-4 sm:grid-cols-2">
+              {/* Choix du type d'appareil */}
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label>{lang === "en" ? "Device Type" : "Type d'appareil"}</Label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => changerTypeAppareil("telephone")}
+                    className={cn(
+                      "flex flex-1 items-center justify-center gap-2 rounded-lg border py-2 text-xs font-medium transition-all",
+                      champs.type_appareil === "telephone"
+                        ? "border-primary bg-primary/10 text-primary font-semibold"
+                        : "border-border text-muted-foreground hover:bg-muted/50",
+                    )}
+                  >
+                    <Smartphone className="h-4 w-4" />
+                    <span>{t("telephones.typeTelephone")}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => changerTypeAppareil("ordinateur_portable")}
+                    className={cn(
+                      "flex flex-1 items-center justify-center gap-2 rounded-lg border py-2 text-xs font-medium transition-all",
+                      champs.type_appareil === "ordinateur_portable"
+                        ? "border-primary bg-primary/10 text-primary font-semibold"
+                        : "border-border text-muted-foreground hover:bg-muted/50",
+                    )}
+                  >
+                    <Laptop className="h-4 w-4" />
+                    <span>{t("telephones.typeOrdinateur")}</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label>
                   {t("modeles.marques")}
                   <span className="ml-0.5 text-destructive">*</span>
                 </Label>
                 <SelectRecherche
-                  options={marques.map((m) => ({ valeur: m.id, libelle: m.nom }))}
+                  options={marquesDisponibles.map((m) => ({ valeur: m.id, libelle: m.nom }))}
                   valeur={marqueId}
                   onChange={(v) => choisirMarque(v)}
-                  disabled={chargementMarques}
-                  chargement={chargementMarques}
+                  disabled={chargementMarquesLocales}
+                  chargement={chargementMarquesLocales}
                   texteChargement={
                     lang === "en"
                       ? "Loading brands..."
@@ -930,27 +1061,44 @@ function FenetreMarque({
 function FenetreGamme({
   ouverte,
   marques,
+  typeAppareilParDefaut = "telephone",
   onFermer,
   onSucces,
 }: {
   ouverte: boolean;
   marques: Marque[];
+  typeAppareilParDefaut?: TypeAppareil;
   onFermer: () => void;
   onSucces: () => void;
 }) {
   const { t, lang } = useI18n();
+  const [typeAppareil, setTypeAppareil] = useState<TypeAppareil>(typeAppareilParDefaut);
   const [marqueId, setMarqueId] = useState("");
   const [nom, setNom] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
 
+  const [marquesDisponibles, setMarquesDisponibles] = useState<Marque[]>(marques);
+  const [chargementMarquesLocales, setChargementMarquesLocales] = useState(false);
+
   useEffect(() => {
     if (ouverte) {
+      setTypeAppareil(typeAppareilParDefaut);
       setMarqueId("");
       setNom("");
       setErreur(null);
     }
-  }, [ouverte]);
+  }, [ouverte, typeAppareilParDefaut]);
+
+  useEffect(() => {
+    if (!ouverte) return;
+    setChargementMarquesLocales(true);
+    api
+      .get<{ data: Marque[] }>("/marques", { type_appareil: typeAppareil })
+      .then((r) => setMarquesDisponibles(r.data))
+      .catch(() => setMarquesDisponibles(marques))
+      .finally(() => setChargementMarquesLocales(false));
+  }, [ouverte, typeAppareil, marques]);
 
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
@@ -976,7 +1124,11 @@ function FenetreGamme({
     setEnvoiEnCours(true);
 
     try {
-      await api.post("/gammes", { marque_id: marqueId, nom });
+      await api.post("/gammes", {
+        marque_id: marqueId,
+        nom,
+        type_appareil: typeAppareil,
+      });
       toast.success(t("modeles.gammeCreee"));
       onSucces();
     } catch (e) {
@@ -996,24 +1148,65 @@ function FenetreGamme({
             <DialogTitle>{t("modeles.ajouterGamme")}</DialogTitle>
             <DialogDescription>
               {lang === "en"
-                ? "e.g. iPhone, Galaxy S, Redmi Note..."
-                : "Ex: iPhone, Galaxy S, MacBook…"}
+                ? "e.g. iPhone, Galaxy S, MacBook Pro..."
+                : "Ex: iPhone, Galaxy S, MacBook Pro…"}
             </DialogDescription>
           </DialogHeader>
 
           <DialogCorps>
+            {/* Choix du type d'appareil */}
+            <div className="space-y-1.5">
+              <Label>{lang === "en" ? "Device Type" : "Type d'appareil"}</Label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTypeAppareil("telephone");
+                    setMarqueId("");
+                  }}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-2 rounded-lg border py-2 text-xs font-medium transition-all",
+                    typeAppareil === "telephone"
+                      ? "border-primary bg-primary/10 text-primary font-semibold"
+                      : "border-border text-muted-foreground hover:bg-muted/50",
+                  )}
+                >
+                  <Smartphone className="h-4 w-4" />
+                  <span>{t("telephones.typeTelephone")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTypeAppareil("ordinateur_portable");
+                    setMarqueId("");
+                  }}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-2 rounded-lg border py-2 text-xs font-medium transition-all",
+                    typeAppareil === "ordinateur_portable"
+                      ? "border-primary bg-primary/10 text-primary font-semibold"
+                      : "border-border text-muted-foreground hover:bg-muted/50",
+                  )}
+                >
+                  <Laptop className="h-4 w-4" />
+                  <span>{t("telephones.typeOrdinateur")}</span>
+                </button>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>
                 {t("modeles.marques")}
                 <span className="ml-0.5 text-destructive">*</span>
               </Label>
               <SelectRecherche
-                options={marques.map((m) => ({ valeur: m.id, libelle: m.nom }))}
+                options={marquesDisponibles.map((m) => ({ valeur: m.id, libelle: m.nom }))}
                 valeur={marqueId}
                 onChange={(v) => {
                   setMarqueId(v);
                   if (erreur) setErreur(null);
                 }}
+                disabled={chargementMarquesLocales}
+                chargement={chargementMarquesLocales}
                 placeholder={
                   lang === "en" ? "Choose brand" : "Choisir la marque"
                 }
@@ -1036,7 +1229,11 @@ function FenetreGamme({
                   setNom(e.target.value);
                   if (erreur) setErreur(null);
                 }}
-                placeholder="iPhone"
+                placeholder={
+                  typeAppareil === "ordinateur_portable"
+                    ? "MacBook Pro, ThinkPad..."
+                    : "iPhone, Galaxy S..."
+                }
               />
               {erreur && <p className="text-xs text-destructive">{erreur}</p>}
             </div>

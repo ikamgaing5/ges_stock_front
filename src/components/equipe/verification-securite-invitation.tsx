@@ -9,7 +9,7 @@ import {
   EyeOff,
   KeyRound,
   Loader2,
-  Mail,
+  // Mail,
   RotateCw,
   Send,
   ShieldAlert,
@@ -175,7 +175,7 @@ export function VerificationSecuriteInvitation({
               : "text-muted-foreground hover:text-foreground",
           )}
         >
-          <Mail className="h-4 w-4 text-primary" />
+          {/* <Mail className="h-4 w-4 text-primary" /> */}
           <span>{t("equipe.methodeCodeEmail")}</span>
         </button>
       </div>
@@ -322,9 +322,9 @@ export function VerificationSecuriteInvitation({
             <div className="space-y-4">
               <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  {/* <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <Mail className="h-4 w-4" />
-                  </div>
+                  </div> */}
                   <div className="space-y-1">
                     <h4 className="text-sm font-semibold text-foreground">
                       {t("equipe.infoCodeEmailTitre")}

@@ -43,7 +43,7 @@ export default function PagePolitiqueCookies() {
             </thead>
             <tbody className="divide-y text-muted-foreground">
               <tr>
-                <td className="py-2.5 px-3 font-mono font-medium text-foreground">gestion-stock-token</td>
+                {/* <td className="py-2.5 px-3 font-mono font-medium text-foreground">gestion-stock-token</td> */}
                 <td className="py-2.5 px-3">Session</td>
                 <td className="py-2.5 px-3">Maintien de la connexion sécurisée (API).</td>
                 <td className="py-2.5 px-3">Durée de session</td>

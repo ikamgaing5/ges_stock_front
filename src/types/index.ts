@@ -135,12 +135,12 @@ export type Marque = {
 };
 
 // export type Marque = { id: string; nom: string };
-export type Gamme =
-  {
-    id: string;
-    nom: string;
-    marque: Marque
-  };
+export type Gamme = {
+  id: string;
+  nom: string;
+  type_appareil?: TypeAppareil;
+  marque: Marque;
+};
 
 export type ModeleStockage =
   {
@@ -149,10 +149,14 @@ export type ModeleStockage =
   };
 
 
+export type TypeAppareil = "telephone" | "ordinateur_portable";
+export type TypeDisque = "ssd_nvme" | "ssd_sata" | "hdd" | "ssd";
+export type TypeClavier = "azerty" | "qwerty" | "qwertz";
+
 /** Une référence commerciale du catalogue : « Samsung Galaxy A54 128 Go ». */
 export interface Modele {
   id: number;
-  // marque: Marque;
+  type_appareil?: TypeAppareil;
   gamme: Gamme;
   nom: string;
   // stockage: string | null;
@@ -169,15 +173,24 @@ export interface Modele {
   created_at: string;
 }
 
-/** UN APPAREIL PHYSIQUE, identifié par son IMEI. */
+/** UN APPAREIL PHYSIQUE (téléphone ou ordinateur portable). */
 export interface Telephone {
   id: number | string;
   boutique_id: number;
   modele_id: number;
-  modele_stockage: ModeleStockage;
-  imei: string;
+  modele_stockage?: ModeleStockage | null;
+  type_appareil?: TypeAppareil;
+  imei: string | null;
   imei2: string | null;
   numero_serie: string | null;
+  identifiant?: string | null;
+  processeur?: string | null;
+  ram?: string | null;
+  disque_capacite?: string | null;
+  disque_type?: TypeDisque | null;
+  clavier?: TypeClavier | null;
+  taille_ecran?: string | null;
+  specs_ordinateur?: string | null;
   couleur: string | null;
   etat: EtatTelephone;
   statut: StatutTelephone;

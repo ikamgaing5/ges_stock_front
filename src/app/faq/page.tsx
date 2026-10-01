@@ -79,15 +79,23 @@ export default function PageFaq() {
             <p>Seules les données techniques nécessaires au bon fonctionnement sont conservées sur votre navigateur :</p>
             <ul className="list-disc pl-5 space-y-1.5 text-xs text-neutral-400">
               <li>
-                <strong className="text-neutral-200">Jeton de session (<code>gestion-stock-token</code>)</strong> :
+                <strong className="text-neutral-200">
+                  Jeton de session
+                  {/* (<code>gestion-stock-token</code>) */}
+                </strong> :
                 Maintient votre connexion sécurisée avec le serveur.
               </li>
               <li>
-                <strong className="text-neutral-200">Point de vente (<code>gestion-stock-boutique</code>)</strong> :
+                <strong className="text-neutral-200">
+                  Point de vente
+                  {/* (<code>gestion-stock-boutique</code>) */}
+                </strong> :
                 Mémorise la boutique sur laquelle vous travaillez.
               </li>
               <li>
-                <strong className="text-neutral-200">Langue (<code>gestion-stock-langue</code>)</strong> :
+                <strong className="text-neutral-200">Langue
+                  {/* (<code>gestion-stock-langue</code>) */}
+                </strong> :
                 Conserve votre choix de langue (Français ou Anglais).
               </li>
               <li>
@@ -95,7 +103,9 @@ export default function PageFaq() {
                 Sauvegarde votre préférence d'affichage (sombre ou clair).
               </li>
               <li>
-                <strong className="text-neutral-200">Consentement (<code>gestion-stock-cookies-consent</code>)</strong> :
+                <strong className="text-neutral-200">Consentement
+                  {/* (<code>gestion-stock-cookies-consent</code>) */}
+                </strong> :
                 Enregistre que vous avez validé l'information sur les cookies.
               </li>
             </ul>
@@ -113,7 +123,9 @@ export default function PageFaq() {
                 Keeps your connection secure with the API.
               </li>
               <li>
-                <strong className="text-neutral-200">Active store (<code>gestion-stock-boutique</code>)</strong>:
+                <strong className="text-neutral-200">Active store
+                  {/* (<code>gestion-stock-boutique</code>) */}
+                </strong>:
                 Remembers the store location you are currently working on.
               </li>
               <li>
@@ -125,7 +137,9 @@ export default function PageFaq() {
                 Saves your display preference (dark or light mode).
               </li>
               <li>
-                <strong className="text-neutral-200">Consent (<code>gestion-stock-cookies-consent</code>)</strong>:
+                <strong className="text-neutral-200">Consent
+                   {/* (<code>gestion-stock-cookies-consent</code>) */}
+                   </strong>:
                 Stores your acknowledgment of the cookie notice.
               </li>
             </ul>
@@ -544,7 +558,7 @@ export default function PageFaq() {
         {/* Section Contact & Assistance */}
         <div className="mt-16 text-center border-t border-border/40 pt-8 pb-12 space-y-2">
           <h3 className="text-base font-semibold text-foreground flex items-center justify-center gap-2">
-            <PhoneCall className="h-4 w-4 text-primary" />
+            {/* <PhoneCall className="h-4 w-4 text-primary" /> */}
             <span>{t("faq.besoinAide")}</span>
           </h3>
           <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">

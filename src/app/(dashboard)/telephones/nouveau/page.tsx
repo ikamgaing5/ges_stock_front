@@ -11,13 +11,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, Loader2, PackagePlus, Search } from "lucide-react";
+import { ArrowLeft, Check, Cpu, HardDrive, Laptop, Loader2, PackagePlus, Search, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { imeiValide } from "@/lib/imei";
 import { formaterImei } from "@/lib/imei";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 import { convertirMontant, obtenirDevise } from "@/lib/devises";
 import { ChampImei } from "@/components/champ-imei";
 import { Apparait, SqueletteFormulaire, TitrePage } from "@/components/ui-commun";
@@ -42,6 +43,9 @@ import type {
   Modele,
   ResultatLookupImei,
   Telephone,
+  TypeAppareil,
+  TypeClavier,
+  TypeDisque,
 } from "@/types";
 
 export default function PageEntreeStock() {
@@ -52,8 +56,17 @@ export default function PageEntreeStock() {
     utilisateur?.est_premium || utilisateur?.abonnement?.plan === "premium",
   );
 
+  const [typeAppareil, setTypeAppareil] = useState<TypeAppareil>("telephone");
   const [modeles, setModeles] = useState<Modele[]>([]);
   const [imei, setImei] = useState("");
+  const [numeroSerie, setNumeroSerie] = useState("");
+  const [processeur, setProcesseur] = useState("");
+  const [ram, setRam] = useState("");
+  const [disqueCapacite, setDisqueCapacite] = useState("");
+  const [disqueType, setDisqueType] = useState<TypeDisque>("ssd_nvme");
+  const [clavier, setClavier] = useState<TypeClavier>("azerty");
+  const [tailleEcran, setTailleEcran] = useState("");
+
   const [ajoutes, setAjoutes] = useState<Telephone[]>([]);
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
@@ -87,11 +100,11 @@ export default function PageEntreeStock() {
   useEffect(() => {
     setChargementMarques(true);
     api
-      .get<{ data: Marque[] }>("/marques")
+      .get<{ data: Marque[] }>("/marques", { type_appareil: typeAppareil })
       .then((r) => setMarques(r.data))
       .catch(() => setMarques([]))
       .finally(() => setChargementMarques(false));
-  }, []);
+  }, [typeAppareil]);
 
   useEffect(() => {
     if (!marqueChoisie) {
@@ -101,11 +114,14 @@ export default function PageEntreeStock() {
     }
     setChargementGammes(true);
     api
-      .get<{ data: Gamme[] }>("/gammes", { marque_id: marqueChoisie })
+      .get<{ data: Gamme[] }>("/gammes", {
+        marque_id: marqueChoisie,
+        type_appareil: typeAppareil,
+      })
       .then((r) => setGammes(r.data))
       .catch(() => setGammes([]))
       .finally(() => setChargementGammes(false));
-  }, [marqueChoisie]);
+  }, [marqueChoisie, typeAppareil]);
 
   useEffect(() => {
     if (!gammeChoisie) {
@@ -117,12 +133,13 @@ export default function PageEntreeStock() {
     api
       .get<{ data: Modele[] }>("/modeles", {
         gamme_id: gammeChoisie,
+        type_appareil: typeAppareil,
         actifs_seulement: true,
       })
       .then((r) => setModeles(r.data))
       .catch(() => setModeles([]))
       .finally(() => setChargementModeles(false));
-  }, [gammeChoisie]);
+  }, [gammeChoisie, typeAppareil]);
 
   const modelesFiltres = modeles;
 
@@ -201,8 +218,14 @@ export default function PageEntreeStock() {
       setMarqueChoisie(sel.marque_id);
       try {
         const [resGammes, resModeles] = await Promise.all([
-          api.get<{ data: Gamme[] }>("/gammes", { marque_id: sel.marque_id }),
-          api.get<{ data: Modele[] }>("/modeles", { actifs_seulement: true }),
+          api.get<{ data: Gamme[] }>("/gammes", {
+            marque_id: sel.marque_id,
+            type_appareil: typeAppareil,
+          }),
+          api.get<{ data: Modele[] }>("/modeles", {
+            type_appareil: typeAppareil,
+            actifs_seulement: true,
+          }),
         ]);
         setGammes(resGammes.data);
         setModeles(resModeles.data);
@@ -365,7 +388,7 @@ export default function PageEntreeStock() {
   }, [imei, dernierTacRecherche, estPremium, lancerRecherche]);
 
   const enregistrer = useCallback(
-    async (imeiScanne: string) => {
+    async (identifiantScanne?: string) => {
       if (!commun.modele_id) {
         toast.error(
           lang === "en"
@@ -375,7 +398,9 @@ export default function PageEntreeStock() {
         return;
       }
 
-      if (!stockageChoisi) {
+      const estPc = typeAppareil === "ordinateur_portable";
+
+      if (!estPc && !stockageChoisi) {
         toast.error(
           lang === "en"
             ? "Please select storage capacity first."
@@ -384,28 +409,60 @@ export default function PageEntreeStock() {
         return;
       }
 
+      const sNum = identifiantScanne || (estPc ? numeroSerie : imei);
+
+      if (estPc && !sNum.trim()) {
+        toast.error(
+          lang === "en"
+            ? "Please enter or scan the serial number (S/N)."
+            : "Veuillez renseigner ou scanner le numéro de série (S/N).",
+        );
+        return;
+      }
+
       setErreurs({});
       setEnvoiEnCours(true);
 
       try {
-        const reponse = await api.post<{ data: Telephone }>("/telephones", {
+        const payload: Record<string, any> = {
           modele_id: String(commun.modele_id),
           boutique_id: commun.boutique_id || undefined,
-          imei: imeiScanne,
+          type_appareil: typeAppareil,
           couleur: commun.couleur || null,
           etat: commun.etat,
-          modele_stockage_id: stockageChoisi,
           prix_achat: commun.prix_achat ? Number(String(commun.prix_achat).replace(/\s+/g, "").replace(",", ".")) : null,
           prix_vente: commun.prix_vente ? Number(String(commun.prix_vente).replace(/\s+/g, "").replace(",", ".")) : null,
           fournisseur: commun.fournisseur || null,
           notes: commun.notes || null,
-        });
+        };
+
+        if (estPc) {
+          payload.numero_serie = sNum.trim();
+          payload.processeur = processeur.trim() || null;
+          payload.ram = ram.trim() || null;
+          payload.disque_capacite = disqueCapacite.trim() || null;
+          payload.disque_type = disqueType || null;
+          payload.clavier = clavier || null;
+          payload.taille_ecran = tailleEcran.trim() || null;
+          if (stockageChoisi) {
+            payload.modele_stockage_id = stockageChoisi;
+          }
+        } else {
+          payload.imei = sNum;
+          payload.modele_stockage_id = stockageChoisi;
+        }
+
+        const reponse = await api.post<{ data: Telephone }>("/telephones", payload);
 
         setAjoutes((precedent) => [reponse.data, ...precedent]);
-        setImei("");
-        setDetection(null);
-        setNonTrouve(false);
-        setDernierTacRecherche("");
+        if (estPc) {
+          setNumeroSerie("");
+        } else {
+          setImei("");
+          setDetection(null);
+          setNonTrouve(false);
+          setDernierTacRecherche("");
+        }
         toast.success(t("telephones.appareilCree"));
       } catch (e) {
         if (e instanceof ErreurApi) {
@@ -416,7 +473,7 @@ export default function PageEntreeStock() {
         setEnvoiEnCours(false);
       }
     },
-    [commun, stockageChoisi, t, lang],
+    [commun, typeAppareil, stockageChoisi, imei, numeroSerie, processeur, ram, disqueCapacite, disqueType, clavier, tailleEcran, t, lang],
   );
 
   async function gererScanImei(valeurScanne: string) {
@@ -434,8 +491,9 @@ export default function PageEntreeStock() {
     }
   }
 
-  const pret =
-    Boolean(commun.modele_id) && Boolean(stockageChoisi) && imeiValide(imei);
+  const pret = typeAppareil === "telephone"
+    ? Boolean(commun.modele_id) && Boolean(stockageChoisi) && imeiValide(imei)
+    : Boolean(commun.modele_id) && Boolean(numeroSerie.trim());
 
   const etats: EtatTelephone[] = ["neuf", "occasion", "reconditionne"];
 
@@ -459,119 +517,212 @@ export default function PageEntreeStock() {
       <TitrePage
         titre={t("telephones.entreeStock")}
         description={
-          lang === "en"
-            ? "Scan IMEI for each unit. Other fields stay populated for the next phone."
-            : "Scannez l'IMEI de chaque appareil. Les autres champs restent remplis pour le suivant."
+          typeAppareil === "ordinateur_portable"
+            ? (lang === "en"
+                ? "Scan or enter Serial Number (S/N). Other hardware specs stay populated for the next laptop."
+                : "Scannez ou saisissez le N° de série (S/N). Les spécifications restent remplies pour le suivant.")
+            : (lang === "en"
+                ? "Scan IMEI for each unit. Other fields stay populated for the next phone."
+                : "Scannez l'IMEI de chaque appareil. Les autres champs restent remplis pour le suivant.")
         }
       />
+
+      {/* Bascule Type d'appareil */}
+      <div className="mb-4 flex items-center gap-1.5 rounded-xl border bg-muted/40 p-1.5 w-fit">
+        <button
+          type="button"
+          onClick={() => {
+            setTypeAppareil("telephone");
+            setCommun((p) => ({ ...p, modele_id: "" }));
+            setStockageChoisi("");
+            setGammeChoisie("");
+            setMarqueChoisie("");
+          }}
+          className={cn(
+            "flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs sm:text-sm font-medium transition-all",
+            typeAppareil === "telephone"
+              ? "bg-background text-foreground shadow-xs font-semibold"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Smartphone className="h-4 w-4" />
+          <span>{t("telephones.typeTelephone")}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setTypeAppareil("ordinateur_portable");
+            setCommun((p) => ({ ...p, modele_id: "" }));
+            setStockageChoisi("");
+            setGammeChoisie("");
+            setMarqueChoisie("");
+          }}
+          className={cn(
+            "flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs sm:text-sm font-medium transition-all",
+            typeAppareil === "ordinateur_portable"
+              ? "bg-background text-foreground shadow-xs font-semibold"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Laptop className="h-4 w-4" />
+          <span>{t("telephones.typeOrdinateur")}</span>
+        </button>
+      </div>
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1.15fr_1fr]">
         <Apparait>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">
-                {lang === "en" ? "The Device" : "L'appareil"}
+              <CardTitle className="text-base flex items-center gap-2">
+                {/* {typeAppareil === "ordinateur_portable" ? (
+                  <Laptop className="h-4 w-4 text-primary" />
+                ) : (
+                  <Smartphone className="h-4 w-4" />
+                )} */}
+                <span>
+                  {typeAppareil === "ordinateur_portable"
+                    ? t("telephones.typeOrdinateur")
+                    : lang === "en" ? "The Phone" : "Le téléphone"}
+                </span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 sm:space-y-5">
-              <div className="space-y-2">
-                <ChampImei
-                  valeur={imei}
-                  onChange={(val) => {
-                    setImei(val);
-                    setNonTrouve(false);
-                  }}
-                  onScanValide={(valeur) => void gererScanImei(valeur)}
-                  erreur={erreurs.imei}
-                />
-                {estPremium && imei.replace(/\D/g, "").length >= 8 && (
-                  <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 text-xs font-medium text-primary"
-                      onClick={() => void lancerRecherche(imei)}
-                      disabled={rechercheEnCours}
-                    >
-                      {rechercheEnCours ? (
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Search className="mr-1.5 h-3.5 w-3.5" />
-                      )}
-                      {lang === "en" ? "Identify device" : "Identifier l'appareil"}
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {!estPremium ? (
-                <div className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-muted/40 px-3.5 py-2.5 text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground">Premium :</span>
-                  <span>
+              {typeAppareil === "ordinateur_portable" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="numero-serie">
+                    {t("telephones.numeroSerie")} (S/N)
+                    <span className="ml-0.5 text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="numero-serie"
+                    className="h-10 font-mono"
+                    value={numeroSerie}
+                    onChange={(e) => {
+                      setNumeroSerie(e.target.value);
+                      if (erreurs.numero_serie) setErreurs((prev) => ({ ...prev, numero_serie: "" }));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (pret) {
+                          void enregistrer();
+                        }
+                      }
+                    }}
+                    placeholder="Ex: 5CG1234ABC, C02X1234MD6R..."
+                    autoFocus
+                  />
+                  {erreurs.numero_serie && (
+                    <p className="text-xs text-destructive">{erreurs.numero_serie}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
                     {lang === "en"
-                      ? "Automatic model detection by IMEI is reserved for Premium members."
-                      : "L'identification automatique du modèle par IMEI est réservée aux abonnés Premium."}
-                  </span>
+                      ? "Scan barcode or type serial number. Press Enter to add immediately."
+                      : "Scannez le code-barres avec une douchette ou tapez le numéro de série. Appuyez sur Entrée pour valider."}
+                  </p>
                 </div>
-              ) : rechercheEnCours ? (
-                <div className="flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                  <span>
-                    {lang === "en"
-                      ? "Identifying device from IMEI..."
-                      : "Identification du modèle en cours..."}
-                  </span>
-                </div>
-              ) : nonTrouve ? (
-                <div className="flex items-center gap-2 rounded-lg border border-muted bg-muted/40 px-3.5 py-2.5 text-xs text-muted-foreground">
-                  <span className="text-base">ℹ️</span>
-                  <span>
-                    {lang === "en"
-                      ? "Device not recognized in TAC database for this IMEI. Please select brand and model manually below."
-                      : "Modèle non répertorié dans la base TAC pour cet IMEI. Vous pouvez sélectionner la marque et le modèle manuellement ci-dessous."}
-                  </span>
-                </div>
-              ) : detection && !detection.deja_en_catalogue ? (
-                <div className="rounded-lg border border-border/80 bg-muted/30 p-3.5 text-sm">
-                  <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <div className="font-medium text-foreground">
-                        {lang === "en" ? "Identified device:" : "Appareil identifié :"} {nomCompletDetecte}
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <ChampImei
+                      valeur={imei}
+                      onChange={(val) => {
+                        setImei(val);
+                        setNonTrouve(false);
+                      }}
+                      onScanValide={(valeur) => void gererScanImei(valeur)}
+                      erreur={erreurs.imei}
+                    />
+                    {estPremium && imei.replace(/\D/g, "").length >= 8 && (
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs font-medium text-primary"
+                          onClick={() => void lancerRecherche(imei)}
+                          disabled={rechercheEnCours}
+                        >
+                          {rechercheEnCours ? (
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Search className="mr-1.5 h-3.5 w-3.5" />
+                          )}
+                          {lang === "en" ? "Identify device" : "Identifier l'appareil"}
+                        </Button>
                       </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {lang === "en"
-                          ? "This model is not yet in your catalog."
-                          : "Ce modèle n'est pas encore enregistré dans votre catalogue."}
-                        {detection.stockage_defaut ? ` (${detection.stockage_defaut})` : ""}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={importerModeleDetecte}
-                      disabled={importationEnCours}
-                      className="shrink-0"
-                    >
-                      {importationEnCours && (
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      )}
-                      {lang === "en"
-                        ? "Add to catalog"
-                        : "Ajouter au catalogue"}
-                    </Button>
+                    )}
                   </div>
-                </div>
-              ) : detection && detection.deja_en_catalogue ? (
-                <div className="flex items-center gap-2 rounded-lg bg-muted/50 border border-border/60 px-3 py-2 text-xs font-medium text-foreground">
-                  <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span>
-                    {lang === "en"
-                      ? `Selected model: ${nomCompletDetecte}`
-                      : `Modèle sélectionné : ${nomCompletDetecte}`}
-                  </span>
-                </div>
-              ) : null}
+
+                  {!estPremium ? (
+                    <div className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-muted/40 px-3.5 py-2.5 text-xs text-muted-foreground">
+                      <span className="font-semibold text-foreground">Premium :</span>
+                      <span>
+                        {lang === "en"
+                          ? "Automatic model detection by IMEI is reserved for Premium members."
+                          : "L'identification automatique du modèle par IMEI est réservée aux abonnés Premium."}
+                      </span>
+                    </div>
+                  ) : rechercheEnCours ? (
+                    <div className="flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                      <span>
+                        {lang === "en"
+                          ? "Identifying device from IMEI..."
+                          : "Identification du modèle en cours..."}
+                      </span>
+                    </div>
+                  ) : nonTrouve ? (
+                    <div className="flex items-center gap-2 rounded-lg border border-muted bg-muted/40 px-3.5 py-2.5 text-xs text-muted-foreground">
+                      <span className="text-base">ℹ️</span>
+                      <span>
+                        {lang === "en"
+                          ? "Device not recognized in TAC database for this IMEI. Please select brand and model manually below."
+                          : "Modèle non répertorié dans la base TAC pour cet IMEI. Vous pouvez sélectionner la marque et le modèle manuellement ci-dessous."}
+                      </span>
+                    </div>
+                  ) : detection && !detection.deja_en_catalogue ? (
+                    <div className="rounded-lg border border-border/80 bg-muted/30 p-3.5 text-sm">
+                      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <div className="font-medium text-foreground">
+                            {lang === "en" ? "Identified device:" : "Appareil identifié :"} {nomCompletDetecte}
+                          </div>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            {lang === "en"
+                              ? "This model is not yet in your catalog."
+                              : "Ce modèle n'est pas encore enregistré dans votre catalogue."}
+                            {detection.stockage_defaut ? ` (${detection.stockage_defaut})` : ""}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={importerModeleDetecte}
+                          disabled={importationEnCours}
+                          className="shrink-0"
+                        >
+                          {importationEnCours && (
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          )}
+                          {lang === "en"
+                            ? "Add to catalog"
+                            : "Ajouter au catalogue"}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : detection && detection.deja_en_catalogue ? (
+                    <div className="flex items-center gap-2 rounded-lg bg-muted/50 border border-border/60 px-3 py-2 text-xs font-medium text-foreground">
+                      <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>
+                        {lang === "en"
+                          ? `Selected model: ${nomCompletDetecte}`
+                          : `Modèle sélectionné : ${nomCompletDetecte}`}
+                      </span>
+                    </div>
+                  ) : null}
+                </>
+              )}
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -672,40 +823,218 @@ export default function PageEntreeStock() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>
-                  {t("telephones.stockage")}
-                  <span className="ml-0.5 text-destructive">*</span>
-                </Label>
-                <SelectRecherche
-                  options={stockagesDisponibles.map((s) => ({
-                    valeur: s.id,
-                    libelle: s.valeur,
-                  }))}
-                  valeur={stockageChoisi}
-                  onChange={(v) => setStockageChoisi(v)}
-                  disabled={!commun.modele_id}
-                  placeholder={
-                    commun.modele_id
-                      ? lang === "en"
-                        ? "Choose storage"
-                        : "Choisir le stockage"
-                      : lang === "en"
-                        ? "Choose model first"
-                        : "Choisissez d'abord le modèle"
-                  }
-                  placeholderRecherche={
-                    lang === "en" ? "Search storage..." : "Rechercher un stockage…"
-                  }
-                />
-                {stockagesDisponibles.length === 0 && commun.modele_id && (
-                  <p className="text-xs text-muted-foreground">
-                    {lang === "en"
-                      ? "No storage capacity configured for this model. Add one in the catalog."
-                      : "Aucun stockage configuré pour ce modèle. Ajoutez-en un depuis le catalogue."}
-                  </p>
-                )}
-              </div>
+              {typeAppareil === "telephone" ? (
+                <div className="space-y-2">
+                  <Label>
+                    {t("telephones.stockage")}
+                    <span className="ml-0.5 text-destructive">*</span>
+                  </Label>
+                  <SelectRecherche
+                    options={stockagesDisponibles.map((s) => ({
+                      valeur: s.id,
+                      libelle: s.valeur,
+                    }))}
+                    valeur={stockageChoisi}
+                    onChange={(v) => setStockageChoisi(v)}
+                    disabled={!commun.modele_id}
+                    placeholder={
+                      commun.modele_id
+                        ? lang === "en"
+                          ? "Choose storage"
+                          : "Choisir le stockage"
+                        : lang === "en"
+                          ? "Choose model first"
+                          : "Choisissez d'abord le modèle"
+                    }
+                    placeholderRecherche={
+                      lang === "en" ? "Search storage..." : "Rechercher un stockage…"
+                    }
+                  />
+                  {stockagesDisponibles.length === 0 && commun.modele_id && (
+                    <p className="text-xs text-muted-foreground">
+                      {lang === "en"
+                        ? "No storage capacity configured for this model. Add one in the catalog."
+                        : "Aucun stockage configuré pour ce modèle. Ajoutez-en un depuis le catalogue."}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4 rounded-xl border border-border/70 bg-muted/20 p-4">
+                  <div className="flex items-center gap-2 border-b border-border/50 pb-2.5 text-sm font-semibold text-foreground">
+                    {/* <Cpu className="h-4 w-4 text-primary" /> */}
+                    <span>{t("telephones.specifications")}</span>
+                  </div>
+
+                  {/* Processeur */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor="processeur">{t("telephones.processeur")}</Label>
+                    <Input
+                      id="processeur"
+                      className="h-10"
+                      value={processeur}
+                      onChange={(e) => setProcesseur(e.target.value)}
+                      placeholder={t("telephones.processeurPlaceholder")}
+                    />
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {["Intel Core i5", "Intel Core i7", "AMD Ryzen 5", "AMD Ryzen 7", "Apple M1", "Apple M2", "Apple M3"].map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setProcesseur(p)}
+                          className={cn(
+                            "rounded border px-2 py-0.5 text-[11px] transition-colors",
+                            processeur === p
+                              ? "border-primary bg-primary/10 font-semibold text-primary"
+                              : "bg-background text-muted-foreground hover:border-primary hover:text-foreground"
+                          )}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* RAM & Taille Écran */}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ram">{t("telephones.ram")}</Label>
+                      <Input
+                        id="ram"
+                        className="h-10"
+                        value={ram}
+                        onChange={(e) => setRam(e.target.value)}
+                        placeholder="Ex: 8 Go, 16 Go, 32 Go"
+                      />
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {["8 Go", "16 Go", "32 Go", "64 Go"].map((r) => (
+                          <button
+                            key={r}
+                            type="button"
+                            onClick={() => setRam(r)}
+                            className={cn(
+                              "rounded border px-2 py-0.5 text-[11px] transition-colors",
+                              ram === r
+                                ? "border-primary bg-primary/10 font-semibold text-primary"
+                                : "bg-background text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="taille-ecran">{t("telephones.tailleEcran")}</Label>
+                      <Input
+                        id="taille-ecran"
+                        className="h-10"
+                        value={tailleEcran}
+                        onChange={(e) => setTailleEcran(e.target.value)}
+                        placeholder={t("telephones.tailleEcranPlaceholder")}
+                      />
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {['13.3"', '14"', '15.6"', '16"'].map((te) => (
+                          <button
+                            key={te}
+                            type="button"
+                            onClick={() => setTailleEcran(te)}
+                            className={cn(
+                              "rounded border px-2 py-0.5 text-[11px] transition-colors",
+                              tailleEcran === te
+                                ? "border-primary bg-primary/10 font-semibold text-primary"
+                                : "bg-background text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            {te}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Disque Capacité & Type */}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="disque-capacite">{t("telephones.disqueCapacite")}</Label>
+                      <Input
+                        id="disque-capacite"
+                        className="h-10"
+                        value={disqueCapacite}
+                        onChange={(e) => setDisqueCapacite(e.target.value)}
+                        placeholder="Ex: 256 Go, 512 Go, 1 To"
+                      />
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {["128 Go", "256 Go", "512 Go", "1 To", "2 To"].map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => setDisqueCapacite(c)}
+                            className={cn(
+                              "rounded border px-2 py-0.5 text-[11px] transition-colors",
+                              disqueCapacite === c
+                                ? "border-primary bg-primary/10 font-semibold text-primary"
+                                : "bg-background text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label>{t("telephones.disqueType")}</Label>
+                      <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+                        {(["ssd_nvme", "ssd_sata", "hdd"] as TypeDisque[]).map((dt) => {
+                          const labels: Record<string, string> = {
+                            ssd_nvme: "NVMe",
+                            ssd_sata: "SATA",
+                            hdd: "HDD",
+                          };
+                          return (
+                            <button
+                              key={dt}
+                              type="button"
+                              onClick={() => setDisqueType(dt)}
+                              className={cn(
+                                "rounded-md border py-2 text-xs font-medium transition-all text-center",
+                                disqueType === dt
+                                  ? "border-primary bg-primary/10 text-primary font-semibold"
+                                  : "bg-background text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              {labels[dt]}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Clavier */}
+                  <div className="space-y-1.5">
+                    <Label>{t("telephones.clavier")}</Label>
+                    <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+                      {(["azerty", "qwerty", "qwertz"] as TypeClavier[]).map((cl) => (
+                        <button
+                          key={cl}
+                          type="button"
+                          onClick={() => setClavier(cl)}
+                          className={cn(
+                            "rounded-md border py-2 text-xs font-medium transition-all text-center",
+                            clavier === cl
+                              ? "border-primary bg-primary/10 text-primary font-semibold"
+                              : "bg-background text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {cl.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {boutiques.length > 1 && (
                 <div className="space-y-2">
@@ -893,25 +1222,51 @@ export default function PageEntreeStock() {
                 </p>
               ) : (
                 <ul className="divide-y">
-                  {ajoutes.map((appareil, index) => (
-                    <li key={appareil.id}>
-                      <Link
-                        href={`/telephones/${appareil.id}`}
-                        className="flex items-center gap-3 py-2.5"
-                        style={{ "--index": index } as React.CSSProperties}
-                      >
-                        <Check className="h-4 w-4 shrink-0 text-statut-ok" />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">
-                            {appareil.modele?.libelle}
-                          </p>
-                          <p className="chiffres truncate font-mono text-xs text-muted-foreground">
-                            {formaterImei(appareil.imei)}
-                          </p>
-                        </div>
-                      </Link>
-                    </li>
-                  ))}
+                  {ajoutes.map((appareil, index) => {
+                    const estOrdi = appareil.type_appareil === "ordinateur_portable";
+                    const idLabel = estOrdi
+                      ? (appareil.numero_serie ? `S/N: ${appareil.numero_serie}` : "S/N non renseigné")
+                      : (appareil.imei ? formaterImei(appareil.imei) : (appareil.numero_serie ? `S/N: ${appareil.numero_serie}` : "—"));
+                    const specsOrdi = estOrdi
+                      ? appareil.specs_ordinateur || [appareil.processeur, appareil.ram, appareil.disque_capacite ? `${appareil.disque_capacite} ${appareil.disque_type || ""}`.trim() : null].filter(Boolean).join(" · ")
+                      : null;
+
+                    return (
+                      <li key={appareil.id}>
+                        <Link
+                          href={`/telephones/${appareil.id}`}
+                          className="flex items-center gap-3 py-2.5 transition-colors hover:bg-muted/40 rounded-md px-1"
+                          style={{ "--index": index } as React.CSSProperties}
+                        >
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-statut-ok/10 text-statut-ok">
+                            <Check className="h-3.5 w-3.5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              {estOrdi ? (
+                                <Laptop className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                              ) : (
+                                <Smartphone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              )}
+                              <p className="truncate text-sm font-medium">
+                                {appareil.modele?.libelle}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="chiffres truncate font-mono text-xs text-muted-foreground">
+                                {idLabel}
+                              </p>
+                              {specsOrdi && (
+                                <span className="text-[11px] text-muted-foreground/80 truncate">
+                                  · {specsOrdi}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </CardContent>

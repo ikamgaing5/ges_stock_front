@@ -4,7 +4,7 @@
 
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Pencil, Printer, Store } from "lucide-react";
+import { ArrowLeft, Cpu, HardDrive, Laptop, Pencil, Printer, Smartphone, Store } from "lucide-react";
 import { api, ErreurApi } from "@/lib/api";
 import { formaterImei } from "@/lib/imei";
 import { useAuth } from "@/components/auth-provider";
@@ -115,6 +115,11 @@ export default function PageAppareil({
     );
   }
 
+  const estOrdi = appareil.type_appareil === "ordinateur_portable";
+  const identifiantTexte = estOrdi
+    ? (appareil.numero_serie ? `S/N : ${appareil.numero_serie}` : "S/N non renseigné")
+    : formaterImei(appareil.imei);
+
   return (
     <>
       <Button
@@ -130,6 +135,19 @@ export default function PageAppareil({
 
       <TitrePage titre={appareil.modele?.libelle ?? "Appareil"}>
         <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+            {estOrdi ? (
+              <>
+                <Laptop className="h-3.5 w-3.5 text-blue-500" />
+                <span>{t("telephones.typeOrdinateur")}</span>
+              </>
+            ) : (
+              <>
+                <Smartphone className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>{t("telephones.typeTelephone")}</span>
+              </>
+            )}
+          </span>
           <PastilleStatut statut={appareil.statut} className="px-3 py-1 text-sm" />
           {permissions.saisirAppareils(utilisateur?.role ?? "vendeuse") && (
             <Button
@@ -145,9 +163,16 @@ export default function PageAppareil({
         </div>
       </TitrePage>
 
-      <p className="chiffres -mt-2 mb-4 font-mono text-xs text-muted-foreground sm:-mt-3 sm:mb-6 sm:text-sm">
-        {formaterImei(appareil.imei)}
-      </p>
+      <div className="flex flex-wrap items-center gap-3 -mt-2 mb-4 sm:-mt-3 sm:mb-6">
+        <p className="chiffres font-mono text-xs text-muted-foreground sm:text-sm">
+          {identifiantTexte}
+        </p>
+        {estOrdi && appareil.specs_ordinateur && (
+          <span className="rounded-md bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+            {appareil.specs_ordinateur}
+          </span>
+        )}
+      </div>
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_1.4fr]">
         <div className="space-y-4 sm:space-y-6">
@@ -173,24 +198,73 @@ export default function PageAppareil({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Ligne
-                  libelle={t("telephones.imei")}
-                  valeur={formaterImei(appareil.imei)}
-                  mono
-                />
-                {appareil.imei2 && (
-                  <Ligne
-                    libelle={t("telephones.imei2")}
-                    valeur={formaterImei(appareil.imei2)}
-                    mono
-                  />
-                )}
-                {appareil.numero_serie && (
-                  <Ligne
-                    libelle={t("telephones.numeroSerie")}
-                    valeur={appareil.numero_serie}
-                    mono
-                  />
+                {estOrdi ? (
+                  <>
+                    <Ligne
+                      libelle={t("telephones.numeroSerie")}
+                      valeur={appareil.numero_serie ?? "—"}
+                      mono
+                    />
+                    {appareil.processeur && (
+                      <Ligne
+                        libelle={t("telephones.processeur")}
+                        valeur={appareil.processeur}
+                      />
+                    )}
+                    {appareil.ram && (
+                      <Ligne
+                        libelle={t("telephones.ram")}
+                        valeur={appareil.ram}
+                      />
+                    )}
+                    {appareil.disque_capacite && (
+                      <Ligne
+                        libelle={t("telephones.disqueCapacite")}
+                        valeur={`${appareil.disque_capacite} ${appareil.disque_type ?? ""}`.trim()}
+                      />
+                    )}
+                    {appareil.clavier && (
+                      <Ligne
+                        libelle={t("telephones.clavier")}
+                        valeur={appareil.clavier}
+                      />
+                    )}
+                    {appareil.taille_ecran && (
+                      <Ligne
+                        libelle={t("telephones.tailleEcran")}
+                        valeur={appareil.taille_ecran}
+                      />
+                    )}
+                    {appareil.imei && (
+                      <Ligne
+                        libelle={t("telephones.imei")}
+                        valeur={formaterImei(appareil.imei)}
+                        mono
+                      />
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <Ligne
+                      libelle={t("telephones.imei")}
+                      valeur={formaterImei(appareil.imei)}
+                      mono
+                    />
+                    {appareil.imei2 && (
+                      <Ligne
+                        libelle={t("telephones.imei2")}
+                        valeur={formaterImei(appareil.imei2)}
+                        mono
+                      />
+                    )}
+                    {appareil.numero_serie && (
+                      <Ligne
+                        libelle={t("telephones.numeroSerie")}
+                        valeur={appareil.numero_serie}
+                        mono
+                      />
+                    )}
+                  </>
                 )}
                 <Ligne
                   libelle={t("telephones.couleur")}

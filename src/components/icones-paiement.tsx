@@ -39,7 +39,7 @@ export function IconeMtnMomo({ className = "h-6 w-6" }: { className?: string }) 
   );
 }
 
-export function IconeCarteBancaire({ className = "h-6 w-6" }: { className?: string }) {
+export function IconeCarteBancaires({ className = "h-6 w-6" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 64 40"
@@ -73,5 +73,26 @@ export function IconeCarteBancaire({ className = "h-6 w-6" }: { className?: stri
         VISA
       </text>
     </svg>
+  );
+}
+
+export function IconeCarteBancaire({
+  className = "h-6 w-6",
+}: {
+  className?: string;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center justify-center shrink-0 overflow-hidden relative rounded-xs ${className}`}
+    >
+      <Image
+        src="/card.png"
+        alt="MTN Mobile Money"
+        width={48}
+        height={48}
+        className="w-full h-full object-contain"
+        unoptimized
+      />
+    </span>
   );
 }
