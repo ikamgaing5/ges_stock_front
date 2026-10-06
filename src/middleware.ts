@@ -11,6 +11,8 @@ const ROUTES_PUBLIQUES = [
   "/confidentialite",
   "/conditions",
   "/mentions-legales",
+  // "/invitation/",
+  "/hors-ligne"
 ];
 
 const CLE_TOKEN = "gestion-stock-token";
@@ -35,7 +37,7 @@ export function middleware(request: NextRequest) {
   const estRoutePublique =
     ROUTES_PUBLIQUES.some(
       (route) => pathname === route || pathname.startsWith(`${route}/`),
-    ) || pathname.startsWith("/invitations/");
+    ) || pathname.startsWith("/invitation/");
 
   // 1. Accès à la page de connexion
   if (pathname === "/connexion") {
