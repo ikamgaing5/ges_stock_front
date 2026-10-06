@@ -339,13 +339,13 @@ export default function PageParc() {
                         <TableRow key={appareil.id}>
                           <TableCell>
                             <div className="flex items-start gap-2.5">
-                              <div className="mt-0.5 shrink-0 text-muted-foreground">
+                              {/* <div className="mt-0.5 shrink-0 text-muted-foreground">
                                 {estPc ? (
                                   <Laptop className="h-4 w-4 text-primary" />
                                 ) : (
                                   <Smartphone className="h-4 w-4" />
                                 )}
-                              </div>
+                              </div> */}
                               <div className="min-w-0">
                                 <Link
                                   href={`/telephones/${appareil.id}`}
@@ -367,16 +367,16 @@ export default function PageParc() {
                           <TableCell className="chiffres whitespace-nowrap font-mono text-xs">
                             {estPc ? (
                               <div className="flex items-center gap-1.5">
-                                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-sans font-medium text-muted-foreground">
+                                {/* <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-sans font-medium text-muted-foreground">
                                   S/N
-                                </span>
+                                </span> */}
                                 <span>{appareil.numero_serie || "—"}</span>
                               </div>
                             ) : (
                               <div className="flex items-center gap-1.5">
-                                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-sans font-medium text-muted-foreground">
+                                {/* <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-sans font-medium text-muted-foreground">
                                   IMEI
-                                </span>
+                                </span> */}
                                 <span>{formaterImei(appareil.imei)}</span>
                               </div>
                             )}

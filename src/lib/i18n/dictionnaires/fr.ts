@@ -120,6 +120,7 @@ export const fr = {
     CreerBoutiqueCode: "Créer ma boutique et recevoir mon code",
     EssaieGratuit: "Gratuit pendant 14 jours, aucune carte requise.",
     DeuxiemeEtape: "Étape 2 sur 2 : confirmez votre email",
+    DerniereEtape: "Dernière étape : vérifiez votre boîte de réception",
     derniereEtape: "Dernière étape : vérifiez votre boîte de réception",
     CodeRecu:
       "Nous venons de vous envoyer un code de confirmation à 6 chiffres à :",
@@ -247,7 +248,8 @@ export const fr = {
   },
   telephones: {
     titre: "Appareils",
-    description: "Suivez chaque appareil à l'unité par son identifiant unique (IMEI ou Numéro de série).",
+    description:
+      "Suivez chaque appareil à l'unité par son identifiant unique (IMEI ou Numéro de série).",
     tousTypes: "Tous les types",
     typeAppareil: "Type d'appareil",
     typeTelephone: "Téléphone",
@@ -263,13 +265,15 @@ export const fr = {
     clavierQwerty: "QWERTY",
     clavierQwertz: "QWERTZ",
     tailleEcran: "Taille d'écran",
-    tailleEcranPlaceholder: "Ex: 14\", 15.6\"...",
+    tailleEcranPlaceholder: 'Ex: 14", 15.6"...',
     specifications: "Configuration & Spécifications",
     numeroSerieCourt: "N° Série (S/N)",
-    numeroSerieRequis: "Le numéro de série est obligatoire pour un ordinateur portable.",
+    numeroSerieRequis:
+      "Le numéro de série est obligatoire pour un ordinateur portable.",
     nouvelAppareil: "Nouvel appareil",
     entreeStock: "Entrée de stock",
-    recherchePlaceholder: "Rechercher par IMEI, N° série, modèle, processeur, client...",
+    recherchePlaceholder:
+      "Rechercher par IMEI, N° série, modèle, processeur, client...",
     tousStatuts: "Tous les statuts",
     tousModeles: "Tous les modèles",
     tableauAppareil: "Modèle",
@@ -381,7 +385,8 @@ export const fr = {
     titre: "Historique des mouvements",
     description:
       "Traçabilité complète de chaque entrée, vente, transfert et intervention.",
-    recherchePlaceholder: "Rechercher par IMEI, N° série, modèle, client, utilisateur...",
+    recherchePlaceholder:
+      "Rechercher par IMEI, N° série, modèle, client, utilisateur...",
     tousTypes: "Tous les types",
     tousLesTypes: "Tous les types",
     toutesBoutiques: "Toutes les boutiques",
@@ -400,7 +405,8 @@ export const fr = {
   },
   factures: {
     titre: "Mes factures",
-    description: "Consultez, filtrez et réimprimez les factures de vente de votre boutique.",
+    description:
+      "Consultez, filtrez et réimprimez les factures de vente de votre boutique.",
     numero: "N° Facture",
     dateHeure: "Date et heure",
     dateAchat: "Date et heure d'achat",
@@ -409,7 +415,8 @@ export const fr = {
     modePaiement: "Paiement",
     montant: "Montant",
     totalFactures: "{total} facture(s) enregistrée(s)",
-    recherchePlaceholder: "Rechercher par client, téléphone, IMEI, N° facture...",
+    recherchePlaceholder:
+      "Rechercher par client, téléphone, IMEI, N° facture...",
     tousPaiements: "Tous les modes de paiement",
     aucuneFacture: "Aucune facture trouvée",
     aucuneFactureDesc: "Aucune vente ne correspond aux critères sélectionnés.",
@@ -436,16 +443,19 @@ export const fr = {
     total: "Total",
     notesTitre: "Notes :",
     notesGarantie: "Garantie : 1 mois (30 jours) à compter de la date d'achat.",
-    notesNb: "NB : La garantie ne couvre pas l'afficheur (écran) et les accessoires.",
+    notesNb:
+      "NB : La garantie ne couvre pas l'afficheur (écran) et les accessoires.",
     notesNonRemboursable: "L'argent versé n'est pas remboursable.",
     conditionsTitre: "Conditions générales :",
-    conditionsTexte: "Aucun article ne sera repris, échangé ou garanti sans la présentation de cette facture originale.",
-    conditionsTest: "Les appareils sont rigoureusement testés et vérifiés conformes avant la vente.",
+    conditionsTexte:
+      "Aucun article ne sera repris, échangé ou garanti sans la présentation de cette facture originale.",
+    conditionsTest:
+      "Les appareils sont rigoureusement testés et vérifiés conformes avant la vente.",
     cash: "Cash (Espèces)",
     omMomo: "OM / MoMo",
     niu: "NUI",
     rccm: "N° RCCM",
-    telephone:"Tel",
+    telephone: "Tel",
     zoomAjuster: "Ajuster",
     zoomTailleReelle: "Taille 100%",
   },
@@ -526,7 +536,8 @@ export const fr = {
     demanderCodeEmailBtn: "Envoyer le code",
     envoyerCodeBtn: "Envoyer le code",
     infoCodeEmailTitre: "Code de sécurité par e-mail",
-    infoCodeEmailDesc: "Un code de confirmation à 8 chiffres sera envoyé à votre adresse pour vérifier votre identité.",
+    infoCodeEmailDesc:
+      "Un code de confirmation à 8 chiffres sera envoyé à votre adresse pour vérifier votre identité.",
     infoValidite15Min: "Ce code sera valable pendant 15 minutes.",
     retourVueEnvoi: "Retour",
     renvoyerCodeDans: "Renvoyer un code dans {secondes}s",
@@ -571,7 +582,8 @@ export const fr = {
     demanderCodeEmailBtn: "Envoyer le code",
     envoyerCodeBtn: "Envoyer le code",
     infoCodeEmailTitre: "Code de sécurité par e-mail",
-    infoCodeEmailDesc: "Un code de confirmation à 8 chiffres sera envoyé à votre adresse pour vérifier votre identité.",
+    infoCodeEmailDesc:
+      "Un code de confirmation à 8 chiffres sera envoyé à votre adresse pour vérifier votre identité.",
     infoValidite15Min: "Ce code sera valable pendant 15 minutes.",
     retourVueEnvoi: "Retour",
     renvoyerCodeDans: "Renvoyer un code dans {secondes}s",
@@ -607,7 +619,8 @@ export const fr = {
   },
   clients: {
     titre: "Clients",
-    sousTitre: "Historique et gestion des clients ayant acheté dans vos boutiques",
+    sousTitre:
+      "Historique et gestion des clients ayant acheté dans vos boutiques",
     recherchePlaceholder: "Rechercher par nom ou numéro de téléphone...",
     toutesBoutiques: "Toutes les boutiques",
     aucunClient: "Aucun client trouvé",
@@ -645,14 +658,20 @@ export const fr = {
     triAchats: "Nombre d'achats",
     triNom: "Nom (A-Z)",
     modalWhatsappTitre: "Diffusion & Campagne WhatsApp",
-    modalWhatsappDesc: "Communiquez facilement avec les clients sélectionnés pour vos offres ou nouveautés.",
+    modalWhatsappDesc:
+      "Communiquez facilement avec les clients sélectionnés pour vos offres ou nouveautés.",
     guideDiffusionTitre: "Comment créer une Liste de Diffusion WhatsApp ?",
-    guideDiffusionEtape1: "1. Cliquez sur « Télécharger les contacts (.vcf) » et ouvrez le fichier sur votre téléphone.",
-    guideDiffusionEtape2: "2. Vos clients sont instantanément ajoutés avec le tag de votre boutique.",
-    guideDiffusionEtape3: "3. Dans WhatsApp, créez une « Nouvelle diffusion » et sélectionnez ces contacts.",
+    guideDiffusionEtape1:
+      "1. Cliquez sur « Télécharger les contacts (.vcf) » et ouvrez le fichier sur votre téléphone.",
+    guideDiffusionEtape2:
+      "2. Vos clients sont instantanément ajoutés avec le tag de votre boutique.",
+    guideDiffusionEtape3:
+      "3. Dans WhatsApp, créez une « Nouvelle diffusion » et sélectionnez ces contacts.",
     modeleMessage: "Message promotionnel",
-    variablesDisponibles: "Variables automatiques : {nom} pour le nom du client, {boutique} pour le nom de la boutique.",
-    messageDefaut: "Bonjour {nom} ! Votre boutique {boutique} vous remercie pour votre fidélité. Découvrez nos nouvelles arrivées et promotions exclusives de la semaine !",
+    variablesDisponibles:
+      "Variables automatiques : {nom} pour le nom du client, {boutique} pour le nom de la boutique.",
+    messageDefaut:
+      "Bonjour {nom} ! Votre boutique {boutique} vous remercie pour votre fidélité. Découvrez nos nouvelles arrivées et promotions exclusives de la semaine !",
     copierNumeros: "Copier tous les numéros",
     telechargerVcard: "Télécharger les contacts (.vcf)",
     envoyerIndividuel: "Envoyer individuellement",
@@ -695,6 +714,17 @@ export const fr = {
       "Consultez notre foire aux questions pour tout comprendre sur la gestion du stock, le scan IMEI, les abonnements et la politique de confidentialité.",
     questionsBouton: "Consulter la Foire Aux Questions (FAQ)",
     monnaie: "Devise d'affichage.",
+    identiteEntreprise: "Identité de l'entreprise & Logo unique",
+    gererBoutique: "Gérer les boutiques",
+    infoPartagees:
+      "Ces informations légales et ce logo sont partagés par tous vos points de vente dans le même pays et figurent sur vos factures et reçus.",
+    nomEntreprise: "Nom de l'entreprise",
+    paysPrincipal: "Pays principal",
+    selectPays: "Sélectionner un pays",
+    recherchePays: "Rechercher un pays…",
+    afficheNIU: "Afficher le NIU sur les factures et reçus",
+    afficheRCCM: "Afficher le RCCM sur les factures et reçus",
+    paiements: "Paiements"
   },
   admin: {
     titre: "Administration de la plateforme",
@@ -914,5 +944,38 @@ export const fr = {
     tableauDeBord: "Retour au tableau de bord",
     ouvrirScanner: "Ouvrir le scanner d'IMEI",
     consulterFaq: "Consulter la FAQ",
+  },
+  merci: {
+    metaTitre: "Bienvenue sur Telora — Inscription réussie",
+    metaDescription:
+      "Votre compte Telora est activé et votre boutique est configurée. Découvrez vos prochaines étapes pour piloter votre stock et votre caisse.",
+    filAriane: "Confirmation",
+    badgeSucces: "Compte activé & boutique configurée",
+    titre: "Bienvenue sur Telora !",
+    titreNom: "Bienvenue sur Telora, {nom} !",
+    sousTitre:
+      "Votre compte est prêt et votre point de vente est opérationnel. Voici vos 3 prochaines étapes pour démarrer en toute sérénité :",
+    etape1Numero: "01",
+    etape1Titre: "Enregistrez vos premiers téléphones",
+    etape1Description:
+      "Ajoutez vos appareils en stock avec leur numéro IMEI unitaire, par saisie guidée ou scan immédiat au code-barres.",
+    etape1Action: "Ajouter un téléphone",
+    etape2Numero: "02",
+    etape2Titre: "Invitez vos vendeurs & gestionnaires",
+    etape2Description:
+      "Créez des accès sécurisés pour votre équipe avec des rôles sur mesure (Vendeur, Gestionnaire) pour gérer les ventes.",
+    etape2Action: "Gérer l'équipe",
+    etape3Numero: "03",
+    etape3Titre: "Effectuez votre première vente",
+    etape3Description:
+      "Découvrez le mode caisse : encaissez un client, déduisez le stock en temps réel et imprimez un ticket ou une facture avec traçabilité IMEI.",
+    etape3Action: "Explorer la caisse",
+    boutonPrincipal: "Accéder au tableau de bord",
+    boutonScanner: "Scanner un IMEI",
+    boutonSecondaire: "Guide d'utilisation & FAQ",
+    assistance: "Assistance",
+    aideTitre: "Besoin d'un accompagnement personnalisé ?",
+    aideDescription:
+      "Notre équipe est à votre disposition pour vous assister lors de l'import de votre stock existant ou le réglage de vos imprimantes thermiques.",
   },
 };

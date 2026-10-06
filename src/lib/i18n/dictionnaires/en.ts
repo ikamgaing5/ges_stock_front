@@ -241,13 +241,15 @@ export const en = {
   },
   telephones: {
     titre: "Devices",
-    description: "Track each unit individually by its unique identifier (IMEI or Serial Number).",
+    description:
+      "Track each unit individually by its unique identifier (IMEI or Serial Number).",
     tousTypes: "All device types",
     typeAppareil: "Device type",
     typeTelephone: "Phone",
     typeOrdinateur: "Laptop",
     processeur: "Processor (CPU)",
-    processeurPlaceholder: "e.g. Intel Core i5-1135G7, Apple M2, AMD Ryzen 5...",
+    processeurPlaceholder:
+      "e.g. Intel Core i5-1135G7, Apple M2, AMD Ryzen 5...",
     ram: "RAM Memory",
     disque: "Disk",
     disqueCapacite: "Disk capacity",
@@ -257,7 +259,7 @@ export const en = {
     clavierQwerty: "QWERTY",
     clavierQwertz: "QWERTZ",
     tailleEcran: "Screen size",
-    tailleEcranPlaceholder: "e.g. 14\", 15.6\"...",
+    tailleEcranPlaceholder: 'e.g. 14", 15.6"...',
     specifications: "Specs & Hardware",
     numeroSerieCourt: "Serial (S/N)",
     numeroSerieRequis: "Serial number is required for a laptop.",
@@ -316,7 +318,7 @@ export const en = {
     nouveauClient: "New customer",
     nbAchats: "{nb} purchase(s)",
     aucunClientTrouve: "No existing customer found",
-    creerNouveauClient: "New customer: \"{nom}\"",
+    creerNouveauClient: 'New customer: "{nom}"',
     changerClient: "Change",
     modePaiement: "Payment method",
     modePaiementCash: "Cash",
@@ -430,8 +432,10 @@ export const en = {
     notesNb: "NB: Warranty does not cover screen display and accessories.",
     notesNonRemboursable: "Payments made are strictly non-refundable.",
     conditionsTitre: "Terms and Conditions:",
-    conditionsTexte: "No item will be replaced, refunded, or serviced without this original invoice.",
-    conditionsTest: "Goods have been tested and verified fully functional prior to handover.",
+    conditionsTexte:
+      "No item will be replaced, refunded, or serviced without this original invoice.",
+    conditionsTest:
+      "Goods have been tested and verified fully functional prior to handover.",
     cash: "Cash",
     omMomo: "OM / MoMo",
     niu: "Tax ID",
@@ -517,7 +521,8 @@ export const en = {
     demanderCodeEmailBtn: "Send code",
     envoyerCodeBtn: "Send code",
     infoCodeEmailTitre: "Security code via email",
-    infoCodeEmailDesc: "An 8-digit confirmation code will be sent to your email to verify your identity.",
+    infoCodeEmailDesc:
+      "An 8-digit confirmation code will be sent to your email to verify your identity.",
     infoValidite15Min: "This code will be valid for 15 minutes.",
     retourVueEnvoi: "Back",
     renvoyerCodeDans: "Resend code in {secondes}s",
@@ -561,7 +566,8 @@ export const en = {
     demanderCodeEmailBtn: "Send code",
     envoyerCodeBtn: "Send code",
     infoCodeEmailTitre: "Email security code",
-    infoCodeEmailDesc: "An 8-digit confirmation code will be sent to your email address to verify your identity.",
+    infoCodeEmailDesc:
+      "An 8-digit confirmation code will be sent to your email address to verify your identity.",
     infoValidite15Min: "This code is valid for 15 minutes.",
     retourVueEnvoi: "Back",
     renvoyerCodeDans: "Resend code in {secondes}s",
@@ -597,7 +603,8 @@ export const en = {
   },
   clients: {
     titre: "Customers",
-    sousTitre: "History and management of customers who purchased from your stores",
+    sousTitre:
+      "History and management of customers who purchased from your stores",
     recherchePlaceholder: "Search by name or phone number...",
     toutesBoutiques: "All stores",
     aucunClient: "No customers found",
@@ -635,14 +642,20 @@ export const en = {
     triAchats: "Number of purchases",
     triNom: "Name (A-Z)",
     modalWhatsappTitre: "WhatsApp Broadcast & Campaign",
-    modalWhatsappDesc: "Easily communicate with selected customers for promotions and news.",
+    modalWhatsappDesc:
+      "Easily communicate with selected customers for promotions and news.",
     guideDiffusionTitre: "How to create a WhatsApp Broadcast List?",
-    guideDiffusionEtape1: "1. Click 'Download Contacts (.vcf)' and open the file on your smartphone.",
-    guideDiffusionEtape2: "2. Your customers are instantly added to your phonebook.",
-    guideDiffusionEtape3: "3. In WhatsApp, tap 'New Broadcast' and select these contacts.",
+    guideDiffusionEtape1:
+      "1. Click 'Download Contacts (.vcf)' and open the file on your smartphone.",
+    guideDiffusionEtape2:
+      "2. Your customers are instantly added to your phonebook.",
+    guideDiffusionEtape3:
+      "3. In WhatsApp, tap 'New Broadcast' and select these contacts.",
     modeleMessage: "Promotional Message",
-    variablesDisponibles: "Dynamic variables: {nom} for customer name, {boutique} for store name.",
-    messageDefaut: "Hello {nom}! {boutique} thanks you for your loyalty. Check out our new arrivals and exclusive promotions this week!",
+    variablesDisponibles:
+      "Dynamic variables: {nom} for customer name, {boutique} for store name.",
+    messageDefaut:
+      "Hello {nom}! {boutique} thanks you for your loyalty. Check out our new arrivals and exclusive promotions this week!",
     copierNumeros: "Copy all phone numbers",
     telechargerVcard: "Download contacts (.vcf)",
     envoyerIndividuel: "Send individually",
@@ -650,6 +663,7 @@ export const en = {
   },
   monCompte: {
     titre: "My Account",
+    paiements: "Payments",
     description:
       "Manage your personal profile, security settings, and preferences.",
     coordonnees: "Personal details",
@@ -684,6 +698,16 @@ export const en = {
       "Browse our frequently asked questions to learn everything about inventory management, IMEI scanning, subscriptions, and privacy policy.",
     questionsBouton: "View Frequently Asked Questions (FAQ)",
     monnaie: "Display currency.",
+    identiteEntreprise: "Enterprise Identity & Unique Logo",
+    gererBoutique: "Manage stores",
+    infoPartagees:
+      "This legal identity and logo are shared by all your points of sale in the same country and appear on your invoices/receipts.",
+    nomEtreprise: "Enterprise name",
+    paysPrincipal: "Home country",
+    selectPays: "Select country",
+    recherchePays: "Search country...",
+    afficheNIU: "Display NIU on invoices & receipts",
+    afficheRCCM: "Display RCCM on invoices & receipts",
   },
   admin: {
     titre: "Platform Administration",
@@ -904,5 +928,38 @@ export const en = {
     tableauDeBord: "Back to Dashboard",
     ouvrirScanner: "Open IMEI Scanner",
     consulterFaq: "View FAQ",
+  },
+  merci: {
+    metaTitre: "Welcome to Telora — Registration Successful",
+    metaDescription:
+      "Your Telora account is activated and your store is set up. Discover your next steps to manage your inventory and checkout.",
+    filAriane: "Confirmation",
+    badgeSucces: "Account activated & store operational",
+    titre: "Welcome to Telora!",
+    titreNom: "Welcome to Telora, {nom}!",
+    sousTitre:
+      "Your account is ready and your store is operational. Here are your 3 next steps to get started smoothly:",
+    etape1Numero: "01",
+    etape1Titre: "Add your first phones",
+    etape1Description:
+      "Add devices to inventory with their unique IMEI numbers, either by manual input or direct barcode scanning.",
+    etape1Action: "Add a phone",
+    etape2Numero: "02",
+    etape2Titre: "Invite sales reps & managers",
+    etape2Description:
+      "Create secure access for your team with customized permissions (Sales rep, Manager) to handle sales.",
+    etape2Action: "Manage team",
+    etape3Numero: "03",
+    etape3Titre: "Make your first sale",
+    etape3Description:
+      "Discover the POS: process a sale, watch real-time stock deduction, and print a thermal receipt or invoice with IMEI tracking.",
+    etape3Action: "Explore POS",
+    boutonPrincipal: "Go to Dashboard",
+    boutonScanner: "Scan an IMEI",
+    boutonSecondaire: "User Guide & FAQ",
+    assistance: "Support",
+    aideTitre: "Need personalized onboarding assistance?",
+    aideDescription:
+      "Our team is available to help you import your existing inventory or set up thermal receipt printers.",
   },
 };

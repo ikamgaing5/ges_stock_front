@@ -13,6 +13,11 @@ export function BandeauCookies() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    // Ne jamais afficher le bandeau sur la version Desktop
+    if (typeof window !== "undefined" && window.teloraDesktop?.isDesktop) {
+      return;
+    }
+
     const consentement = window.localStorage.getItem(CLE_CONSENTEMENT);
     if (!consentement) {
       const timer = setTimeout(() => setVisible(true), 500);
@@ -25,7 +30,10 @@ export function BandeauCookies() {
     setVisible(false);
   }
 
-  if (!visible) return null;
+  // Ne rien afficher si masqué ou si nous sommes sur l'application Desktop
+  if (!visible || (typeof window !== "undefined" && window.teloraDesktop?.isDesktop)) {
+    return null;
+  }
 
   return (
     <div

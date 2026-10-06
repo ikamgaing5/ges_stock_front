@@ -227,10 +227,10 @@ export default function PageAbonnement() {
           size="sm"
           className="mb-2 -ml-2 text-muted-foreground hover:text-foreground"
           nativeButton={false}
-          render={<Link href="/mon-compte" />}
+          render={<Link href="/mon-compte#facturation" />}
         >
           <ArrowLeft className="mr-1.5 h-4 w-4" />
-          {lang === "en" ? "Back to my account" : "Retour à mon compte"}
+          {lang === "en" ? "Back to account & billing" : "Retour à mon compte & facturation"}
         </Button>
 
         <TitrePage

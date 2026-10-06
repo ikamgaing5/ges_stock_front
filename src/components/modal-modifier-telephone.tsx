@@ -280,9 +280,9 @@ export function ModalModifierTelephone({
           {/* En-tête aéré et élégant */}
           <DialogHeader className="border-b border-border/50 bg-muted/20 px-6 pt-6 pb-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
+              {/* <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-xs">
                 {estOrdi ? <Laptop className="h-4.5 w-4.5" /> : <Smartphone className="h-4.5 w-4.5" />}
-              </div>
+              </div> */}
               <div className="min-w-0 flex-1">
                 <DialogTitle className="text-base font-semibold tracking-tight text-foreground">
                   {lang === "en"
@@ -311,7 +311,7 @@ export function ModalModifierTelephone({
                 {/* Section Identifiants pour PC */}
                 <div className="space-y-3.5">
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    <Barcode className="h-3.5 w-3.5 text-primary" />
+                    {/* <Barcode className="h-3.5 w-3.5 text-primary" /> */}
                     <span>
                       {lang === "en" ? "Identification & Serial Number" : "Identification & Numéro de série"}
                     </span>
@@ -323,7 +323,7 @@ export function ModalModifierTelephone({
                       <span className="text-destructive">*</span>
                     </Label>
                     <div className="relative">
-                      <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      {/* <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" /> */}
                       <Input
                         id="edit-num-serie"
                         className={`font-mono text-sm pl-9.5 h-10 uppercase ${
@@ -348,7 +348,7 @@ export function ModalModifierTelephone({
                       </span>
                     </Label>
                     <div className="relative">
-                      <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      {/* <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" /> */}
                       <Input
                         id="edit-imei-pc"
                         className="font-mono text-sm pl-9.5 h-10 tracking-wider"
@@ -364,7 +364,7 @@ export function ModalModifierTelephone({
                 {/* Section Spécifications Matérielles PC */}
                 <div className="border-t border-border/50 pt-5 space-y-3.5">
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    <Cpu className="h-3.5 w-3.5 text-primary" />
+                    {/* <Cpu className="h-3.5 w-3.5 text-primary" /> */}
                     <span>
                       {lang === "en" ? "Technical Specifications" : "Spécifications Techniques"}
                     </span>
@@ -376,7 +376,7 @@ export function ModalModifierTelephone({
                       {t("telephones.processeur")}
                     </Label>
                     <div className="relative">
-                      <Cpu className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      {/* <Cpu className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" /> */}
                       <Input
                         id="edit-cpu"
                         className="pl-9.5 h-10"
@@ -467,7 +467,7 @@ export function ModalModifierTelephone({
               /* Section 1 : Identifiants Smartphone & IMEI */
               <div className="space-y-3.5">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <Hash className="h-3.5 w-3.5 text-primary" />
+                  {/* <Hash className="h-3.5 w-3.5 text-primary" /> */}
                   <span>
                     {lang === "en" ? "Identification & IMEI" : "Identification & IMEI"}
                   </span>
@@ -492,12 +492,12 @@ export function ModalModifierTelephone({
                       >
                         {imei1EstValide ? (
                           <>
-                            <CheckCircle2 className="h-3 w-3" />
+                            {/* <CheckCircle2 className="h-3 w-3" /> */}
                             <span>{lang === "en" ? "Valid IMEI (Luhn)" : "IMEI conforme"}</span>
                           </>
                         ) : (
                           <>
-                            <AlertCircle className="h-3 w-3" />
+                            {/* <AlertCircle className="h-3 w-3" /> */}
                             <span>
                               {imei1Chiffres.length < 15
                                 ? `${imei1Chiffres.length}/15 chiffres`
@@ -595,7 +595,7 @@ export function ModalModifierTelephone({
             {/* Séparateur subtil */}
             <div className="border-t border-border/50 pt-5 space-y-3.5">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                {/* <Sparkles className="h-3.5 w-3.5 text-primary" /> */}
                 <span>
                   {lang === "en" ? "Condition & Appearance" : "État & Caractéristiques"}
                 </span>
@@ -609,7 +609,7 @@ export function ModalModifierTelephone({
                 <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-muted/60 border border-border/50">
                   {etatsOptions.map((opt) => {
                     const estActif = etat === opt.valeur;
-                    const Icone = opt.icone;
+                    // const Icone = opt.icone;
                     return (
                       <button
                         key={opt.valeur}
@@ -621,11 +621,11 @@ export function ModalModifierTelephone({
                             : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                         }`}
                       >
-                        <Icone
+                        {/* <Icone
                           className={`h-3.5 w-3.5 ${
                             estActif ? "text-primary" : "text-muted-foreground"
                           }`}
-                        />
+                        /> */}
                         <span className="capitalize">{opt.libelle}</span>
                       </button>
                     );
@@ -672,7 +672,7 @@ export function ModalModifierTelephone({
             {/* Séparateur subtil - Tarification */}
             <div className="border-t border-border/50 pt-5 space-y-3.5">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <Coins className="h-3.5 w-3.5 text-primary" />
+                {/* <Coins className="h-3.5 w-3.5 text-primary" /> */}
                 <span>
                   {lang === "en" ? "Commercial & Pricing" : "Tarification & Commerce"}
                 </span>
@@ -730,7 +730,6 @@ export function ModalModifierTelephone({
             {/* Séparateur subtil - Notes */}
             <div className="border-t border-border/50 pt-5 space-y-2">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <FileText className="h-3.5 w-3.5 text-primary" />
                 <span>{t("telephones.notes")}</span>
               </div>
               <Textarea
@@ -745,12 +744,7 @@ export function ModalModifierTelephone({
           </DialogCorps>
 
           {/* Pied de dialogue */}
-          <DialogFooter className="border-t border-border/50 bg-muted/30 px-6 py-4 flex items-center justify-between sm:justify-between">
-            <span className="hidden sm:inline text-xs text-muted-foreground">
-              {lang === "en"
-                ? "Changes take effect immediately."
-                : "Les données sont mises à jour en direct."}
-            </span>
+          <DialogFooter className="border-t border-border/50 bg-muted/30 px-6 py-4 flex items-center justify-end sm:justify-end">
 
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <Button type="button" variant="outline" onClick={onFermer} className="h-9 px-4">

@@ -342,6 +342,113 @@ export interface StatutAbonnementComplet {
   };
 }
 
+export interface InfoStatutAbonnement {
+  statut: StatutAbonnement | null;
+  plan: PlanAbonnement;
+  echeance: string | null;
+  jours_restants: number;
+  est_expire: boolean;
+  est_essai: boolean;
+  est_actif: boolean;
+  est_premium: boolean;
+  tarifs: {
+    standard: { mensuel: number; annuel: number };
+    premium: { mensuel: number; annuel: number };
+    devise: string;
+  };
+}
+
+export interface ModePaiementItem {
+  id: number;
+  type: "carte" | "mobile_money";
+  nom_label?: string | null;
+  est_defaut: boolean;
+  carte_titulaire?: string | null;
+  carte_derniers_chiffres?: string | null;
+  carte_marque?: "visa" | "mastercard" | null;
+  carte_expiration?: string | null;
+  operateur?: "orange_money" | "mtn_momo" | null;
+  telephone?: string | null;
+  created_at?: string;
+}
+
+export interface FacturationStatutEtPreferences {
+  abonnement: InfoStatutAbonnement;
+  mode_paiement: PreferencesModePaiement;
+  modes_paiement?: ModePaiementItem[];
+}
+
+export interface PreferencesModePaiement {
+  moyen_prefere: "orange_money" | "mtn_momo" | "carte" | null;
+  telephone_paiement: string | null;
+  carte_titulaire: string | null;
+  carte_derniers_chiffres: string | null;
+  carte_expiration: string | null;
+  carte_marque: "visa" | "mastercard" | null;
+}
+
+export interface FactureAbonnementItem {
+  id: number;
+  reference: string;
+  numero_facture: string;
+  date: string;
+  total: number;
+  devise: string;
+  statut: StatutPaiement;
+  plan: PlanAbonnement;
+  duree_mois: number;
+  moyen_paiement: string | null;
+  operateur_id: string | null;
+  recu_url: string | null;
+}
+
+export interface FactureAbonnementDetail {
+  numero_facture: string;
+  reference_transaction: string;
+  date_emission: string;
+  date_echeance: string;
+  statut: string;
+  plan: PlanAbonnement;
+  duree_mois: number;
+  montant_ht: number;
+  taux_tva: number;
+  montant_tva: number;
+  montant_ttc: number;
+  devise: string;
+  moyen_paiement: string | null;
+  operateur_id: string | null;
+  recu_url: string | null;
+  emetteur: {
+    nom: string;
+    societe: string;
+    adresse: string;
+    ville: string;
+    pays: string;
+    email: string;
+    telephone: string;
+    niu: string;
+    rccm: string;
+  };
+  client: {
+    nom: string;
+    email: string;
+    telephone: string | null;
+    entreprise: string;
+    adresse: string;
+    ville: string;
+    pays: string;
+    niu?: string | null;
+    rccm?: string | null;
+  };
+  lignes: Array<{
+    designation: string;
+    periode: string;
+    quantite: number;
+    prix_unitaire: number;
+    total: number;
+  }>;
+}
+
 export interface ConfigurationPaiementAdmin {
   cinetpay_mode: ModePaiement;
   cinetpay_site_id: string;

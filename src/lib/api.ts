@@ -258,6 +258,10 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
       throw new RequeteAnnulee();
     }
 
+    if (typeof window !== "undefined" && typeof navigator !== "undefined" && !navigator.onLine) {
+      window.dispatchEvent(new CustomEvent("telora:reseau-deconnecte"));
+    }
+
     const lang = lireLangue();
     const msg =
       lang === "en"

@@ -37,6 +37,8 @@ export type CleTraduction =
   | `deuxFacteurs.${string}`
   | `imei.${string}`
   | `selecteurBoutique.${string}`
+  | `merci.${string}`
+  | `page404.${string}`
   | `roles.${Role}`
   | `rolesDesc.${Role}`
   | `statuts.${StatutTelephone}`

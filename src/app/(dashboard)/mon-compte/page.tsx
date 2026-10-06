@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Building2, CreditCard, HelpCircle, Loader2, Store } from "lucide-react";
+import {  CreditCard, HelpCircle, Loader2, Store } from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { couleursAbonnements } from "@/lib/format";
@@ -14,6 +14,7 @@ import { BasculeLangue } from "@/components/bascule-langue";
 import { BasculeTheme } from "@/components/bascule-theme";
 import { ChangerEmail } from "@/components/changer-email";
 import { DeuxFacteurs } from "@/components/deux-facteurs";
+import { MenuPaiement } from "@/components/facturation/menu-paiement";
 import { Apparait, SqueletteMonCompte, TitrePage } from "@/components/ui-commun";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -152,75 +153,74 @@ export default function PageMonCompte() {
       />
 
       <div className="space-y-4 sm:space-y-6">
-        {abonnement?.statut && (
+        {/* Rubrique Paiement & Facturation (format liste avec modales dédiées pour le propriétaire) */}
+        {utilisateur.role === "proprietaire" ? (
           <Apparait>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">
-                  {t("monCompte.abonnement")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-muted-foreground">
-                    {t("monCompte.typeAbonnement")}
-                  </span>
-                  {abonnement.plan === "premium" || abonnement.est_premium ? (
-                    <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
-                      {t("monCompte.planPremiumBadge")}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                      {t("monCompte.planStandardBadge")}
-                    </span>
-                  )}
-                </div>
+            <div id="paiement">
+              <MenuPaiement />
+            </div>
 
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-muted-foreground">
-                    {t("commun.statut")}
-                  </span>
-                  <span
-                    className={[
-                      "rounded-full px-2.5 py-0.5 text-sm font-medium",
-                      couleursAbonnements[abonnement.statut],
-                    ].join(" ")}
-                  >
-                    {libelleAbonnement(abonnement.statut)}
-                  </span>
-                </div>
-
-                {abonnement.echeance && (
+            
+          </Apparait>
+        ) : (
+          abonnement?.statut && (
+            <Apparait>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    {t("monCompte.abonnement")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-sm text-muted-foreground">
-                      {t("admin.tableauEcheance")}
+                      {t("monCompte.typeAbonnement")}
                     </span>
-                    <span className="text-sm font-medium">
-                      {formatDateCourte(abonnement.echeance)}
+                    {abonnement.plan === "premium" || abonnement.est_premium ? (
+                      <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                        {t("monCompte.planPremiumBadge")}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                        {t("monCompte.planStandardBadge")}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm text-muted-foreground">
+                      {t("commun.statut")}
+                    </span>
+                    <span
+                      className={[
+                        "rounded-full px-2.5 py-0.5 text-sm font-medium",
+                        couleursAbonnements[abonnement.statut],
+                      ].join(" ")}
+                    >
+                      {libelleAbonnement(abonnement.statut)}
                     </span>
                   </div>
-                )}
 
-                {!abonnement.utilisable && (
-                  <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {t("monCompte.abonnementExpire")}
-                  </p>
-                )}
+                  {abonnement.echeance && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm text-muted-foreground">
+                        {t("admin.tableauEcheance")}
+                      </span>
+                      <span className="text-sm font-medium">
+                        {formatDateCourte(abonnement.echeance)}
+                      </span>
+                    </div>
+                  )}
 
-                {/* {utilisateur?.role === "proprietaire" && (
-                  <Button
-                    size="sm"
-                    className="w-full mt-2 font-semibold cursor-pointer"
-                    nativeButton={false}
-                    render={<Link href="/mon-compte/abonnement" />}
-                  >
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    {lang === "en" ? "Manage Subscription & Plans" : "Gérer mon abonnement & forfaits"}
-                  </Button>
-                )} */}
-              </CardContent>
-            </Card>
-          </Apparait>
+                  {!abonnement.utilisable && (
+                    <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                      {t("monCompte.abonnementExpire")}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </Apparait>
+          )
         )}
 
         {/* Préférences d'affichage (Langue et Thème) */}
@@ -279,7 +279,11 @@ export default function PageMonCompte() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form noValidate onSubmit={enregistrerCoordonnees} className="space-y-4">
+              <form
+                noValidate
+                onSubmit={enregistrerCoordonnees}
+                className="space-y-4"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="c-nom">{t("monCompte.nom")}</Label>
                   <Input
@@ -311,7 +315,9 @@ export default function PageMonCompte() {
                     erreur={Boolean(erreurTelephone)}
                   />
                   {erreurTelephone && (
-                    <p className="text-xs text-destructive">{erreurTelephone}</p>
+                    <p className="text-xs text-destructive">
+                      {erreurTelephone}
+                    </p>
                   )}
                 </div>
 
@@ -349,7 +355,11 @@ export default function PageMonCompte() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form noValidate onSubmit={changerMotDePasse} className="space-y-4">
+              <form
+                noValidate
+                onSubmit={changerMotDePasse}
+                className="space-y-4"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="mdp-actuel">
                     {t("monCompte.motDePasseActuel")}
@@ -363,7 +373,10 @@ export default function PageMonCompte() {
                     onChange={(e) => {
                       setAncien(e.target.value);
                       if (erreurs.mot_de_passe_actuel) {
-                        setErreurs((prev) => ({ ...prev, mot_de_passe_actuel: "" }));
+                        setErreurs((prev) => ({
+                          ...prev,
+                          mot_de_passe_actuel: "",
+                        }));
                       }
                     }}
                   />
@@ -566,11 +579,12 @@ function SectionIdentiteEntreprise({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-primary" />
+            {/* <Building2 className="h-4 w-4 text-primary" /> */}
             <span>
-              {lang === "en"
+              {/* {lang === "en"
                 ? "Enterprise Identity & Unique Logo"
-                : "Identité de l'entreprise & Logo unique"}
+                : "Identité de l'entreprise & Logo unique"} */}
+              {t("monCompte.identiteEntreprise")}
             </span>
           </CardTitle>
           <Button
@@ -580,22 +594,20 @@ function SectionIdentiteEntreprise({
             nativeButton={false}
             render={<Link href="/boutiques" />}
           >
-            {lang === "en" ? "Manage stores" : "Gérer les boutiques"}
+            {t("monCompte.gererBoutiques")}
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-xs text-muted-foreground">
-          {lang === "en"
-            ? "This legal identity and logo are shared by all your points of sale in the same country and appear on your invoices/receipts."
-            : "Ces informations légales et ce logo sont partagés par tous vos points de vente dans le même pays et figurent sur vos factures et reçus."}
+          {t("monCompte.infoPartagees")}
         </p>
 
         <form noValidate onSubmit={enregistrer} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="ent-nom">
-                {lang === "en" ? "Enterprise name" : "Nom de l'entreprise"}
+                {t("monCompte.nomEntreprise")}
                 <span className="ml-0.5 text-destructive">*</span>
               </Label>
               <Input
@@ -622,9 +634,7 @@ function SectionIdentiteEntreprise({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ent-pays">
-                {lang === "en" ? "Home country" : "Pays principal"}
-              </Label>
+              <Label htmlFor="ent-pays">{t("monCompte.paysPrincipal")}</Label>
               <SelectRecherche
                 id="ent-pays"
                 options={LISTE_PAYS.map((p) => ({
@@ -646,12 +656,8 @@ function SectionIdentiteEntreprise({
                     }
                   }
                 }}
-                placeholder={
-                  lang === "en" ? "Select country" : "Sélectionner un pays"
-                }
-                placeholderRecherche={
-                  lang === "en" ? "Search country..." : "Rechercher un pays…"
-                }
+                placeholder={t("monCompte.selectPays")}
+                placeholderRecherche={t("monCompte.recherchePays")}
               />
             </div>
           </div>
@@ -693,9 +699,7 @@ function SectionIdentiteEntreprise({
                   htmlFor="ent-afficher-niu"
                   className="text-xs font-normal text-muted-foreground cursor-pointer"
                 >
-                  {lang === "en"
-                    ? "Display NIU on invoices & receipts"
-                    : "Afficher le NIU sur les factures et reçus"}
+                  {t("monCompte.afficheNIU")}
                 </Label>
               </div>
             </div>
@@ -741,9 +745,7 @@ function SectionIdentiteEntreprise({
                   htmlFor="ent-afficher-rccm"
                   className="text-xs font-normal text-muted-foreground cursor-pointer"
                 >
-                  {lang === "en"
-                    ? "Display RCCM on invoices & receipts"
-                    : "Afficher le RCCM sur les factures et reçus"}
+                  {t("monCompte.afficheRCCM")}
                 </Label>
               </div>
             </div>
