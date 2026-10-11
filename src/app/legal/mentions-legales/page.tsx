@@ -26,12 +26,12 @@ export default function PageMentionsLegales() {
             ? "The Telora software application is developed and operated as an inventory and sales tracking solution for telephony and electronics retail professionals."
             : "L'application Telora est développée et exploitée en tant que solution logicielle de gestion d'inventaire et de vente destinée aux professionnels du commerce de téléphones et équipements électroniques."}
         </p>
-        <div className="rounded-lg border bg-muted/30 p-4 text-xs sm:text-sm space-y-1.5">
+        {/* <div className="rounded-lg border bg-muted/30 p-4 text-xs sm:text-sm space-y-1.5">
           <p><span className="font-semibold text-foreground">Éditeur :</span> Impact Tech Solutions</p>
           <p><span className="font-semibold text-foreground">Activité :</span> Conception de logiciels et services numériques</p>
           <p><span className="font-semibold text-foreground">Contact :</span> contact@gestionstock.local</p>
           <p><span className="font-semibold text-foreground">Directeur de publication :</span> Responsable des opérations</p>
-        </div>
+        </div> */}
       </section>
 
       {/* Section 2 */}

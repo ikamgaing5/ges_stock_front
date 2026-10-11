@@ -28,7 +28,9 @@ export function ModeleFacture({
 
   const conteneurRef = useRef<HTMLDivElement>(null);
   const [echelle, setEchelle] = useState<number>(1);
-  const [modeZoomInterne, setModeZoomInterne] = useState<"auto" | "100%">("auto");
+  const [modeZoomInterne, setModeZoomInterne] = useState<"auto" | "100%">(
+    "auto",
+  );
 
   const modeZoom = propZoomMode ?? modeZoomInterne;
 
@@ -41,7 +43,10 @@ export function ModeleFacture({
       const largeurConteneur = el.clientWidth;
       if (largeurConteneur > 0 && largeurConteneur < DOC_WIDTH) {
         // Laisser 8px de marge visuelle sur mobile
-        const ratio = Math.min(1, Math.max(0.25, (largeurConteneur - 8) / DOC_WIDTH));
+        const ratio = Math.min(
+          1,
+          Math.max(0.25, (largeurConteneur - 8) / DOC_WIDTH),
+        );
         setEchelle(ratio);
       } else {
         setEchelle(1);
@@ -73,7 +78,10 @@ export function ModeleFacture({
   };
 
   const mouvement: Mouvement =
-    propMouvement && typeof propMouvement === "object" && "data" in propMouvement && propMouvement.data
+    propMouvement &&
+    typeof propMouvement === "object" &&
+    "data" in propMouvement &&
+    propMouvement.data
       ? (propMouvement.data as Mouvement)
       : (propMouvement as Mouvement);
 
@@ -83,7 +91,9 @@ export function ModeleFacture({
   const devise = boutique?.devise ?? "XAF";
 
   // Date et heure formatées avec gestion des dates invalides
-  const dateObj = mouvement?.created_at ? new Date(mouvement.created_at) : new Date();
+  const dateObj = mouvement?.created_at
+    ? new Date(mouvement.created_at)
+    : new Date();
   const dateValide = !isNaN(dateObj.getTime());
   const dateFormatee = dateValide
     ? dateObj.toLocaleDateString(lang === "en" ? "en-US" : "fr-FR", {
@@ -98,7 +108,10 @@ export function ModeleFacture({
         hour: "2-digit",
         minute: "2-digit",
       })
-    : new Date().toLocaleTimeString(lang === "en" ? "en-US" : "fr-FR", { hour: "2-digit", minute: "2-digit" });
+    : new Date().toLocaleTimeString(lang === "en" ? "en-US" : "fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 
   // Libellé désignation
   const marqueNom =
@@ -109,7 +122,9 @@ export function ModeleFacture({
   const modeleNom = modele?.nom ?? (telephone as any)?.modele ?? "";
   const designationBrute =
     modele?.libelle ||
-    (marqueNom && modeleNom ? `${marqueNom} ${modeleNom}`.trim() : modeleNom || marqueNom);
+    (marqueNom && modeleNom
+      ? `${marqueNom} ${modeleNom}`.trim()
+      : modeleNom || marqueNom);
 
   const nomArticle = [
     designationBrute || (lang === "en" ? "Mobile Phone" : "Téléphone portable"),
@@ -164,8 +179,12 @@ export function ModeleFacture({
       <div
         className="facture-scale-wrapper relative flex justify-center print:block print:!w-full print:!h-auto print:!overflow-visible"
         style={{
-          width: doitEtreMisAEchelle ? `${Math.ceil(DOC_WIDTH * echelle)}px` : `${DOC_WIDTH}px`,
-          height: doitEtreMisAEchelle ? `${Math.ceil(DOC_HEIGHT * echelle)}px` : `${DOC_HEIGHT}px`,
+          width: doitEtreMisAEchelle
+            ? `${Math.ceil(DOC_WIDTH * echelle)}px`
+            : `${DOC_WIDTH}px`,
+          height: doitEtreMisAEchelle
+            ? `${Math.ceil(DOC_HEIGHT * echelle)}px`
+            : `${DOC_HEIGHT}px`,
           maxWidth: "100%",
           overflow: modeZoom === "100%" ? "auto" : "hidden",
         }}
@@ -191,7 +210,8 @@ export function ModeleFacture({
               height: `${DOC_HEIGHT}px`,
               maxHeight: `${DOC_HEIGHT}px`,
               padding: "36px 40px 30px 40px",
-              fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+              fontFamily:
+                "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
               color: "#111827",
               backgroundColor: "#ffffff",
               boxSizing: "border-box",
@@ -220,7 +240,7 @@ export function ModeleFacture({
                 style={{ zIndex: 0 }}
               >
                 <span className="text-7xl font-extrabold uppercase tracking-widest text-neutral-900 opacity-[0.03]">
-                  {boutique?.nom || "TELORA"}
+                  {boutique?.nom || "Telora"}
                 </span>
               </div>
             )}
@@ -250,27 +270,41 @@ export function ModeleFacture({
                       <p className="text-sm font-bold text-neutral-900 leading-tight mb-0.5">
                         {boutique?.nom ?? "—"}
                       </p>
-                      {boutique?.niu && (boutique.afficher_niu_facture ?? true) && (
-                        <p>
-                          <span className="font-semibold text-neutral-800">{t("factures.niu")} :</span>{" "}
-                          <span className="font-mono">{boutique.niu}</span>
-                        </p>
-                      )}
-                      {boutique?.registre_commerce && (boutique.afficher_rccm_facture ?? true) && (
-                        <p>
-                          <span className="font-semibold text-neutral-800">{t("factures.rccm")} :</span>{" "}
-                          <span className="font-mono">{boutique.registre_commerce}</span>
-                        </p>
-                      )}
+                      {boutique?.niu &&
+                        (boutique.afficher_niu_facture ?? true) && (
+                          <p>
+                            <span className="font-semibold text-neutral-800">
+                              {t("factures.niu")} :
+                            </span>{" "}
+                            <span className="font-mono">{boutique.niu}</span>
+                          </p>
+                        )}
+                      {boutique?.registre_commerce &&
+                        (boutique.afficher_rccm_facture ?? true) && (
+                          <p>
+                            <span className="font-semibold text-neutral-800">
+                              {t("factures.rccm")} :
+                            </span>{" "}
+                            <span className="font-mono">
+                              {boutique.registre_commerce}
+                            </span>
+                          </p>
+                        )}
                       {(boutique?.adresse || boutique?.ville) && (
                         <p className="text-neutral-600">
-                          {[boutique.adresse, boutique.ville].filter(Boolean).join(", ")}
+                          {[boutique.adresse, boutique.ville]
+                            .filter(Boolean)
+                            .join(", ")}
                         </p>
                       )}
                       {boutique?.telephone && (
                         <p className="text-neutral-600">
-                          <span className="font-semibold text-neutral-700">{t("factures.telephone")} :</span>{" "}
-                          <span className="font-medium text-neutral-800">{boutique.telephone}</span>
+                          <span className="font-semibold text-neutral-700">
+                            {t("factures.telephone")} :
+                          </span>{" "}
+                          <span className="font-medium text-neutral-800">
+                            {boutique.telephone}
+                          </span>
                         </p>
                       )}
                     </div>
@@ -301,18 +335,28 @@ export function ModeleFacture({
                       </h3>
                       <dl className="space-y-1 text-neutral-700">
                         <div className="flex justify-between py-0.5">
-                          <dt className="text-neutral-500">{t("factures.commandePasseLe")}</dt>
+                          <dt className="text-neutral-500">
+                            {t("factures.commandePasseLe")}
+                          </dt>
                           <dd className="font-medium capitalize text-right text-neutral-900">
                             {dateFormatee}
                           </dd>
                         </div>
                         <div className="flex justify-between py-0.5">
-                          <dt className="text-neutral-500">{t("factures.dateHeure")}</dt>
-                          <dd className="font-medium text-right text-neutral-900">{heureFormatee}</dd>
+                          <dt className="text-neutral-500">
+                            {t("factures.dateHeure")}
+                          </dt>
+                          <dd className="font-medium text-right text-neutral-900">
+                            {heureFormatee}
+                          </dd>
                         </div>
                         <div className="flex justify-between py-0.5">
-                          <dt className="text-neutral-500">{t("factures.moyenPaiement")}</dt>
-                          <dd className="font-medium text-right text-neutral-900">{libellePaiement}</dd>
+                          <dt className="text-neutral-500">
+                            {t("factures.moyenPaiement")}
+                          </dt>
+                          <dd className="font-medium text-right text-neutral-900">
+                            {libellePaiement}
+                          </dd>
                         </div>
                       </dl>
                     </div>
@@ -324,16 +368,24 @@ export function ModeleFacture({
                       </h3>
                       <dl className="space-y-1 text-neutral-700">
                         <div className="flex justify-between py-0.5">
-                          <dt className="text-neutral-500">{t("factures.client")}</dt>
+                          <dt className="text-neutral-500">
+                            {t("factures.client")}
+                          </dt>
                           <dd className="font-bold text-right text-neutral-900">
-                            {mouvement.client_nom || telephone?.client_nom || "—"}
+                            {mouvement.client_nom ||
+                              telephone?.client_nom ||
+                              "—"}
                           </dd>
                         </div>
-                        {(mouvement.client_telephone || telephone?.client_telephone) && (
+                        {(mouvement.client_telephone ||
+                          telephone?.client_telephone) && (
                           <div className="flex justify-between py-0.5">
-                            <dt className="text-neutral-500">{t("factures.telephoneClient")}</dt>
+                            <dt className="text-neutral-500">
+                              {t("factures.telephoneClient")}
+                            </dt>
                             <dd className="font-medium text-right text-neutral-900">
-                              {mouvement.client_telephone || telephone?.client_telephone}
+                              {mouvement.client_telephone ||
+                                telephone?.client_telephone}
                             </dd>
                           </div>
                         )}
@@ -347,17 +399,27 @@ export function ModeleFacture({
                   <table className="w-full border-collapse text-xs">
                     <thead>
                       <tr className="border-t border-b border-neutral-800 text-left text-[11px] font-bold uppercase text-neutral-800">
-                        <th className="py-2 pr-4">{t("factures.designation")}</th>
-                        <th className="py-2 px-3 text-right">{t("factures.prixUnitaire")}</th>
-                        <th className="py-2 px-3 text-center w-14">{t("factures.quantite")}</th>
-                        <th className="py-2 pl-3 text-right">{t("factures.prixTotal")}</th>
+                        <th className="py-2 pr-4">
+                          {t("factures.designation")}
+                        </th>
+                        <th className="py-2 px-3 text-right">
+                          {t("factures.prixUnitaire")}
+                        </th>
+                        <th className="py-2 px-3 text-center w-14">
+                          {t("factures.quantite")}
+                        </th>
+                        <th className="py-2 pl-3 text-right">
+                          {t("factures.prixTotal")}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr className="border-b border-neutral-200">
                         <td className="py-3 pr-4 align-middle">
                           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-                            <span className="font-bold text-neutral-900 text-sm">{nomArticle}</span>
+                            <span className="font-bold text-neutral-900 text-sm">
+                              {nomArticle}
+                            </span>
 
                             {/* Bloc Identifiants & Spécifications */}
                             <div className="inline-flex flex-wrap items-baseline gap-x-2.5 text-[11px] text-neutral-700 font-mono">
@@ -434,7 +496,9 @@ export function ModeleFacture({
                     </div>
                     <div className="flex justify-between py-1 border-t-2 border-neutral-900 text-sm font-bold text-neutral-900">
                       <span>{t("factures.total")} :</span>
-                      <span className="font-mono text-base">{formatMontant(prix, devise, devise)}</span>
+                      <span className="font-mono text-base">
+                        {formatMontant(prix, devise, devise)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -443,7 +507,9 @@ export function ModeleFacture({
               {/* Pied de page : Notes & Conditions (strictement 1 page) */}
               <div className="mt-auto pt-4 border-t border-neutral-200 text-[11px] text-neutral-700 space-y-2.5 break-inside-avoid">
                 <div>
-                  <h4 className="font-bold text-neutral-900 mb-0.5">{t("factures.notesTitre")}</h4>
+                  <h4 className="font-bold text-neutral-900 mb-0.5">
+                    {t("factures.notesTitre")}
+                  </h4>
                   <ul className="space-y-0.5 list-none pl-0">
                     <li className="font-semibold text-neutral-900">
                       • {t("factures.notesGarantie")}
@@ -458,9 +524,12 @@ export function ModeleFacture({
                 </div>
 
                 <div>
-                  <h4 className="font-bold text-neutral-900 mb-0.5">{t("factures.conditionsTitre")}</h4>
+                  <h4 className="font-bold text-neutral-900 mb-0.5">
+                    {t("factures.conditionsTitre")}
+                  </h4>
                   <p className="text-neutral-600 leading-snug">
-                    {t("factures.conditionsTexte")} {t("factures.conditionsTest")}
+                    {t("factures.conditionsTexte")}{" "}
+                    {t("factures.conditionsTest")}
                   </p>
                 </div>
               </div>

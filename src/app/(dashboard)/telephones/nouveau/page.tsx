@@ -50,7 +50,7 @@ import type {
 
 export default function PageEntreeStock() {
   const { boutiques, boutiqueActive, utilisateur, deviseBoutique } = useAuth();
-  const { t, libelleEtat, lang } = useI18n();
+  const { t, libelleEtat } = useI18n();
 
   const estPremium = Boolean(
     utilisateur?.est_premium || utilisateur?.abonnement?.plan === "premium",
@@ -290,9 +290,7 @@ export default function PageEntreeStock() {
       await appliquerSelection(rep.data);
       setDetection((prev) => (prev ? { ...prev, deja_en_catalogue: true } : null));
       toast.success(
-        lang === "en"
-          ? `Model "${detection.modele}" created and selected!`
-          : `Modèle « ${detection.modele} » créé et sélectionné !`,
+        t("telephones.modeleCreeEtSelectionne", { modele: detection.modele ?? "" })
       );
     } catch (e) {
       toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
@@ -343,15 +341,17 @@ export default function PageEntreeStock() {
           if (res.deja_en_catalogue && res.selection) {
             await appliquerSelection(res.selection);
             toast.success(
-              lang === "en"
-                ? `Recognized & selected: ${res.marque} ${res.modele}`
-                : `Appareil reconnu et sélectionné : ${res.marque} ${res.modele}`,
+              t("telephones.appareilReconnuEtSelectionne", {
+                marque: res.marque ?? "",
+                modele: res.modele ?? "",
+              })
             );
           } else {
             toast.info(
-              lang === "en"
-                ? `Recognized: ${res.marque} ${res.modele}. Click "Add to catalog" to select it.`
-                : `Appareil détecté : ${res.marque} ${res.modele}. Cliquez sur « Ajouter au catalogue » pour le sélectionner.`,
+              t("telephones.appareilDetecteInfo", {
+                marque: res.marque ?? "",
+                modele: res.modele ?? "",
+              })
             );
           }
         } else {
@@ -367,7 +367,7 @@ export default function PageEntreeStock() {
         setRechercheEnCours(false);
       }
     },
-    [estPremium, lang, appliquerSelection],
+    [estPremium, appliquerSelection],
   );
 
   useEffect(() => {
@@ -390,33 +390,21 @@ export default function PageEntreeStock() {
   const enregistrer = useCallback(
     async (identifiantScanne?: string) => {
       if (!commun.modele_id) {
-        toast.error(
-          lang === "en"
-            ? "Please select a model first."
-            : "Choisissez d'abord le modèle.",
-        );
+        toast.error(t("telephones.choisirModeleDabord"));
         return;
       }
 
       const estPc = typeAppareil === "ordinateur_portable";
 
       if (!estPc && !stockageChoisi) {
-        toast.error(
-          lang === "en"
-            ? "Please select storage capacity first."
-            : "Choisissez d'abord le stockage.",
-        );
+        toast.error(t("telephones.choisirStockageDabord"));
         return;
       }
 
       const sNum = identifiantScanne || (estPc ? numeroSerie : imei);
 
       if (estPc && !sNum.trim()) {
-        toast.error(
-          lang === "en"
-            ? "Please enter or scan the serial number (S/N)."
-            : "Veuillez renseigner ou scanner le numéro de série (S/N).",
-        );
+        toast.error(t("telephones.renseignerNumeroSerieSn"));
         return;
       }
 
@@ -473,7 +461,7 @@ export default function PageEntreeStock() {
         setEnvoiEnCours(false);
       }
     },
-    [commun, typeAppareil, stockageChoisi, imei, numeroSerie, processeur, ram, disqueCapacite, disqueType, clavier, tailleEcran, t, lang],
+    [commun, typeAppareil, stockageChoisi, imei, numeroSerie, processeur, ram, disqueCapacite, disqueType, clavier, tailleEcran, t],
   );
 
   async function gererScanImei(valeurScanne: string) {
@@ -483,11 +471,7 @@ export default function PageEntreeStock() {
     } else if (estPremium) {
       await lancerRecherche(valeurScanne);
     } else {
-      toast.error(
-        lang === "en"
-          ? "Please select a model first."
-          : "Choisissez d'abord le modèle.",
-      );
+      toast.error(t("telephones.choisirModeleDabord"));
     }
   }
 
@@ -511,19 +495,15 @@ export default function PageEntreeStock() {
         render={<Link href="/telephones" />}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
-        {lang === "en" ? "Back to inventory" : "Retour au parc"}
+        {t("telephones.retourAuParc")}
       </Button>
 
       <TitrePage
         titre={t("telephones.entreeStock")}
         description={
           typeAppareil === "ordinateur_portable"
-            ? (lang === "en"
-                ? "Scan or enter Serial Number (S/N). Other hardware specs stay populated for the next laptop."
-                : "Scannez ou saisissez le N° de série (S/N). Les spécifications restent remplies pour le suivant.")
-            : (lang === "en"
-                ? "Scan IMEI for each unit. Other fields stay populated for the next phone."
-                : "Scannez l'IMEI de chaque appareil. Les autres champs restent remplis pour le suivant.")
+            ? t("telephones.descriptionEntreeOrdinateur")
+            : t("telephones.descriptionEntreeTelephone")
         }
       />
 
@@ -582,7 +562,7 @@ export default function PageEntreeStock() {
                 <span>
                   {typeAppareil === "ordinateur_portable"
                     ? t("telephones.typeOrdinateur")
-                    : lang === "en" ? "The Phone" : "Le téléphone"}
+                    : t("telephones.leTelephone")}
                 </span>
               </CardTitle>
             </CardHeader>
@@ -616,9 +596,7 @@ export default function PageEntreeStock() {
                     <p className="text-xs text-destructive">{erreurs.numero_serie}</p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    {lang === "en"
-                      ? "Scan barcode or type serial number. Press Enter to add immediately."
-                      : "Scannez le code-barres avec une douchette ou tapez le numéro de série. Appuyez sur Entrée pour valider."}
+                    {t("telephones.scannerCodeBarresOuTaperSn")}
                   </p>
                 </div>
               ) : (
@@ -648,7 +626,7 @@ export default function PageEntreeStock() {
                           ) : (
                             <Search className="mr-1.5 h-3.5 w-3.5" />
                           )}
-                          {lang === "en" ? "Identify device" : "Identifier l'appareil"}
+                          {t("telephones.identifierAppareil")}
                         </Button>
                       </div>
                     )}
@@ -658,27 +636,21 @@ export default function PageEntreeStock() {
                     <div className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-muted/40 px-3.5 py-2.5 text-xs text-muted-foreground">
                       <span className="font-semibold text-foreground">Premium :</span>
                       <span>
-                        {lang === "en"
-                          ? "Automatic model detection by IMEI is reserved for Premium members."
-                          : "L'identification automatique du modèle par IMEI est réservée aux abonnés Premium."}
+                        {t("telephones.premiumDetectionNotice")}
                       </span>
                     </div>
                   ) : rechercheEnCours ? (
                     <div className="flex items-center gap-2 rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
                       <span>
-                        {lang === "en"
-                          ? "Identifying device from IMEI..."
-                          : "Identification du modèle en cours..."}
+                        {t("telephones.identificationEnCours")}
                       </span>
                     </div>
                   ) : nonTrouve ? (
                     <div className="flex items-center gap-2 rounded-lg border border-muted bg-muted/40 px-3.5 py-2.5 text-xs text-muted-foreground">
                       <span className="text-base">ℹ️</span>
                       <span>
-                        {lang === "en"
-                          ? "Device not recognized in TAC database for this IMEI. Please select brand and model manually below."
-                          : "Modèle non répertorié dans la base TAC pour cet IMEI. Vous pouvez sélectionner la marque et le modèle manuellement ci-dessous."}
+                        {t("telephones.nonTrouveTacNotice")}
                       </span>
                     </div>
                   ) : detection && !detection.deja_en_catalogue ? (
@@ -686,12 +658,10 @@ export default function PageEntreeStock() {
                       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <div className="font-medium text-foreground">
-                            {lang === "en" ? "Identified device:" : "Appareil identifié :"} {nomCompletDetecte}
+                            {t("telephones.appareilIdentifie")} {nomCompletDetecte}
                           </div>
                           <p className="mt-0.5 text-xs text-muted-foreground">
-                            {lang === "en"
-                              ? "This model is not yet in your catalog."
-                              : "Ce modèle n'est pas encore enregistré dans votre catalogue."}
+                            {t("telephones.modeleNonPresentCatalogue")}
                             {detection.stockage_defaut ? ` (${detection.stockage_defaut})` : ""}
                           </p>
                         </div>
@@ -705,9 +675,7 @@ export default function PageEntreeStock() {
                           {importationEnCours && (
                             <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                           )}
-                          {lang === "en"
-                            ? "Add to catalog"
-                            : "Ajouter au catalogue"}
+                          {t("telephones.ajouterAuCatalogue")}
                         </Button>
                       </div>
                     </div>
@@ -715,9 +683,7 @@ export default function PageEntreeStock() {
                     <div className="flex items-center gap-2 rounded-lg bg-muted/50 border border-border/60 px-3 py-2 text-xs font-medium text-foreground">
                       <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                       <span>
-                        {lang === "en"
-                          ? `Selected model: ${nomCompletDetecte}`
-                          : `Modèle sélectionné : ${nomCompletDetecte}`}
+                        {t("telephones.modeleSelectionne", { nom: nomCompletDetecte })}
                       </span>
                     </div>
                   ) : null}
@@ -739,17 +705,9 @@ export default function PageEntreeStock() {
                     onChange={(v) => choisirMarque(v)}
                     disabled={chargementMarques}
                     chargement={chargementMarques}
-                    texteChargement={
-                      lang === "en"
-                        ? "Loading brands..."
-                        : "Chargement des marques…"
-                    }
-                    placeholder={
-                      lang === "en" ? "Choose brand" : "Choisir la marque"
-                    }
-                    placeholderRecherche={
-                      lang === "en" ? "Search brand..." : "Rechercher une marque…"
-                    }
+                    texteChargement={t("telephones.chargementMarques")}
+                    placeholder={t("telephones.choisirMarque")}
+                    placeholderRecherche={t("telephones.rechercherMarquePlaceholder")}
                   />
                 </div>
 
@@ -767,23 +725,13 @@ export default function PageEntreeStock() {
                     onChange={(v) => choisirGamme(v)}
                     disabled={!marqueChoisie || chargementGammes}
                     chargement={chargementGammes}
-                    texteChargement={
-                      lang === "en"
-                        ? "Loading ranges for this brand..."
-                        : "Chargement des gammes de la marque…"
-                    }
+                    texteChargement={t("telephones.chargementGammes")}
                     placeholder={
                       marqueChoisie
-                        ? lang === "en"
-                          ? "Choose range"
-                          : "Choisir la gamme"
-                        : lang === "en"
-                          ? "Choose brand first"
-                          : "Choisissez d'abord la marque"
+                        ? t("telephones.choisirGamme")
+                        : t("telephones.choisirMarqueDabord")
                     }
-                    placeholderRecherche={
-                      lang === "en" ? "Search range..." : "Rechercher une gamme…"
-                    }
+                    placeholderRecherche={t("telephones.rechercherGammePlaceholder")}
                   />
                 </div>
               </div>
@@ -803,23 +751,13 @@ export default function PageEntreeStock() {
                   onChange={(v) => choisirModeleAvecStockage(v)}
                   disabled={!gammeChoisie || chargementModeles}
                   chargement={chargementModeles}
-                  texteChargement={
-                    lang === "en"
-                      ? "Loading models for this range..."
-                      : "Chargement des modèles de la gamme…"
-                  }
+                  texteChargement={t("telephones.chargementModelesGamme")}
                   placeholder={
                     gammeChoisie
-                      ? lang === "en"
-                        ? "Choose model"
-                        : "Choisir le modèle"
-                      : lang === "en"
-                        ? "Choose range first"
-                        : "Choisissez d'abord la gamme"
+                      ? t("telephones.choisirModele")
+                      : t("telephones.choisirGammeDabord")
                   }
-                  placeholderRecherche={
-                    lang === "en" ? "Search model..." : "Rechercher un modèle…"
-                  }
+                  placeholderRecherche={t("telephones.rechercherModelePlaceholder")}
                 />
               </div>
 
@@ -839,22 +777,14 @@ export default function PageEntreeStock() {
                     disabled={!commun.modele_id}
                     placeholder={
                       commun.modele_id
-                        ? lang === "en"
-                          ? "Choose storage"
-                          : "Choisir le stockage"
-                        : lang === "en"
-                          ? "Choose model first"
-                          : "Choisissez d'abord le modèle"
+                        ? t("telephones.choisirStockage")
+                        : t("telephones.choisirModeleDabord")
                     }
-                    placeholderRecherche={
-                      lang === "en" ? "Search storage..." : "Rechercher un stockage…"
-                    }
+                    placeholderRecherche={t("telephones.rechercherStockagePlaceholder")}
                   />
                   {stockagesDisponibles.length === 0 && commun.modele_id && (
                     <p className="text-xs text-muted-foreground">
-                      {lang === "en"
-                        ? "No storage capacity configured for this model. Add one in the catalog."
-                        : "Aucun stockage configuré pour ce modèle. Ajoutez-en un depuis le catalogue."}
+                      {t("telephones.aucunStockageConfigure")}
                     </p>
                   )}
                 </div>
@@ -1055,14 +985,8 @@ export default function PageEntreeStock() {
                     valeur={commun.boutique_id}
                     onChange={(v) => modifier("boutique_id", v)}
                     erreur={Boolean(erreurs.boutique_id)}
-                    placeholder={
-                      lang === "en"
-                        ? "Where is this unit entering?"
-                        : "Où entre cet appareil ?"
-                    }
-                    placeholderRecherche={
-                      lang === "en" ? "Search store..." : "Rechercher une boutique…"
-                    }
+                    placeholder={t("telephones.ouEntreAppareilPlaceholder")}
+                    placeholderRecherche={t("telephones.rechercherBoutiquePlaceholder")}
                   />
                   {erreurs.boutique_id && (
                     <p className="text-xs text-destructive">
@@ -1080,9 +1004,7 @@ export default function PageEntreeStock() {
                     className="h-10"
                     value={commun.couleur}
                     onChange={(e) => modifier("couleur", e.target.value)}
-                    placeholder={
-                      lang === "en" ? "Black, Blue..." : "Noir, Bleu…"
-                    }
+                    placeholder={t("telephones.couleurRapidePlaceholder")}
                   />
                 </div>
 
@@ -1156,11 +1078,7 @@ export default function PageEntreeStock() {
                   className="h-10"
                   value={commun.fournisseur}
                   onChange={(e) => modifier("fournisseur", e.target.value)}
-                  placeholder={
-                    lang === "en"
-                      ? "Dubai Import, local supplier..."
-                      : "Import Dubaï, grossiste local…"
-                  }
+                  placeholder={t("telephones.fournisseurPlaceholder")}
                 />
               </div>
 
@@ -1187,12 +1105,10 @@ export default function PageEntreeStock() {
                 ) : (
                   <PackagePlus className="mr-2 h-4 w-4" />
                 )}
-                {lang === "en" ? "Add to inventory" : "Ajouter au stock"}
+                {t("telephones.ajouterAuStock")}
               </Button>
               <p className="text-center text-xs text-muted-foreground">
-                {lang === "en"
-                  ? "With a barcode scanner, saving is automatic upon scan."
-                  : "Avec une douchette, l'enregistrement se fait tout seul au scan."}
+                {t("telephones.scanDouchetteAutomatique")}
               </p>
             </CardContent>
           </Card>
@@ -1203,9 +1119,7 @@ export default function PageEntreeStock() {
           <Card className="h-full">
             <CardHeader>
               <CardTitle className="text-base">
-                {lang === "en"
-                  ? "Registered in this session"
-                  : "Enregistrés dans cette session"}
+                {t("telephones.enregistresDansCetteSession")}
                 {ajoutes.length > 0 && (
                   <span className="chiffres ml-2 text-muted-foreground">
                     {ajoutes.length}
@@ -1216,9 +1130,7 @@ export default function PageEntreeStock() {
             <CardContent>
               {ajoutes.length === 0 ? (
                 <p className="py-10 text-center text-sm text-muted-foreground">
-                  {lang === "en"
-                    ? "Added devices will appear here progressively."
-                    : "Les appareils ajoutés apparaîtront ici au fur et à mesure."}
+                  {t("telephones.appareilsAjoutesApparaitrontIci")}
                 </p>
               ) : (
                 <ul className="divide-y">

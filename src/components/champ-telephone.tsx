@@ -35,7 +35,7 @@ export function ChampTelephone({
   placeholder,
   codePaysParDefaut = "CM",
 }: ChampTelephoneProps) {
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
 
   // Décomposition de la valeur courante en (pays, numéroLocal)
   const [paysActif, setPaysActif] = useState<Pays>(() => {
@@ -173,11 +173,7 @@ export function ChampTelephone({
                     type="text"
                     value={recherche}
                     onChange={(e) => setRecherche(e.target.value)}
-                    placeholder={
-                      lang === "en"
-                        ? "Search country or dial code…"
-                        : "Rechercher un pays ou indicatif…"
-                    }
+                    placeholder={t("commun.rechercherPaysIndicatif")}
                     className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md bg-background border border-input focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
@@ -187,7 +183,7 @@ export function ChampTelephone({
               <div className="overflow-y-auto max-h-60 p-1 divide-y divide-border/20">
                 {paysFiltres.length === 0 ? (
                   <div className="py-6 text-center text-xs text-muted-foreground">
-                    {lang === "en" ? "No country found" : "Aucun pays trouvé"}
+                    {t("commun.aucunPaysTrouve")}
                   </div>
                 ) : (
                   paysFiltres.map((p) => {

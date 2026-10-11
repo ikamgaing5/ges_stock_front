@@ -21,6 +21,20 @@
 import { ThemeProvider as FournisseurNextThemes } from "next-themes";
 import type { ReactNode } from "react";
 
+// Filtre le faux positif React 19 / Next.js 16 déclenché par le script d'initialisation interne de next-themes
+if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+  const consoleErrorOriginal = console.error;
+  console.error = (...args: unknown[]) => {
+    if (
+      typeof args[0] === "string" &&
+      args[0].includes("Encountered a script tag while rendering React component")
+    ) {
+      return;
+    }
+    consoleErrorOriginal.apply(console, args);
+  };
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   return (
     <FournisseurNextThemes

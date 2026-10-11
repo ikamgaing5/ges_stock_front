@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
@@ -16,13 +15,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IconeTelora } from "@/components/ui/logo-telora";
+import { useAntiBot } from "@/components/securite/champ-anti-bot";
 
 /** Page de connexion (/connexion). */
 export default function PageConnexion() {
   const { utilisateur, chargement, connexion, connexionDeuxFacteurs } =
     useAuth();
   const { lang, t } = useI18n();
-  const router = useRouter();
+  const { antiBotData, ChampAntiBot } = useAntiBot();
 
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
@@ -32,6 +32,7 @@ export default function PageConnexion() {
     motDePasse?: string;
   }>({});
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   // Rate limiting dynamique avec décompte en direct sur la vue
   const rateLimitLogin = useRateLimit({
@@ -57,6 +58,7 @@ export default function PageConnexion() {
           ? new URLSearchParams(window.location.search)
           : null;
       const retour = params?.get("retour");
+      let cible = "/";
 
       if (
         retour &&
@@ -67,20 +69,24 @@ export default function PageConnexion() {
         !retour.startsWith("/merci")
       ) {
         if (utilisateur.role === "admin" && !retour.startsWith("/admin")) {
-          router.replace("/admin");
+          cible = "/admin";
         } else if (
           utilisateur.role !== "admin" &&
           retour.startsWith("/admin")
         ) {
-          router.replace("/");
+          cible = "/";
         } else {
-          router.replace(retour);
+          cible = retour;
         }
       } else {
-        router.replace(utilisateur.role === "admin" ? "/admin" : "/");
+        cible = utilisateur.role === "admin" ? "/admin" : "/";
+      }
+
+      if (typeof window !== "undefined") {
+        window.location.replace(cible);
       }
     }
-  }, [chargement, utilisateur, router]);
+  }, [chargement, utilisateur]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -98,6 +104,12 @@ export default function PageConnexion() {
   useEffect(() => {
     document.title = `${jetonDefi ? t("auth.titre2faOnglet") : t("auth.titreConnexionOnglet")} | Telora`;
   }, [lang, jetonDefi, t]);
+
+  useEffect(() => {
+    setIsDesktop(
+      typeof window !== "undefined" && Boolean(window.teloraDesktop?.isDesktop),
+    );
+  }, []);
 
   /** Traduit dynamiquement les messages d'erreur selon la langue sélectionnée. */
   function formaterErreur(err: string | null): string | null {
@@ -175,7 +187,7 @@ export default function PageConnexion() {
     setEnvoiEnCours(true);
 
     try {
-      const resultat = await connexion(email, motDePasse);
+      const resultat = await connexion(email, motDePasse, antiBotData);
 
       // Le mot de passe est bon, mais il ne suffit pas : on passe à
       // l'écran du code.
@@ -231,10 +243,12 @@ export default function PageConnexion() {
   return (
     <div className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-muted/40 p-4">
       {/* Sélecteur de langue et de thème avant même de se connecter */}
-      <div className="absolute top-4 right-4 flex items-center gap-1">
-        <BasculeLangue />
-        <BasculeTheme />
-      </div>
+      {!isDesktop && (
+        <div className="absolute top-4 right-4 flex items-center gap-1">
+          <BasculeLangue />
+          <BasculeTheme />
+        </div>
+      )}
 
       <div className="flex-1 flex items-center justify-center w-full py-8">
         <div className="anim-apparait w-full max-w-sm">
@@ -348,6 +362,7 @@ export default function PageConnexion() {
               onSubmit={envoyer}
               className="space-y-4 rounded-xl border bg-card p-6 shadow-sm"
             >
+              <ChampAntiBot />
               <div className="space-y-2">
                 <Label htmlFor="email">{t("auth.email")}</Label>
                 <Input
@@ -359,13 +374,18 @@ export default function PageConnexion() {
                   onChange={(e) => {
                     setEmail(e.target.value);
                     if (erreursChamps.email) {
-                      setErreursChamps((prev) => ({ ...prev, email: undefined }));
+                      setErreursChamps((prev) => ({
+                        ...prev,
+                        email: undefined,
+                      }));
                     }
                   }}
                   placeholder={t("auth.emailPlaceholder")}
                 />
                 {erreursChamps.email && (
-                  <p className="text-xs text-destructive">{erreursChamps.email}</p>
+                  <p className="text-xs text-destructive">
+                    {erreursChamps.email}
+                  </p>
                 )}
               </div>
 
@@ -388,12 +408,17 @@ export default function PageConnexion() {
                   onChange={(e) => {
                     setMotDePasse(e.target.value);
                     if (erreursChamps.motDePasse) {
-                      setErreursChamps((prev) => ({ ...prev, motDePasse: undefined }));
+                      setErreursChamps((prev) => ({
+                        ...prev,
+                        motDePasse: undefined,
+                      }));
                     }
                   }}
                 />
                 {erreursChamps.motDePasse && (
-                  <p className="text-xs text-destructive">{erreursChamps.motDePasse}</p>
+                  <p className="text-xs text-destructive">
+                    {erreursChamps.motDePasse}
+                  </p>
                 )}
               </div>
 
@@ -424,7 +449,9 @@ export default function PageConnexion() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 {rateLimitLogin.estBloque
-                  ? t("auth.reessayerDans", { secondes: rateLimitLogin.secondes })
+                  ? t("auth.reessayerDans", {
+                      secondes: rateLimitLogin.secondes,
+                    })
                   : envoiEnCours
                     ? t("auth.connexionEnCours")
                     : t("auth.seConnecter")}

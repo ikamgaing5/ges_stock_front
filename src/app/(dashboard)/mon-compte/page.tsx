@@ -70,9 +70,7 @@ export default function PageMonCompte() {
     }
 
     if (!telephone.trim()) {
-      setErreurTelephone(
-        lang === "en" ? "Phone number is required." : "Le numéro de téléphone est obligatoire."
-      );
+      setErreurTelephone(t("monCompte.telephoneObligatoire"));
       valide = false;
     } else {
       setErreurTelephone(null);
@@ -104,16 +102,12 @@ export default function PageMonCompte() {
     if (!nouveau) {
       errs.password = t("commun.motDePasseRequis");
     } else if (nouveau.length < 8) {
-      errs.password =
-        lang === "en" ? "8 characters minimum" : "8 caractères minimum";
+      errs.password = t("monCompte.huitCaracteresMin");
     }
     if (!confirmation) {
       errs.confirmation = t("commun.confirmationRequise");
     } else if (nouveau !== confirmation) {
-      errs.confirmation =
-        lang === "en"
-          ? "The two passwords do not match."
-          : "Les deux mots de passe diffèrent.";
+      errs.confirmation = t("auth.motsDePasseDifferents");
     }
 
     if (Object.keys(errs).length > 0) {
@@ -467,7 +461,7 @@ export default function PageMonCompte() {
                 nativeButton={false}
                 render={<Link href="/faq" />}
               >
-                <HelpCircle className="h-4 w-4" />
+                {/* <HelpCircle className="h-4 w-4" /> */}
                 {t("monCompte.questionsBouton")}
               </Button>
             </CardContent>
@@ -521,10 +515,7 @@ function SectionIdentiteEntreprise({
 
     const errs: Record<string, string> = {};
     if (!nom.trim()) {
-      errs.entreprise_nom =
-        lang === "en"
-          ? "Enterprise name is required."
-          : "Le nom de l'entreprise est obligatoire.";
+      errs.entreprise_nom = t("monCompte.nomEntrepriseObligatoire");
     }
 
     const testNiu = validerNiu(niu, lang);
@@ -556,11 +547,7 @@ function SectionIdentiteEntreprise({
 
     try {
       await api.put("/mon-compte", formData);
-      toast.success(
-        lang === "en"
-          ? "Enterprise identity updated."
-          : "Identité de l'entreprise mise à jour.",
-      );
+      toast.success(t("monCompte.identiteEntrepriseMiseAJour"));
       await rafraichir();
     } catch (err) {
       if (err instanceof ErreurApi) {
@@ -581,9 +568,6 @@ function SectionIdentiteEntreprise({
           <CardTitle className="text-base flex items-center gap-2">
             {/* <Building2 className="h-4 w-4 text-primary" /> */}
             <span>
-              {/* {lang === "en"
-                ? "Enterprise Identity & Unique Logo"
-                : "Identité de l'entreprise & Logo unique"} */}
               {t("monCompte.identiteEntreprise")}
             </span>
           </CardTitle>

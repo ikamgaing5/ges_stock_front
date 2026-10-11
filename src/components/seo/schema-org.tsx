@@ -74,11 +74,15 @@ export function SchemaOrg() {
   return (
     <>
       <script
+        key="schema-logiciel"
         type="application/ld+json"
+        suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaLogiciel) }}
       />
       <script
+        key="schema-entreprise"
         type="application/ld+json"
+        suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaEntreprise) }}
       />
     </>

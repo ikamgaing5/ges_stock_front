@@ -40,7 +40,7 @@ export default function PageAccessibilite() {
       </section>
 
       {/* Section 3 */}
-      <section className="space-y-3">
+      {/* <section className="space-y-3">
         <h2 className="text-lg font-semibold tracking-tight text-foreground">
           {lang === "en" ? "3. Feedback & Contact" : "3. Signalement et Assistance"}
         </h2>
@@ -50,7 +50,7 @@ export default function PageAccessibilite() {
         <div className="rounded-lg border bg-muted/30 p-4 text-xs sm:text-sm">
           <p><span className="font-semibold text-foreground">Contact accessibilité :</span> support@gestionstock.local</p>
         </div>
-      </section>
+      </section> */}
     </article>
   );
 }

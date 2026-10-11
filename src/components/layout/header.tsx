@@ -2,7 +2,7 @@
 
 /** La barre du haut : menu mobile, sélecteur de boutique, compte. */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, Menu, UserRound } from "lucide-react";
@@ -33,11 +33,22 @@ export function Header() {
   const { t, libelleRole } = useI18n();
   const [menuOuvert, setMenuOuvert] = useState(false);
   const chemin = usePathname();
+  const [isDesktop, setIsDesktop] = useState(false);
+  
+
+  useEffect(() => {
+    setIsDesktop(
+      typeof window !== "undefined" && Boolean(window.teloraDesktop?.isDesktop),
+    );
+  }, []);
 
   if (!utilisateur) return null;
+  // Sur Desktop, la navbar est complètement supprimée pour maximiser l'espace vertical :
+  // le sélecteur de boutique est intégré directement dans la barre de titre.
+  if (isDesktop) return null;
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-1.5 border-b bg-background/85 px-2.5 sm:px-4 sm:gap-3 backdrop-blur-sm">
+    <header className="barre-navigation-haut sticky top-0 z-30 flex h-14 shrink-0 items-center gap-1.5 border-b bg-background/85 px-3 sm:px-6 sm:gap-3 backdrop-blur-sm">
       {/*
         Le menu en tiroir, uniquement sur petit écran. Sur grand écran, la
         sidebar est déjà affichée en permanence à gauche.
@@ -61,53 +72,56 @@ export function Header() {
 
       {/* `ml-auto` colle ce bloc et tout ce qui suit au bord droit. */}
       <div className="ml-auto flex items-center gap-1">
-        <SelecteurDevise />
-        <BasculeLangue />
-        <BasculeTheme />
+        {!isDesktop && (
+          <>
+            <SelecteurDevise />
+            <BasculeLangue />
+            <BasculeTheme />
+          </>
+        )}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
-            <UserRound className="h-4 w-4" />
-            <span className="hidden max-w-32 truncate sm:inline">
-              {utilisateur.name}
-            </span>
-          </DropdownMenuTrigger>
+        {/*
+          Bouton de compte masqué (non supprimé) :
+          l'accès complet au compte et aux paramètres se fait désormais
+          depuis le menu profil interactif au bas de la barre latérale.
+        */}
+        <div className="hidden" aria-hidden="true">
+          <DropdownMenu>
+            <DropdownMenuTrigger render={<Button variant="ghost" size="sm" />}>
+              <UserRound className="h-4 w-4" />
+              <span className="hidden max-w-32 truncate sm:inline">
+                {utilisateur.name}
+              </span>
+            </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-60">
-            {/*
-              Un simple bloc de texte, et non un DropdownMenuLabel : dans
-              Base UI, ce composant est l'intitulé d'un groupe d'entrées et
-              doit vivre dans un <DropdownMenuGroup>. Ici il ne s'agit pas
-              d'un intitulé mais de l'identité de la personne connectée.
-            */}
-            <div className="px-1.5 py-1">
-              <p className="truncate text-sm font-medium">{utilisateur.name}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {libelleRole(utilisateur.role)}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {utilisateur.email}
-              </p>
-            </div>
+            <DropdownMenuContent align="end" className="w-60">
+              <div className="px-1.5 py-1">
+                <p className="truncate text-sm font-medium">{utilisateur.name}</p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {libelleRole(utilisateur.role)}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {utilisateur.email}
+                </p>
+              </div>
 
-            <DropdownMenuSeparator />
+              <DropdownMenuSeparator />
 
-            {/* `nativeButton={false}` prévient Base UI que l'élément rendu
-                n'est pas un <button> mais un lien. */}
-            <DropdownMenuItem
-              nativeButton={false}
-              render={<Link href="/mon-compte" />}
-            >
-              <UserRound className="mr-2 h-4 w-4" />
-              {t("nav.monCompte")}
-            </DropdownMenuItem>
+              <DropdownMenuItem
+                nativeButton={false}
+                render={<Link href="/mon-compte" />}
+              >
+                <UserRound className="mr-2 h-4 w-4" />
+                {t("nav.monCompte")}
+              </DropdownMenuItem>
 
-            <DropdownMenuItem onClick={() => void deconnexion()}>
-              <LogOut className="mr-2 h-4 w-4" />
-              {t("nav.deconnexion")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuItem onClick={() => void deconnexion()}>
+                <LogOut className="mr-2 h-4 w-4" />
+                {t("nav.deconnexion")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </header>
   );

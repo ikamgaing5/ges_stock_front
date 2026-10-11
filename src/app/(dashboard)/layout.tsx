@@ -11,11 +11,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { TriangleAlert } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
+import { useSidebar } from "@/components/layout/contexte-sidebar";
 import { SqueletteShellDashboard } from "@/components/ui-commun";
 import { useI18n } from "@/lib/i18n";
 
@@ -26,7 +26,7 @@ export default function DashboardLayout({
 }) {
   const { utilisateur, chargement } = useAuth();
   const { t } = useI18n();
-  const router = useRouter();
+  const { ouverte } = useSidebar();
 
   useEffect(() => {
     if (chargement) return;
@@ -40,33 +40,38 @@ export default function DashboardLayout({
         cheminActuel && cheminActuel !== "/"
           ? `/connexion?retour=${encodeURIComponent(cheminActuel)}`
           : "/connexion";
-      router.replace(destination);
+      if (typeof window !== "undefined") {
+        window.location.replace(destination);
+      }
       return;
     }
 
     // L'administrateur n'a rien à faire ici : il n'a accès à aucun stock.
     if (utilisateur.role === "admin") {
-      router.replace("/admin");
+      if (typeof window !== "undefined") {
+        window.location.replace("/admin");
+      }
     }
-  }, [chargement, utilisateur, router]);
+  }, [chargement, utilisateur]);
 
   if (chargement || !utilisateur || utilisateur.role === "admin") {
     return <SqueletteShellDashboard />;
   }
 
   return (
-    <div className="flex min-h-[100dvh]">
-      {/* Sur grand écran la sidebar est fixée : elle ne défile pas avec
-          le contenu, et reste visible quelle que soit la longueur d'une
-          liste d'appareils. */}
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 border-r lg:block">
-        <Sidebar />
-      </aside>
+    <div className="flex h-[calc(100dvh-var(--hauteur-barre-titre,0px))] overflow-hidden">
+      {/* 1. Barre latérale gauche : totalement fixe et figée, ne bouge jamais */}
+      {ouverte && (
+        <aside className="hidden h-full w-60 shrink-0 border-r lg:block animate-in fade-in duration-150 select-none">
+          <Sidebar />
+        </aside>
+      )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* 2. Zone principale droite : défilement indépendant avec barre de défilement fluide et aérée */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
         <Header />
         <BandeauAbonnement />
-        <main className="flex-1 px-3 py-3.5 sm:p-6">{children}</main>
+        <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8 space-y-6">{children}</main>
       </div>
     </div>
   );
@@ -80,7 +85,7 @@ export default function DashboardLayout({
  */
 function BandeauAbonnement() {
   const { utilisateur } = useAuth();
-  const { formatDateCourte, t, lang } = useI18n();
+  const { formatDateCourte, t } = useI18n();
   const abonnement = utilisateur?.abonnement;
 
   // La date du jour est relevée après l'affichage, pas pendant : lire
@@ -141,12 +146,8 @@ function BandeauAbonnement() {
         className="shrink-0 font-medium underline underline-offset-4"
       >
         {bloque
-          ? lang === "en"
-            ? "Choose a plan"
-            : "Choisir un forfait"
-          : lang === "en"
-            ? "Manage subscription"
-            : "Gérer l'abonnement"}
+          ? t("monCompte.choisirForfait")
+          : t("monCompte.gererAbonnement")}
       </Link>
     </div>
   );

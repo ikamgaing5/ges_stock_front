@@ -10,8 +10,8 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Building2, CreditCard, LogOut, Loader2, ShieldCheck } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Building2, CreditCard, LogOut, Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { BasculeTheme } from "@/components/bascule-theme";
 import { BasculeLangue } from "@/components/bascule-langue";
@@ -23,6 +23,7 @@ const liens = [
   { href: "/admin", cleLibelle: "admin.vueEnsemble", icone: ShieldCheck },
   { href: "/admin/proprietaires", cleLibelle: "admin.clients", icone: Building2 },
   { href: "/admin/paiements", cleLibelle: "admin.paiements", icone: CreditCard },
+  { href: "/admin/securite", cleLibelle: "admin.securite", icone: ShieldAlert },
 ];
 
 export default function AdminLayout({
@@ -32,7 +33,6 @@ export default function AdminLayout({
 }) {
   const { utilisateur, chargement, deconnexion } = useAuth();
   const { t } = useI18n();
-  const router = useRouter();
   const chemin = usePathname();
 
   useEffect(() => {
@@ -46,14 +46,18 @@ export default function AdminLayout({
       const destination = cheminActuel
         ? `/connexion?retour=${encodeURIComponent(cheminActuel)}`
         : "/connexion";
-      router.replace(destination);
+      if (typeof window !== "undefined") {
+        window.location.replace(destination);
+      }
       return;
     }
 
     if (utilisateur.role !== "admin") {
-      router.replace("/");
+      if (typeof window !== "undefined") {
+        window.location.replace("/");
+      }
     }
-  }, [chargement, utilisateur, router]);
+  }, [chargement, utilisateur]);
 
   if (chargement || utilisateur?.role !== "admin") {
     return (

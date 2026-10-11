@@ -33,6 +33,10 @@ export type CleTraduction =
   | `monCompte.${string}`
   | `scanner.${string}`
   | `admin.${string}`
+  | `maintenance.${string}`
+  | `desktop.${string}`
+  | `legal.${string}`
+  | `marketing.${string}`
   | `changerEmail.${string}`
   | `deuxFacteurs.${string}`
   | `imei.${string}`

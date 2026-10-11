@@ -1,6 +1,5 @@
-/**
- * Utilitaires de formatage et de validation légale : NIU et RCCM (Espace OHADA / CEMAC / DGI).
- */
+import { fr } from "@/lib/i18n/dictionnaires/fr";
+import { en } from "@/lib/i18n/dictionnaires/en";
 
 /**
  * Nettoie et formate un Numéro d'Identification Unique (NIU / Identifiant fiscal) :
@@ -22,17 +21,15 @@ export function nettoyerNiu(val: string): string {
  */
 export function validerNiu(
   val: string,
-  lang: "fr" | "en" = "fr"
+  lang: "fr" | "en" = "fr",
 ): { valide: boolean; erreur?: string } {
+  const dict = lang === "en" ? en : fr;
   const nettoye = nettoyerNiu(val);
 
   if (!nettoye) {
     return {
       valide: false,
-      erreur:
-        lang === "en"
-          ? "Unique Tax ID (NIU) is required."
-          : "Le Numéro d'Identification Unique (NIU) est obligatoire.",
+      erreur: dict.boutiques.niuRequis,
     };
   }
 
@@ -45,10 +42,7 @@ export function validerNiu(
   if (!estHarmony && !estAtom && !estIfuCongo && !estNccCI && !estNineaSN) {
     return {
       valide: false,
-      erreur:
-        lang === "en"
-          ? "Invalid NIU format (e.g., M052012345678X or 14 digits)."
-          : "Format NIU non conforme (ex: M052012345678X ou 14 chiffres).",
+      erreur: dict.boutiques.niuInvalide,
     };
   }
 
@@ -78,17 +72,15 @@ export function nettoyerRccm(val: string): string {
  */
 export function validerRccm(
   val: string,
-  lang: "fr" | "en" = "fr"
+  lang: "fr" | "en" = "fr",
 ): { valide: boolean; erreur?: string } {
+  const dict = lang === "en" ? en : fr;
   const nettoye = nettoyerRccm(val);
 
   if (!nettoye) {
     return {
       valide: false,
-      erreur:
-        lang === "en"
-          ? "Trade Register (RCCM) is required."
-          : "Le registre de commerce (RCCM) est obligatoire.",
+      erreur: dict.boutiques.rccmRequis,
     };
   }
 
@@ -98,10 +90,7 @@ export function validerRccm(
   if (!pattern.test(nettoye)) {
     return {
       valide: false,
-      erreur:
-        lang === "en"
-          ? "Invalid RCCM format (e.g., RC/DLA/2023/B/1234 or CM-DLA-2023-B-1234)."
-          : "Format RCCM non conforme (ex: RC/DLA/2023/B/1234 ou CM-DLA-2023-B-1234).",
+      erreur: dict.boutiques.rccmInvalide,
     };
   }
 

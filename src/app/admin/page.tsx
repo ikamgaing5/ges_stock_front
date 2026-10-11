@@ -19,7 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { StatistiquesAdmin } from "@/types";
 
 export default function PageAdmin() {
-  const { t, formatNombre, lang } = useI18n();
+  const { t, formatNombre } = useI18n();
   const [stats, setStats] = useState<StatistiquesAdmin | null>(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -84,11 +84,9 @@ export default function PageAdmin() {
               <Bloc
                 libelle={t("admin.essaisActifs")}
                 valeur={stats.nb_essais}
-                detail={
-                  lang === "en"
-                    ? `${formatNombre(stats.inscriptions_30_jours)} sign-up(s) over 30 days`
-                    : `${formatNombre(stats.inscriptions_30_jours)} inscription(s) sur 30 jours`
-                }
+                detail={t("admin.inscriptions30JoursDetail", {
+                  nombre: formatNombre(stats.inscriptions_30_jours),
+                })}
                 icone={CalendarClock}
                 lien="/admin/proprietaires?statut=essai"
               />
@@ -97,7 +95,7 @@ export default function PageAdmin() {
               <Bloc
                 libelle={t("admin.comptesSuspendus")}
                 valeur={stats.nb_suspendus}
-                detail={lang === "en" ? "Access cut off" : "Accès coupé"}
+                detail={t("admin.accesCoupe")}
                 icone={Users}
                 accent={stats.nb_suspendus > 0 ? "text-statut-alerte" : undefined}
                 lien="/admin/proprietaires?statut=suspendu"
@@ -107,7 +105,7 @@ export default function PageAdmin() {
               <Bloc
                 libelle={t("admin.echeancesProches")}
                 valeur={stats.nb_echeances_proches}
-                detail={lang === "en" ? "Within 7 days" : "Dans les 7 jours"}
+                detail={t("admin.dansLes7Jours")}
                 icone={CalendarClock}
                 accent={
                   stats.nb_echeances_proches > 0
@@ -140,9 +138,7 @@ export default function PageAdmin() {
           </Apparait>
 
           <p className="mt-4 text-xs text-muted-foreground">
-            {lang === "en"
-              ? "These numbers represent global aggregates. Individual client stock details are neither accessible here nor via API: only the store owner and their team have access."
-              : "Ces chiffres sont des volumes globaux. Le détail du stock d'un client n'est accessible ni ici ni par l'API : seul son propriétaire et son équipe peuvent le consulter."}
+            {t("admin.chiffresVolumesGlobauxNote")}
           </p>
         </>
       )}

@@ -63,7 +63,8 @@ export default function PageEtudesDeCas() {
             enseigne: "GSM Express",
             ville: "Paris & Brazzaville",
             pointsDeVente: "Retail & Repair Center",
-            titre: "“We look up any sold device in 3 seconds for warranty & support”",
+            titre:
+              "“We look up any sold device in 3 seconds for warranty & support”",
             citation:
               "With pre-owned and new smartphones, customers often come back asking about warranty or receipts. We used to spend 15 minutes digging through binder files. Now, we just scan the IMEI from the box or settings screen: purchase date, invoice, sold price, and warranty status appear instantly. Customers immediately appreciate the professionalism.",
             gerant: "Christian M. — Store Manager",
@@ -81,7 +82,8 @@ export default function PageEtudesDeCas() {
             enseigne: "Ivoire Phone",
             ville: "Abidjan, Côte d'Ivoire",
             pointsDeVente: "2 boutiques (Treichville & Cocody)",
-            titre: "« Fini les disputes d'équipe pour savoir qui a vendu quel téléphone »",
+            titre:
+              "« Fini les disputes d'équipe pour savoir qui a vendu quel téléphone »",
             citation:
               "Dans nos deux boutiques, nous tenions un registre manuscrit. À la fin du mois, il arrivait qu'il manque un appareil ou qu'on confonde un modèle 128 Go et un 256 Go. Les vendeurs se renvoyaient la faute. Depuis que chaque IMEI est enregistré à la livraison et déstocké à la vente avec le nom de la vendeuse, il n'y a plus la moindre contestation. L'ambiance est saine et je n'ai plus la boule au ventre quand je fais l'inventaire.",
             gerant: "Mamadou K. — Fondateur & Propriétaire",
@@ -90,14 +92,19 @@ export default function PageEtudesDeCas() {
               "Inventaire exact sans devoir bloquer la boutique",
               "Contrôle à distance sans être présent sur place",
             ],
-            tags: ["Multi-boutiques", "Gestion d'équipe", "Suivi IMEI unitaire"],
+            tags: [
+              "Multi-boutiques",
+              "Gestion d'équipe",
+              "Suivi IMEI unitaire",
+            ],
           },
           {
             id: "smarttech-mobile",
             enseigne: "SmartTech Mobile",
             ville: "Douala & Yaoundé, Cameroun",
             pointsDeVente: "3 boutiques",
-            titre: "« Je ne passe plus mes soirées à recompter des carnets de vente »",
+            titre:
+              "« Je ne passe plus mes soirées à recompter des carnets de vente »",
             citation:
               "Auparavant, je devais attendre 20h30 que les gérantes finissent de compter la caisse, m'envoient des photos de leurs cahiers et que je recomptabilise le cash et les paiements Orange Money ou MTN. Il y avait toujours des erreurs d'arrondi ou des ventes mal notées. Avec Telora, le pointage est automatique. À 20h05, les gérantes ont fini leur journée et j'ai le bilan exact sur mon téléphone portable.",
             gerant: "Diane F. — Gérante d'enseigne",
@@ -106,14 +113,19 @@ export default function PageEtudesDeCas() {
               "Suivi séparé du cash et des paiements mobiles",
               "Gain de plus d'une heure de travail chaque soir",
             ],
-            tags: ["Caisse & Comptoir", "Mobile Money & Espèces", "Gestion à distance"],
+            tags: [
+              "Caisse & Comptoir",
+              "Mobile Money & Espèces",
+              "Gestion à distance",
+            ],
           },
           {
             id: "gsm-express",
             enseigne: "GSM Express",
             ville: "Paris & Brazzaville",
             pointsDeVente: "Boutique & Atelier SAV",
-            titre: "« On identifie n'importe quel téléphone vendu en 3 secondes pour le SAV »",
+            titre:
+              "« On identifie n'importe quel téléphone vendu en 3 secondes pour le SAV »",
             citation:
               "Dans le reconditionné et la téléphonie, les clients reviennent souvent pour une question de garantie ou un accessoire. Avant, il fallait fouiller dans des classeurs de factures papier. Maintenant, on scanne l'IMEI sur la boîte ou dans les réglages du smartphone, et tout l'historique sort : la date exacte d'achat, le prix convenu, la boutique d'origine et la garantie restante. Nos clients voient tout de suite qu'on est sérieux.",
             gerant: "Christian M. — Responsable de magasin",
@@ -122,7 +134,11 @@ export default function PageEtudesDeCas() {
               "Évite les abus sur les retours sous garantie",
               "Expérience client transparente et rassurante",
             ],
-            tags: ["Service après-vente", "Suivi des garanties", "Neuf & Reconditionné"],
+            tags: [
+              "Service après-vente",
+              "Suivi des garanties",
+              "Neuf & Reconditionné",
+            ],
           },
         ];
 
@@ -137,7 +153,7 @@ export default function PageEtudesDeCas() {
           >
             <IconeTelora size={28} />
             <span className="font-heading text-sm font-bold tracking-tight">
-              TELORA
+              Telora
             </span>
           </Link>
 
@@ -234,7 +250,9 @@ export default function PageEtudesDeCas() {
             <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-semibold text-sm">
               <ReceiptText className="h-4 w-4 shrink-0" />
               <span>
-                {lang === "en" ? "Quick warranty check" : "SAV & Garantie en 2 clics"}
+                {lang === "en"
+                  ? "Quick warranty check"
+                  : "SAV & Garantie en 2 clics"}
               </span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">

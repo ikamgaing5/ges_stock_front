@@ -139,8 +139,8 @@ export function SquelettePageTableau({
 /** Chargement du shell dashboard (layout initial). */
 export function SqueletteShellDashboard() {
   return (
-    <div className="flex min-h-[100dvh]">
-      <aside className="hidden h-dvh w-60 shrink-0 border-r p-4 lg:flex flex-col gap-6">
+    <div className="flex h-[calc(100dvh-var(--hauteur-barre-titre,0px))] overflow-hidden">
+      <aside className="hidden h-full w-60 shrink-0 border-r p-4 lg:flex flex-col gap-6">
         <div className="flex items-center gap-2">
           <Skeleton className="h-8 w-8 rounded-lg" />
           <Skeleton className="h-5 w-28" />

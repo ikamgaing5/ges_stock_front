@@ -65,7 +65,7 @@ export function ModalModifierTelephone({
   surSucces,
 }: ModalModifierTelephoneProps) {
   const { devise, deviseBoutique, utilisateur } = useAuth();
-  const { t, libelleEtat, lang } = useI18n();
+  const { t, libelleEtat } = useI18n();
 
   const estOrdi = telephone.type_appareil === "ordinateur_portable";
   const deviseOrigine = telephone.boutique?.devise ?? deviseBoutique;
@@ -160,27 +160,18 @@ export function ModalModifierTelephone({
         errs.numero_serie = t("commun.champRequis");
       }
       if (imei1Chiffres && !imeiValide(imei1Chiffres)) {
-        errs.imei =
-          lang === "en"
-            ? "15 digits required with valid Luhn key."
-            : "L'IMEI doit comporter 15 chiffres valides.";
+        errs.imei = t("telephones.imei15ChiffresValides");
       }
     } else {
       if (!imei1Chiffres) {
         errs.imei = t("commun.champRequis");
       } else if (!imeiValide(imei1Chiffres)) {
-        errs.imei =
-          lang === "en"
-            ? "15 digits required with valid Luhn key."
-            : "L'IMEI doit comporter 15 chiffres valides (clé de Luhn).";
+        errs.imei = t("telephones.imei15ChiffresValides");
       }
     }
 
     if (imei2.trim() && !imei2EstValide) {
-      errs.imei2 =
-        lang === "en"
-          ? "Invalid secondary IMEI (15 digits required)."
-          : "L'IMEI 2 doit comporter 15 chiffres valides.";
+      errs.imei2 = t("telephones.imei2_15ChiffresValides");
     }
 
     if (Object.keys(errs).length > 0) {
@@ -285,9 +276,7 @@ export function ModalModifierTelephone({
               </div> */}
               <div className="min-w-0 flex-1">
                 <DialogTitle className="text-base font-semibold tracking-tight text-foreground">
-                  {lang === "en"
-                    ? (estOrdi ? "Edit Laptop" : "Edit Device")
-                    : (estOrdi ? "Modifier l'ordinateur" : "Modifier l'appareil")}
+                  {estOrdi ? t("telephones.modifierOrdinateur") : t("telephones.modifierAppareil")}
                 </DialogTitle>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <span className="font-medium text-xs text-foreground truncate max-w-[220px]">
@@ -313,7 +302,7 @@ export function ModalModifierTelephone({
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {/* <Barcode className="h-3.5 w-3.5 text-primary" /> */}
                     <span>
-                      {lang === "en" ? "Identification & Serial Number" : "Identification & Numéro de série"}
+                      {t("telephones.identificationEtNumeroSerie")}
                     </span>
                   </div>
 
@@ -344,7 +333,7 @@ export function ModalModifierTelephone({
                     <Label htmlFor="edit-imei-pc" className="text-xs font-medium text-foreground">
                       {t("telephones.imei")}{" "}
                       <span className="text-muted-foreground text-[10px]">
-                        ({lang === "en" ? "Optional / 4G Modem" : "Optionnel / Modem 4G"})
+                        ({t("telephones.optionnelModem4g")})
                       </span>
                     </Label>
                     <div className="relative">
@@ -366,7 +355,7 @@ export function ModalModifierTelephone({
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {/* <Cpu className="h-3.5 w-3.5 text-primary" /> */}
                     <span>
-                      {lang === "en" ? "Technical Specifications" : "Spécifications Techniques"}
+                      {t("telephones.specificationsTechniques")}
                     </span>
                   </div>
 
@@ -469,7 +458,7 @@ export function ModalModifierTelephone({
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {/* <Hash className="h-3.5 w-3.5 text-primary" /> */}
                   <span>
-                    {lang === "en" ? "Identification & IMEI" : "Identification & IMEI"}
+                    {t("telephones.identificationEtImei")}
                   </span>
                 </div>
 
@@ -493,7 +482,7 @@ export function ModalModifierTelephone({
                         {imei1EstValide ? (
                           <>
                             {/* <CheckCircle2 className="h-3 w-3" /> */}
-                            <span>{lang === "en" ? "Valid IMEI (Luhn)" : "IMEI conforme"}</span>
+                            <span>{t("telephones.imeiConforme")}</span>
                           </>
                         ) : (
                           <>
@@ -501,9 +490,7 @@ export function ModalModifierTelephone({
                             <span>
                               {imei1Chiffres.length < 15
                                 ? `${imei1Chiffres.length}/15 chiffres`
-                                : lang === "en"
-                                  ? "Invalid Luhn key"
-                                  : "Clé Luhn invalide"}
+                                : t("telephones.cleLuhnInvalide")}
                             </span>
                           </>
                         )}
@@ -597,7 +584,7 @@ export function ModalModifierTelephone({
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {/* <Sparkles className="h-3.5 w-3.5 text-primary" /> */}
                 <span>
-                  {lang === "en" ? "Condition & Appearance" : "État & Caractéristiques"}
+                  {t("telephones.etatEtCaracteristiques")}
                 </span>
               </div>
 
@@ -674,7 +661,7 @@ export function ModalModifierTelephone({
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {/* <Coins className="h-3.5 w-3.5 text-primary" /> */}
                 <span>
-                  {lang === "en" ? "Commercial & Pricing" : "Tarification & Commerce"}
+                  {t("telephones.tarificationEtCommerce")}
                 </span>
               </div>
 

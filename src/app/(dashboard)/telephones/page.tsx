@@ -44,7 +44,7 @@ import type { Modele, Page, Telephone } from "@/types";
 
 export default function PageParc() {
   const { devise, deviseBoutique, boutiqueActive, parametresBoutique } = useAuth();
-  const { t, formatMontant, formatDate, libelleEtat, lang } = useI18n();
+  const { t, formatMontant, formatDate, libelleEtat } = useI18n();
   const parametresUrl = useSearchParams();
   const [modeles, setModeles] = useState<Modele[]>([]);
   const [chargementModeles, setChargementModeles] = useState(true);
@@ -275,15 +275,9 @@ export default function PageParc() {
                 }}
                 disabled={chargementModeles}
                 chargement={chargementModeles}
-                texteChargement={
-                  lang === "en"
-                    ? "Loading models..."
-                    : "Chargement des modèles…"
-                }
+                texteChargement={t("telephones.chargementModeles")}
                 placeholder={t("telephones.tousLesModeles")}
-                placeholderRecherche={
-                  lang === "en" ? "Filter model..." : "Filtrer un modèle…"
-                }
+                placeholderRecherche={t("telephones.filtrerModelePlaceholder")}
               />
             </div>
           )}

@@ -59,7 +59,7 @@ import type { Gamme, Marque, Modele, ModeleStockage, TypeAppareil } from "@/type
 
 export default function PageCatalogue() {
   const { devise, deviseBoutique, utilisateur, parametresBoutique } = useAuth();
-  const { t, formatMontant, lang } = useI18n();
+  const { t, formatMontant } = useI18n();
   const parametresUrl = useSearchParams();
 
   const [typeAppareilFiltre, setTypeAppareilFiltre] = useState<string>("tous");
@@ -116,7 +116,7 @@ export default function PageCatalogue() {
     if (!aSupprimer) return;
     try {
       await api.delete(`/modeles/${aSupprimer.id}`);
-      toast.success(lang === "en" ? "Model deleted." : "Modèle supprimé.");
+      toast.success(t("modeles.modeleSupprime"));
       setASupprimer(null);
       recharger();
     } catch (e) {
@@ -219,9 +219,7 @@ export default function PageCatalogue() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="h-9 sm:h-10 pl-9"
-              placeholder={
-                lang === "en" ? "Brand or model..." : "Marque ou modèle…"
-              }
+              placeholder={t("modeles.rechercheMarqueOuModele")}
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
             />
@@ -232,7 +230,7 @@ export default function PageCatalogue() {
               options={[
                 {
                   valeur: "",
-                  libelle: lang === "en" ? "All brands" : "Toutes les marques",
+                  libelle: t("modeles.toutesLesMarques"),
                 },
                 ...marques.map((m) => ({ valeur: m.id, libelle: m.nom })),
               ]}
@@ -240,13 +238,9 @@ export default function PageCatalogue() {
               onChange={(v) => setMarqueFiltre(v)}
               disabled={chargementMarques}
               chargement={chargementMarques}
-              texteChargement={
-                lang === "en" ? "Loading brands..." : "Chargement des marques…"
-              }
-              placeholder={lang === "en" ? "All brands" : "Toutes les marques"}
-              placeholderRecherche={
-                lang === "en" ? "Search brand..." : "Rechercher une marque…"
-              }
+              texteChargement={t("modeles.chargementMarques")}
+              placeholder={t("modeles.toutesLesMarques")}
+              placeholderRecherche={t("modeles.rechercherMarque")}
             />
           </div>
 
@@ -257,9 +251,7 @@ export default function PageCatalogue() {
               onCheckedChange={setAlertesSeules}
             />
             <Label htmlFor="alertes" className="font-normal text-xs sm:text-sm">
-              {lang === "en"
-                ? "Restock alerts only"
-                : "À réapprovisionner seulement"}
+              {t("modeles.alertesReapprovisionnerSeulement")}
             </Label>
           </div>
         </CardContent>
@@ -438,14 +430,10 @@ export default function PageCatalogue() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {lang === "en"
-                ? `Delete "${aSupprimer?.libelle}"?`
-                : `Supprimer « ${aSupprimer?.libelle} » ?`}
+              {t("modeles.supprimerModeleTitre", { nom: aSupprimer?.libelle ?? "" })}
             </DialogTitle>
             <DialogDescription>
-              {lang === "en"
-                ? "A model with existing registered devices cannot be deleted. Deactivate it instead so it hides from intake lists while preserving history."
-                : "Un modèle dont des appareils existent encore ne peut pas être supprimé. Désactivez-le plutôt : il disparaîtra des listes de saisie sans effacer l'historique."}
+              {t("modeles.supprimerModeleDesc")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -479,7 +467,7 @@ function FenetreModele({
   onFermer: () => void;
   onSucces: () => void;
 }) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const modification = Boolean(modele?.id);
 
   const [marqueId, setMarqueId] = useState("");
@@ -572,10 +560,10 @@ function FenetreModele({
 
     const errs: Record<string, string> = {};
     if (!champs.gamme_id) {
-      errs.gamme_id = lang === "en" ? "Please choose a range." : "Veuillez choisir une gamme.";
+      errs.gamme_id = t("modeles.choisirGamme");
     }
     if (!champs.nom.trim()) {
-      errs.nom = lang === "en" ? "Please enter the model name." : "Veuillez renseigner le nom du modèle.";
+      errs.nom = t("modeles.renseignerNom");
     }
     if (Object.keys(errs).length > 0) {
       setErreurs(errs);
@@ -599,7 +587,7 @@ function FenetreModele({
     try {
       if (modification) {
         await api.put(`/modeles/${modele!.id}`, corps);
-        toast.success(lang === "en" ? "Model updated." : "Modèle mis à jour.");
+        toast.success(t("modeles.modeleMisAJour"));
       } else {
         await api.post("/modeles", corps);
         toast.success(t("modeles.modeleCree"));
@@ -622,15 +610,11 @@ function FenetreModele({
           <DialogHeader>
             <DialogTitle>
               {modification
-                ? lang === "en"
-                  ? "Edit Model"
-                  : "Modifier le modèle"
+                ? t("modeles.modifierLeModele")
                 : t("modeles.ajouterModele")}
             </DialogTitle>
             <DialogDescription>
-              {lang === "en"
-                ? "Full reference (brand, range, model) is unique and shared across all stores."
-                : "La référence complète (marque, gamme, nom) est unique et partagée par toutes les boutiques."}
+              {t("modeles.referenceUniquePartagee")}
             </DialogDescription>
           </DialogHeader>
 
@@ -638,7 +622,7 @@ function FenetreModele({
             <div className="grid gap-4 sm:grid-cols-2">
               {/* Choix du type d'appareil */}
               <div className="space-y-1.5 sm:col-span-2">
-                <Label>{lang === "en" ? "Device Type" : "Type d'appareil"}</Label>
+                <Label>{t("modeles.typeAppareil")}</Label>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -680,17 +664,9 @@ function FenetreModele({
                   onChange={(v) => choisirMarque(v)}
                   disabled={chargementMarquesLocales}
                   chargement={chargementMarquesLocales}
-                  texteChargement={
-                    lang === "en"
-                      ? "Loading brands..."
-                      : "Chargement des marques…"
-                  }
-                  placeholder={
-                    lang === "en" ? "Choose brand" : "Choisir la marque"
-                  }
-                  placeholderRecherche={
-                    lang === "en" ? "Search brand..." : "Rechercher une marque…"
-                  }
+                  texteChargement={t("modeles.chargementMarques")}
+                  placeholder={t("telephones.choisirMarque")}
+                  placeholderRecherche={t("modeles.rechercherMarque")}
                 />
               </div>
 
@@ -714,24 +690,14 @@ function FenetreModele({
                   }}
                   disabled={!marqueId || chargementGammes}
                   chargement={chargementGammes}
-                  texteChargement={
-                    lang === "en"
-                      ? "Loading ranges for this brand..."
-                      : "Chargement des gammes de la marque…"
-                  }
+                  texteChargement={t("telephones.chargementGammes")}
                   erreur={Boolean(erreurs.gamme_id)}
                   placeholder={
                     marqueId
-                      ? lang === "en"
-                        ? "Choose range"
-                        : "Choisir la gamme"
-                      : lang === "en"
-                        ? "Choose brand first"
-                        : "Choisissez d'abord la marque"
+                      ? t("telephones.choisirGamme")
+                      : t("telephones.choisirMarqueDabord")
                   }
-                  placeholderRecherche={
-                    lang === "en" ? "Search range..." : "Rechercher une gamme…"
-                  }
+                  placeholderRecherche={t("modeles.rechercherGamme")}
                 />
                 {erreurs.gamme_id && (
                   <p className="text-xs text-destructive">{erreurs.gamme_id}</p>
@@ -843,9 +809,7 @@ function FenetreModele({
                 onCheckedChange={(v) => modifier("actif", v)}
               />
               <Label htmlFor="actif" className="font-normal">
-                {lang === "en"
-                  ? "Active (available during device intake)"
-                  : "Actif (proposé à la saisie d'un appareil)"}
+                {t("modeles.actifProposeSaisie")}
               </Label>
             </div>
           </DialogCorps>
@@ -860,9 +824,7 @@ function FenetreModele({
               )}
               {modification
                 ? t("commun.enregistrer")
-                : lang === "en"
-                  ? "Add to catalog"
-                  : "Ajouter au catalogue"}
+                : t("telephones.ajouterAuCatalogue")}
             </Button>
           </DialogFooter>
         </form>
@@ -878,7 +840,7 @@ function GestionStockages({
   modeleId: string;
   stockagesInitiaux: ModeleStockage[];
 }) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const [stockages, setStockages] =
     useState<ModeleStockage[]>(stockagesInitiaux);
   const [nouveau, setNouveau] = useState("");
@@ -931,9 +893,7 @@ function GestionStockages({
         ))}
         {stockages.length === 0 && (
           <p className="text-xs text-muted-foreground">
-            {lang === "en"
-              ? "No storage capacity added yet."
-              : "Aucun stockage pour l'instant."}
+            {t("modeles.aucunStockagePourLinstant")}
           </p>
         )}
       </div>
@@ -967,7 +927,7 @@ function FenetreMarque({
   onFermer: () => void;
   onSucces: () => void;
 }) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const [nom, setNom] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
@@ -984,11 +944,7 @@ function FenetreMarque({
     setErreur(null);
 
     if (!nom.trim()) {
-      setErreur(
-        lang === "en"
-          ? "Please enter the brand name."
-          : "Veuillez renseigner le nom de la marque.",
-      );
+      setErreur(t("modeles.renseignerNomMarque"));
       return;
     }
 
@@ -1014,9 +970,7 @@ function FenetreMarque({
           <DialogHeader>
             <DialogTitle>{t("modeles.ajouterMarque")}</DialogTitle>
             <DialogDescription>
-              {lang === "en"
-                ? "Available across all stores and models."
-                : "Elle sera disponible pour toutes les boutiques et tous les modèles."}
+              {t("modeles.marqueDisponibleToutesBoutiques")}
             </DialogDescription>
           </DialogHeader>
 
@@ -1049,7 +1003,7 @@ function FenetreMarque({
               {envoiEnCours && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {lang === "en" ? "Create" : "Créer"}
+              {t("modeles.creer")}
             </Button>
           </DialogFooter>
         </form>
@@ -1071,7 +1025,7 @@ function FenetreGamme({
   onFermer: () => void;
   onSucces: () => void;
 }) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const [typeAppareil, setTypeAppareil] = useState<TypeAppareil>(typeAppareilParDefaut);
   const [marqueId, setMarqueId] = useState("");
   const [nom, setNom] = useState("");
@@ -1105,19 +1059,11 @@ function FenetreGamme({
     setErreur(null);
 
     if (!marqueId) {
-      setErreur(
-        lang === "en"
-          ? "Please choose a brand."
-          : "Veuillez choisir une marque.",
-      );
+      setErreur(t("modeles.choisirMarqueErreur"));
       return;
     }
     if (!nom.trim()) {
-      setErreur(
-        lang === "en"
-          ? "Please enter the range name."
-          : "Veuillez renseigner le nom de la gamme.",
-      );
+      setErreur(t("modeles.renseignerNomGamme"));
       return;
     }
 
@@ -1147,16 +1093,14 @@ function FenetreGamme({
           <DialogHeader>
             <DialogTitle>{t("modeles.ajouterGamme")}</DialogTitle>
             <DialogDescription>
-              {lang === "en"
-                ? "e.g. iPhone, Galaxy S, MacBook Pro..."
-                : "Ex: iPhone, Galaxy S, MacBook Pro…"}
+              {t("modeles.exempleGammePlaceholder")}
             </DialogDescription>
           </DialogHeader>
 
           <DialogCorps>
             {/* Choix du type d'appareil */}
             <div className="space-y-1.5">
-              <Label>{lang === "en" ? "Device Type" : "Type d'appareil"}</Label>
+              <Label>{t("modeles.typeAppareil")}</Label>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -1207,12 +1151,8 @@ function FenetreGamme({
                 }}
                 disabled={chargementMarquesLocales}
                 chargement={chargementMarquesLocales}
-                placeholder={
-                  lang === "en" ? "Choose brand" : "Choisir la marque"
-                }
-                placeholderRecherche={
-                  lang === "en" ? "Search brand..." : "Rechercher une marque…"
-                }
+                placeholder={t("telephones.choisirMarque")}
+                placeholderRecherche={t("modeles.rechercherMarque")}
               />
             </div>
 
@@ -1247,7 +1187,7 @@ function FenetreGamme({
               {envoiEnCours && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
-              {lang === "en" ? "Create" : "Créer"}
+              {t("modeles.creer")}
             </Button>
           </DialogFooter>
         </form>

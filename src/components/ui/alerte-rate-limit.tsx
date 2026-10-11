@@ -28,13 +28,8 @@ export function AlerteRateLimit({
 
   if (secondes <= 0) return null;
 
-  const estAnglais = lang === "en";
-
   const messageAffiche =
-    message ||
-    (estAnglais
-      ? `Too many requests. Please wait ${secondes}s before trying again.`
-      : `Trop de tentatives. Veuillez patienter ${secondes}s avant de réessayer.`);
+    message || t("auth.tropDeTentatives", { secondes });
 
   if (compact) {
     return (
@@ -61,7 +56,7 @@ export function AlerteRateLimit({
       </div>
       <div className="flex-1">
         <p className="font-semibold leading-tight text-amber-900 dark:text-amber-200">
-          {estAnglais ? "Rate limit active" : "Délai de sécurité actif"}
+          {lang === "en" ? "Rate limit active" : "Délai de sécurité actif"}
         </p>
         <p className="mt-1 text-xs text-amber-700/90 dark:text-amber-300/90">
           {messageAffiche}

@@ -15,7 +15,7 @@ const TAILLES = {
 };
 
 /**
- * Emblème officiel de TELORA :
+ * Emblème officiel de Telora :
  * Le Disque d'Ondes Géométriques (Cercle profond + 3 ondes dynamiques en espace négatif)
  */
 export function IconeTelora({
@@ -95,7 +95,7 @@ export function IconeTelora({
 }
 
 /**
- * Logo complet TELORA (Icône + Typographie moderne)
+ * Logo complet Telora (Icône + Typographie moderne)
  */
 export function LogoTelora({
   size = "md",
@@ -113,15 +113,15 @@ export function LogoTelora({
             size === "xs"
               ? "text-xs"
               : size === "sm"
-              ? "text-sm"
-              : size === "lg"
-              ? "text-2xl"
-              : size === "xl"
-              ? "text-3xl"
-              : "text-base"
+                ? "text-sm"
+                : size === "lg"
+                  ? "text-2xl"
+                  : size === "xl"
+                    ? "text-3xl"
+                    : "text-base"
           } ${classNameTexte}`}
         >
-          TELORA
+          Telora
         </span>
       )}
     </div>

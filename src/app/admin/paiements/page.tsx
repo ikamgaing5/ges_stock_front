@@ -43,7 +43,7 @@ import {
 import type { ConfigurationPaiementAdmin, ModePaiement, Page, Paiement } from "@/types";
 
 export default function PageAdminPaiements() {
-  const { t, lang, formatMontant, formatDate, formatNombre } = useI18n();
+  const { t, formatMontant, formatDate, formatNombre } = useI18n();
 
   // Données de configuration
   const [config, setConfig] = useState<ConfigurationPaiementAdmin | null>(null);
@@ -161,16 +161,8 @@ export default function PageAdminPaiements() {
       {/* En-tête de page */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <TitrePage
-          titre={
-            lang === "en"
-              ? "Payment Gateway & Subscriptions"
-              : "Gestion des Encaissements & Passerelle CinetPay"
-          }
-          description={
-            lang === "en"
-              ? "Switch between testing and live processing, set up your CinetPay keys, and audit merchant subscriptions."
-              : "Basculez facilement entre les tests et les paiements réels, configurez vos identifiants CinetPay et suivez les règlements effectués par les commerçants."
-          }
+          titre={t("admin.passerellePaiementTitre")}
+          description={t("admin.passerellePaiementDesc")}
         />
 
         <Button
@@ -183,7 +175,7 @@ export default function PageAdminPaiements() {
           className="gap-2 cursor-pointer self-start sm:self-auto"
         >
           <RefreshCw className="h-4 w-4" />
-          <span>{lang === "en" ? "Refresh data" : "Actualiser"}</span>
+          <span>{t("commun.actualiser")}</span>
         </Button>
       </div>
 
@@ -210,12 +202,10 @@ export default function PageAdminPaiements() {
                 </div>
                 <div>
                   <CardTitle className="text-lg font-heading">
-                    {lang === "en" ? "Active Payment Environment" : "Environnement actuel des paiements"}
+                    {t("admin.environnementActuelPaiements")}
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    {lang === "en"
-                      ? "Choose whether merchant payments are simulated or processed directly by operators."
-                      : "Déterminez si les règlements des commerçants sont simulés ou réellement prélevés par les opérateurs."}
+                    {t("admin.environnementActuelPaiementsDesc")}
                   </CardDescription>
                 </div>
               </div>

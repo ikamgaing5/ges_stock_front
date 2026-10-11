@@ -76,6 +76,7 @@
  * boutons ronds dans une interface à angles doux.
  */
 :root {
+  --hauteur-barre-titre: 0px;
   --background: oklch(0.995 0.002 90);
   --foreground: oklch(0.17 0.008 60);
   --card: oklch(1 0 0);
@@ -443,4 +444,13 @@
 
 ::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/*
+ * VERSION DESKTOP :
+ * Masquage complet de la navbar pour libérer tout l'espace vertical.
+ * Le sélecteur de boutique est déporté directement dans la barre de titre.
+ */
+html.telora-desktop .barre-navigation-haut {
+  display: none !important;
 }

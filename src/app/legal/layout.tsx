@@ -57,7 +57,7 @@ export default function LayoutLegal({
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* Barre supérieure */}
-      <header className="border-b bg-background/95 sticky top-0 z-40 backdrop-blur">
+      <header className="border-b bg-background/95 sticky top-0 z-40 backdrop-blur print:hidden">
         <div className="container mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-3">
             <button
@@ -96,7 +96,7 @@ export default function LayoutLegal({
       </header>
 
       {/* En-tête de section et navigation textuelle sobre */}
-      <div className="border-b bg-muted/20">
+      <div className="border-b bg-muted/20 print:hidden">
         <div className="container mx-auto max-w-5xl px-4 pt-8 pb-0 sm:px-6">
           <FilAriane
             elements={[
@@ -152,14 +152,14 @@ export default function LayoutLegal({
       </div>
 
       {/* Contenu principal */}
-      <main className="flex-1 py-8 sm:py-12">
-        <div className="container mx-auto max-w-5xl px-4 sm:px-6">
+      <main className="flex-1 py-8 sm:py-12 print:py-2">
+        <div className="container mx-auto max-w-5xl px-4 sm:px-6 print:px-0">
           {children}
         </div>
       </main>
 
       {/* Pied de page style Spotify */}
-      <PiedDePageLegal complet={true} className="mt-auto bg-muted/10" />
+      <PiedDePageLegal complet={true} className="mt-auto bg-muted/10 print:hidden" />
     </div>
   );
 }

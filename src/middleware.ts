@@ -8,11 +8,17 @@ const ROUTES_PUBLIQUES = [
   "/mot-de-passe-oublie",
   "/merci",
   "/faq",
+  "/legal",
+  "/cgu",
   "/confidentialite",
   "/conditions",
   "/mentions-legales",
+  "/securite",
+  "/cookies",
+  "/accessibilite",
+  "/etudes-de-cas",
   // "/invitation/",
-  "/hors-ligne"
+  "/hors-ligne",
 ];
 
 const CLE_TOKEN = "gestion-stock-token";

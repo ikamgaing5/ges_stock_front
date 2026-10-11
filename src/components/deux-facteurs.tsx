@@ -405,7 +405,7 @@ export function DeuxFacteurs() {
                       setEtape("mot_de_passe");
                     }}
                   >
-                    <ShieldOff className="mr-2 h-3.5 w-3.5" />
+                    {/* <ShieldOff className="mr-2 h-3.5 w-3.5" /> */}
                     {t("deuxFacteurs.desactiver")}
                   </Button>
                 </div>
@@ -417,7 +417,7 @@ export function DeuxFacteurs() {
                 </p>
 
                 <Button size="sm" onClick={() => setEtape("mot_de_passe")}>
-                  <ShieldCheck className="mr-2 h-3.5 w-3.5" />
+                  {/* <ShieldCheck className="mr-2 h-3.5 w-3.5" /> */}
                   {t("deuxFacteurs.activer")}
                 </Button>
               </>

@@ -237,7 +237,7 @@ function FenetreAction({
 }) {
   const router = useRouter();
   const { boutiques, devise, deviseBoutique } = useAuth();
-  const { t, libelleStatut, lang } = useI18n();
+  const { t, libelleStatut } = useI18n();
 
   const deviseOrigine = telephone.boutique?.devise ?? deviseBoutique;
   const configDevise = obtenirDevise(devise);
@@ -438,9 +438,7 @@ function FenetreAction({
                       permettreDecimales={configDevise.decimales > 0}
                     />
                     <p className="text-xs text-muted-foreground">
-                      {lang === "en"
-                        ? "Leave as is if customer pays listed price."
-                        : "Laissez tel quel si le client paie le prix affiché."}
+                      {t("telephones.laisserTelQuelPrixAffiche")}
                     </p>
                   </div>
                 )}
@@ -533,9 +531,7 @@ function FenetreAction({
                     </Label>
                     {destinations.length === 0 ? (
                       <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-                        {lang === "en"
-                          ? "You do not have access to any other store."
-                          : "Vous n'avez accès à aucune autre boutique."}
+                        {t("telephones.aucuneAutreBoutiqueAcces")}
                       </p>
                     ) : (
                       <SelectRecherche
@@ -546,12 +542,8 @@ function FenetreAction({
                         }))}
                         valeur={boutiqueId}
                         onChange={(v) => setBoutiqueId(v)}
-                        placeholder={
-                          lang === "en" ? "Select store" : "Choisir la boutique"
-                        }
-                        placeholderRecherche={
-                          lang === "en" ? "Search store..." : "Rechercher une boutique…"
-                        }
+                        placeholder={t("commun.choisirBoutique")}
+                        placeholderRecherche={t("commun.rechercherBoutique")}
                       />
                     )}
                     {erreurs.boutique_destination_id && (
@@ -607,12 +599,8 @@ function FenetreAction({
                       onChange={(e) => setMotif(e.target.value)}
                       placeholder={
                         action.cle === "perte"
-                          ? lang === "en"
-                            ? "Lost, stolen, damaged..."
-                            : "Vol, casse, disparition…"
-                          : lang === "en"
-                            ? "Specify reason"
-                            : "Précisez la raison"
+                          ? t("telephones.motifPertePlaceholder")
+                          : t("telephones.preciserRaisonPlaceholder")
                       }
                     />
                     {erreurs.motif && (

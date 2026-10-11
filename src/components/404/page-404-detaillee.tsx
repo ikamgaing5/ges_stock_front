@@ -15,16 +15,21 @@ import { BasculeTheme } from "@/components/bascule-theme";
  * Supporte le bilinguisme (FR/EN) et les thèmes clair/sombre.
  */
 export function Page404Detaillee() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-background text-foreground">
       {/* Barre supérieure discrète */}
       <header className="border-b border-border/40 py-4 px-6">
         <div className="container mx-auto max-w-5xl flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 hover:opacity-90 transition-opacity"
+          >
             <IconeTelora size={28} />
-            <span className="font-heading text-sm font-bold tracking-tight">TELORA</span>
+            <span className="font-heading text-sm font-bold tracking-tight">
+              Telora
+            </span>
           </Link>
 
           <div className="flex items-center gap-2">
@@ -96,20 +101,32 @@ export function Page404Detaillee() {
 
         {/* Liens utiles contextuels */}
         <div className="border-t border-border/40 pt-6 text-xs text-muted-foreground flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-          <Link href="/connexion" className="hover:text-foreground hover:underline">
-            {lang === "en" ? "Sign in" : "Se connecter"}
+          <Link
+            href="/connexion"
+            className="hover:text-foreground hover:underline"
+          >
+            {t("marketing.connexion")}
           </Link>
           <span className="text-border">·</span>
-          <Link href="/inscription" className="hover:text-foreground hover:underline">
-            {lang === "en" ? "Sign up" : "Créer un compte"}
+          <Link
+            href="/inscription"
+            className="hover:text-foreground hover:underline"
+          >
+            {t("marketing.creerCompte")}
           </Link>
           <span className="text-border">·</span>
-          <Link href="/etudes-de-cas" className="hover:text-foreground hover:underline">
-            {lang === "en" ? "Case Studies" : "Études de cas"}
+          <Link
+            href="/etudes-de-cas"
+            className="hover:text-foreground hover:underline"
+          >
+            {t("marketing.etudesDeCas")}
           </Link>
           <span className="text-border">·</span>
-          <Link href="/legal/mentions-legales" className="hover:text-foreground hover:underline">
-            {lang === "en" ? "Legal Notice" : "Mentions légales"}
+          <Link
+            href="/legal/mentions-legales"
+            className="hover:text-foreground hover:underline"
+          >
+            {t("legal.mentionsLegalesTitre")}
           </Link>
         </div>
       </main>

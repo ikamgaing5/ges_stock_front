@@ -31,7 +31,11 @@ export default function LogoPreviewPage() {
       description:
         "Un trait unique et asymétrique qui naît d'une boucle d'infinité pour se propulser en aile dynamique, esquissant un 'T' majuscule ultra-moderne. Il incarne la vitesse, l'impulsion et la croissance commerciale.",
       image: "/telora-abstract-3.jpg",
-      tags: ["Monogramme T Abstrait", "Impulsion & Vélocité", "Émeraude & Saphir"],
+      tags: [
+        "Monogramme T Abstrait",
+        "Impulsion & Vélocité",
+        "Émeraude & Saphir",
+      ],
     },
   ];
 
@@ -45,10 +49,11 @@ export default function LogoPreviewPage() {
               <span>Identité Visuelle · Pure Géométrie</span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
-              Logos Abstraits & Créatifs pour TELORA
+              Logos Abstraits & Créatifs pour Telora
             </h1>
             <p className="text-sm text-neutral-400 mt-1">
-              Inspirés des plus grandes marques (Meta, Spotify, Nike, Adidas) : zéro gadget littéral, pureté géométrique et impact immédiat.
+              Inspirés des plus grandes marques (Meta, Spotify, Nike, Adidas) :
+              zéro gadget littéral, pureté géométrique et impact immédiat.
             </p>
           </div>
 
@@ -116,10 +121,14 @@ export default function LogoPreviewPage() {
         {/* Note informative */}
         <div className="rounded-xl border border-neutral-800 bg-neutral-900/30 p-6 text-center text-xs text-neutral-400 space-y-1">
           <p>
-            Lequel de ces 3 symboles géométriques correspond le mieux à l'esprit de <strong>TELORA</strong> ?
+            Lequel de ces 3 symboles géométriques correspond le mieux à l'esprit
+            de <strong>Telora</strong> ?
           </p>
           <p className="text-neutral-500">
-            Dès que vous validez votre préféré (<strong>Option 1</strong>, <strong>Option 2</strong> ou <strong>Option 3</strong>), nous générerons la version vectorielle SVG pour l'intégrer directement dans le code source de l'application !
+            Dès que vous validez votre préféré (<strong>Option 1</strong>,{" "}
+            <strong>Option 2</strong> ou <strong>Option 3</strong>), nous
+            générerons la version vectorielle SVG pour l'intégrer directement
+            dans le code source de l'application !
           </p>
         </div>
       </div>

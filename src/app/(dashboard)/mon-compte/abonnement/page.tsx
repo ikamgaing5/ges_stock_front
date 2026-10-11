@@ -32,6 +32,8 @@ import {
   Lock,
   MessageCircle,
   Phone,
+  Scale,
+  FileText,
   ShieldCheck,
   Smartphone,
   Store,
@@ -117,11 +119,7 @@ export default function PageAbonnement() {
     if (searchParams.get("statut") === "retour") {
       void chargerStatut();
       void rafraichir();
-      toast.info(
-        lang === "en"
-          ? "Confirming your subscription with the network..."
-          : "Confirmation de votre abonnement auprès de l'opérateur…",
-      );
+      toast.info(t("monCompte.confirmationAbonnementEnCours"));
     }
   }, [searchParams, chargerStatut, rafraichir, lang]);
 
@@ -177,11 +175,7 @@ export default function PageAbonnement() {
           moyen_paiement: moyenPaiement,
         });
 
-        toast.success(
-          lang === "en"
-            ? "Your subscription is now active! Your store is fully unlocked."
-            : "Votre abonnement est activé ! Votre boutique reste ouverte sans interruption.",
-        );
+        toast.success(t("monCompte.abonnementActiveSucces"));
 
         setModalOuvert(false);
         setSession(null);
@@ -192,11 +186,7 @@ export default function PageAbonnement() {
           reference: session.reference,
         });
 
-        toast.error(
-          lang === "en"
-            ? "Payment simulation declined (test mode)."
-            : "Simulation d'échec effectuée (mode test).",
-        );
+        toast.error(t("monCompte.simulationEchecEffectuee"));
       }
     } catch (e) {
       toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
@@ -230,20 +220,12 @@ export default function PageAbonnement() {
           render={<Link href="/mon-compte#facturation" />}
         >
           <ArrowLeft className="mr-1.5 h-4 w-4" />
-          {lang === "en" ? "Back to account & billing" : "Retour à mon compte & facturation"}
+          {t("monCompte.retourCompteEtFacturation")}
         </Button>
 
         <TitrePage
-          titre={
-            lang === "en"
-              ? "Keep your store running smoothly"
-              : "Choisissez votre formule pour travailler l'esprit tranquille"
-          }
-          description={
-            lang === "en"
-              ? "Simple, predictable plans designed for phone retailers. Pay easily using Orange Money, MTN MoMo or your bank card."
-              : "Fini les cahiers froissés, les doutes en fin de journée et les téléphones égarés. Choisissez votre forfait et réglez facilement par Orange Money, MTN MoMo ou Carte bancaire."
-          }
+          titre={t("monCompte.pageAbonnementTitre")}
+          description={t("monCompte.pageAbonnementDesc")}
         />
       </div>
 
@@ -284,16 +266,17 @@ export default function PageAbonnement() {
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="font-heading font-semibold text-foreground text-base">
                     {statut.est_expire
-                      ? lang === "en"
-                        ? "Your trial has concluded"
-                        : "Votre période d'essai gratuit est terminée"
+                      ? t("monCompte.essaiTermineTitre")
                       : statut.est_essai
-                        ? lang === "en"
-                          ? `Free Trial Period (${statut.jours_restants} days left)`
-                          : `Période d'essai offerte (${statut.jours_restants} ${statut.jours_restants > 1 ? "jours restants" : "jour restant"})`
-                        : lang === "en"
-                          ? `Your shop is active (${statut.plan === "premium" ? "Premium Plan" : "Standard Plan"})`
-                          : `Votre boutique est active et en règle (${statut.plan === "premium" ? "Formule Premium" : "Formule Standard"})`}
+                        ? t("monCompte.essaiRestantTitre", {
+                            jours: statut.jours_restants,
+                          })
+                        : t("monCompte.boutiqueActiveTitre", {
+                            formule:
+                              statut.plan === "premium"
+                                ? t("monCompte.formulePremiumTitre")
+                                : t("monCompte.formuleStandardTitre"),
+                          })}
                   </h3>
 
                   {statut.est_premium && (
@@ -305,16 +288,13 @@ export default function PageAbonnement() {
 
                 <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
                   {statut.est_expire
-                    ? lang === "en"
-                      ? "Your 14 days of free testing have ended. Choose your plan below so your sales team can keep scanning and selling phones peacefully."
-                      : "Vos 14 jours d'essai gratuits sont arrivés à leur terme. Choisissez votre formule ci-dessous pour que vos vendeuses continuent d'enregistrer les ventes au comptoir sans interruption."
+                    ? t("monCompte.essaiTermineDesc")
                     : statut.est_essai
-                      ? lang === "en"
-                        ? "Take all the time you need to scan your incoming stock and record your sales. No payment or credit card is required during your trial."
-                        : "Prenez tout votre temps pour scanner vos cartons d'arrivage, tester avec vos vendeuses et vérifier vos clôtures de caisse. Aucun paiement n'est exigé avant la fin de vos 14 jours."
-                      : lang === "en"
-                        ? `Everything is covered until ${statut.echeance ? formatDateCourte(statut.echeance) : "—"}. You can extend anytime with no penalty.`
-                        : `Tout fonctionne sans souci jusqu'au ${statut.echeance ? formatDateCourte(statut.echeance) : "—"} (${statut.jours_restants} jours restants). Vous pouvez prolonger à tout moment pour être serein.`}
+                      ? t("monCompte.essaiEnCoursDesc")
+                      : t("monCompte.actifDesc", {
+                          date: statut.echeance ? formatDateCourte(statut.echeance) : "—",
+                          jours: statut.jours_restants,
+                        })}
                 </p>
               </div>
             </div>
@@ -324,12 +304,12 @@ export default function PageAbonnement() {
               {estModeTest ? (
                 <div className="flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-3.5 py-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
                   <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                  <span>{lang === "en" ? "Testing Environment" : "Mode Test (Sans frais)"}</span>
+                  <span>{t("monCompte.environnementTest")}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span>{lang === "en" ? "Direct Orange & MTN" : "Paiements Sécurisés"}</span>
+                  <span>{t("monCompte.paiementsSecurises")}</span>
                 </div>
               )}
             </div>
@@ -342,7 +322,7 @@ export default function PageAbonnement() {
       {/* ------------------------------------------------------------- */}
       <div className="flex flex-col items-center justify-center gap-2 pt-2">
         <p className="text-xs sm:text-sm text-muted-foreground font-medium">
-          {lang === "en" ? "How often would you like to pay?" : "À quel rythme préférez-vous régler ?"}
+          {t("monCompte.rythmeReglement")}
         </p>
 
         <div className="inline-flex items-center rounded-xl border bg-muted/40 p-1.5 text-sm shadow-xs">
@@ -355,7 +335,7 @@ export default function PageAbonnement() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {lang === "en" ? "Every month (flexible)" : "Au mois le mois (sans engagement)"}
+            {t("monCompte.mensuelSansEngagement")}
           </button>
 
           <button
@@ -367,9 +347,9 @@ export default function PageAbonnement() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <span>{lang === "en" ? "1 Full Year" : "Pour toute l'année"}</span>
+            <span>{t("monCompte.annuelTitre")}</span>
             <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
-              {lang === "en" ? "2 months free" : "2 mois offerts "}
+              {t("monCompte.deuxMoisOfferts")}
             </span>
           </button>
         </div>
@@ -392,12 +372,10 @@ export default function PageAbonnement() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-xl font-heading font-bold text-foreground">
-                    {lang === "en" ? "Standard Plan" : "Formule Standard"}
+                    {t("monCompte.formuleStandardTitre")}
                   </CardTitle>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {lang === "en"
-                      ? "For a single store wanting order and zero phone loss"
-                      : "Idéal pour sécuriser 1 magasin et en finir avec les pertes"}
+                    {t("monCompte.formuleStandardSousTitre")}
                   </p>
                 </div>
                 {/* <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground">
@@ -412,19 +390,13 @@ export default function PageAbonnement() {
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {duree === 12
-                      ? lang === "en"
-                        ? "/ year (12 months)"
-                        : " / an (12 mois complets)"
-                      : lang === "en"
-                        ? "/ month"
-                        : " / mois"}
+                      ? t("monCompte.parAnDouzeMois")
+                      : t("monCompte.parMois")}
                   </span>
                 </div>
                 {duree === 12 && (
                   <p className="text-xs text-emerald-600 font-semibold mt-1">
-                    {lang === "en"
-                      ? "Pay 10 months, your store is covered for 12 months!"
-                      : "Vous payez 10 mois, votre magasin est ouvert et tranquille pendant 1 an !"}
+                    {t("monCompte.payezDixMoisStandard")}
                   </p>
                 )}
               </div>
@@ -492,9 +464,7 @@ export default function PageAbonnement() {
                   ? t("auth.reessayerDans", {
                       secondes: rateLimitPaiement.secondes,
                     })
-                  : lang === "en"
-                    ? "Activate Standard Plan"
-                    : "Activer la Formule Standard"}
+                  : t("monCompte.activerFormuleStandard")}
               </Button>
             </CardContent>
           </Card>
@@ -510,19 +480,17 @@ export default function PageAbonnement() {
             }`}
           >
             <div className="absolute top-0 right-0 rounded-bl-xl bg-primary px-3.5 py-1 text-[10px] font-bold text-primary-foreground uppercase tracking-wide">
-              {lang === "en" ? "Multi-store favorite" : "Le préféré des multi-boutiques"}
+              {t("monCompte.prefereMultiBoutiques")}
             </div>
 
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-xl font-heading font-bold text-foreground">
-                    {lang === "en" ? "Premium Plan" : "Formule Premium"}
+                    {t("monCompte.formulePremiumTitre")}
                   </CardTitle>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {lang === "en"
-                      ? "For merchants running 2, 3 or more shops"
-                      : "Pour les commerçants qui ont 2 boutiques ou plus (Akwa, Yaoundé, etc.)"}
+                    {t("monCompte.formulePremiumSousTitre")}
                   </p>
                 </div>
                 {/* <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
@@ -537,19 +505,13 @@ export default function PageAbonnement() {
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {duree === 12
-                      ? lang === "en"
-                        ? "/ year (12 months)"
-                        : " / an (12 mois complets)"
-                      : lang === "en"
-                        ? "/ month"
-                        : " / mois"}
+                      ? t("monCompte.parAnDouzeMois")
+                      : t("monCompte.parMois")}
                   </span>
                 </div>
                 {duree === 12 && (
                   <p className="text-xs text-emerald-600 font-semibold mt-1">
-                    {lang === "en"
-                      ? "Pay 10 months, your stores are covered for 12 months!"
-                      : "Vous payez 10 mois, toutes vos boutiques sont couvertes pendant 1 an !"}
+                    {t("monCompte.payezDixMoisPremium")}
                   </p>
                 )}
               </div>
@@ -623,9 +585,7 @@ export default function PageAbonnement() {
                   ? t("auth.reessayerDans", {
                       secondes: rateLimitPaiement.secondes,
                     })
-                  : lang === "en"
-                    ? "Activate Premium Plan"
-                    : "Activer la Formule Premium"}
+                  : t("monCompte.activerFormulePremium")}
               </Button>
             </CardContent>
           </Card>
@@ -670,6 +630,40 @@ export default function PageAbonnement() {
               Notre équipe d&apos;assistance est à votre écoute pour vous guider selon la taille de votre magasin.
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 4.b Cadre Contractuel : CGU & Accord de Confidentialité       */}
+      {/* ------------------------------------------------------------- */}
+      <div className="rounded-2xl border border-border/80 bg-card/60 p-5 mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Scale className="h-4 w-4 text-primary" />
+            <span>{t("monCompte.cadreContractuel")}</span>
+          </div>
+          <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+            {t("monCompte.cadreContractuelDesc")}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/legal/cgu"
+            target="_blank"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border hover:bg-muted text-foreground transition-colors cursor-pointer"
+          >
+            <FileText className="h-3.5 w-3.5 text-primary" />
+            <span>{t("monCompte.consulterCgu")}</span>
+          </Link>
+          <Link
+            href="/legal/confidentialite"
+            target="_blank"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border hover:bg-muted text-foreground transition-colors cursor-pointer"
+          >
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+            <span>{t("monCompte.consulterNda")}</span>
+          </Link>
         </div>
       </div>
 

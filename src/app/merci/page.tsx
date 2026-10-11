@@ -64,7 +64,7 @@ export default function PageMerci() {
           >
             <IconeTelora size={28} />
             <span className="font-heading text-sm font-bold tracking-tight">
-              TELORA
+              Telora
             </span>
           </Link>
 
@@ -89,7 +89,6 @@ export default function PageMerci() {
 
         {/* Bloc d'accueil & remerciement */}
         <div className="text-center space-y-4 max-w-2xl mx-auto">
-          
           <div className="space-y-3">
             <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text">
               {utilisateur?.name

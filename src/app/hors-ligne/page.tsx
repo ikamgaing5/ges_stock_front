@@ -15,8 +15,12 @@ export default function PageHorsLigne() {
 
   const estAnglais = lang === "en";
 
-  const titre = estAnglais ? "Can’t reach Telora" : "Impossible de joindre Telora";
-  const sousTitre = estAnglais ? "Check your connection." : "Vérifiez votre connexion.";
+  const titre = estAnglais
+    ? "Can’t reach Telora"
+    : "Impossible de joindre Telora";
+  const sousTitre = estAnglais
+    ? "Check your connection."
+    : "Vérifiez votre connexion.";
   const texteBouton = estAnglais ? "Try again" : "Réessayer";
   const texteConnexion = estAnglais ? "Connecting..." : "Connexion...";
 
@@ -96,7 +100,7 @@ export default function PageHorsLigne() {
       }}
     >
       <div className="flex max-w-[420px] flex-col items-center px-5 text-center">
-        {/* En-tête : Icône officielle icon.png + Typographie TELORA */}
+        {/* En-tête : Icône officielle icon.png + Typographie Telora */}
         <div className="mb-11 inline-flex items-center gap-3">
           <div className="relative h-[34px] w-[34px] overflow-hidden rounded-[6px]">
             <Image

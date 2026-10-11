@@ -8,7 +8,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { BandeauCookies } from "@/components/bandeau-cookies";
 import { SchemaOrg } from "@/components/seo/schema-org";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
-import { DetecteurHorsLigne } from "@/components/detecteur-hors-ligne";
+import { BarreTitreDesktop } from "@/components/layout/barre-titre-desktop";
+import { ContexteSidebarProvider } from "@/components/layout/contexte-sidebar";
+import { DetecteurMaintenance } from "@/components/maintenance/detecteur-maintenance";
 
 /*
  * Les polices sont chargées par next/font : les fichiers sont téléchargés
@@ -92,12 +94,17 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
-        <DetecteurHorsLigne />
         <SchemaOrg />
+        {/*<DetecteurHorsLigne />*/}
         <GoogleAnalytics />
         <I18nProvider>
           <ThemeProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <ContexteSidebarProvider>
+                <BarreTitreDesktop />
+                <DetecteurMaintenance>{children}</DetecteurMaintenance>
+              </ContexteSidebarProvider>
+            </AuthProvider>
             <BandeauCookies />
             <Toaster richColors position="top-right" />
           </ThemeProvider>

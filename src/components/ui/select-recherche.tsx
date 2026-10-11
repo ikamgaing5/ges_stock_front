@@ -45,7 +45,7 @@ export function SelectRecherche({
   erreur = false,
   id,
 }: SelectRechercheProps) {
-  const { lang } = useI18n();
+  const { t } = useI18n();
   const [ouvert, setOuvert] = useState(false);
   const [recherche, setRecherche] = useState("");
   const [indexSurvol, setIndexSurvol] = useState(0);
@@ -119,17 +119,11 @@ export function SelectRecherche({
     setOuvert(false);
   }
 
-  const libelleChargement =
-    texteChargement ??
-    (lang === "en" ? "Loading in progress..." : "Chargement en cours…");
-  const textePlaceholder =
-    placeholder ?? (lang === "en" ? "Select..." : "Sélectionner…");
+  const libelleChargement = texteChargement ?? t("commun.chargementEnCours");
+  const textePlaceholder = placeholder ?? t("commun.selectionner");
   const texteRecherchePlaceholder =
-    placeholderRecherche ??
-    (lang === "en" ? "Type to search..." : "Saisir pour chercher…");
-  const texteAucunResultat =
-    texteVide ??
-    (lang === "en" ? "No results found" : "Aucun résultat trouvé");
+    placeholderRecherche ?? t("commun.saisirPourChercher");
+  const texteAucunResultat = texteVide ?? t("commun.aucunResultat");
 
   const estDesactive = disabled || chargement;
 

@@ -47,16 +47,23 @@ export function FilAriane({
       aria-label="Fil d'Ariane"
       className={`flex items-center text-xs text-muted-foreground ${className}`}
     >
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaBreadcrumbs) }}
-      />
-      <ol className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+      <ol
+        itemScope
+        itemType="https://schema.org/BreadcrumbList"
+        className="flex flex-wrap items-center gap-1.5 sm:gap-2"
+      >
         {listeComplete.map((item, index) => {
           const estDernier = index === listeComplete.length - 1 || item.actif;
 
           return (
-            <li key={`${item.label}-${index}`} className="inline-flex items-center gap-1.5 sm:gap-2">
+            <li
+              key={`${item.label}-${index}`}
+              itemProp="itemListElement"
+              itemScope
+              itemType="https://schema.org/ListItem"
+              className="inline-flex items-center gap-1.5 sm:gap-2"
+            >
+              <meta itemProp="position" content={String(index + 1)} />
               {index > 0 && (
                 <ChevronRight className="h-3 w-3 text-muted-foreground/40 shrink-0" aria-hidden="true" />
               )}
@@ -69,24 +76,25 @@ export function FilAriane({
                   {index === 0 && inclureAccueil ? (
                     <span className="inline-flex items-center gap-1">
                       <Home className="h-3.5 w-3.5" />
-                      <span>{item.label}</span>
+                      <span itemProp="name">{item.label}</span>
                     </span>
                   ) : (
-                    item.label
+                    <span itemProp="name">{item.label}</span>
                   )}
                 </span>
               ) : (
                 <Link
                   href={item.href}
+                  itemProp="item"
                   className="hover:text-foreground transition-colors hover:underline underline-offset-4 truncate max-w-[180px]"
                 >
                   {index === 0 && inclureAccueil ? (
                     <span className="inline-flex items-center gap-1">
                       <Home className="h-3.5 w-3.5" />
-                      <span>{item.label}</span>
+                      <span itemProp="name">{item.label}</span>
                     </span>
                   ) : (
-                    item.label
+                    <span itemProp="name">{item.label}</span>
                   )}
                 </Link>
               )}

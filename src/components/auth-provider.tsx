@@ -20,7 +20,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
 import { api, effacerToken, enregistrerToken, lireToken } from "@/lib/api";
 import { detecterDeviseParIP } from "@/lib/geolocalisation";
 import {
@@ -81,6 +80,7 @@ type ContexteAuth = {
   connexion: (
     email: string,
     motDePasse: string,
+    securite?: Record<string, unknown>,
   ) => Promise<{ deuxFacteursRequis: boolean; jetonDefi?: string }>;
   connexionDeuxFacteurs: (jetonDefi: string, code: string) => Promise<void>;
   deconnexion: () => Promise<void>;
@@ -93,7 +93,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null);
   const [chargement, setChargement] = useState(true);
   const [boutiqueId, setBoutiqueId] = useState<string | null>(null);
-  const router = useRouter();
 
   const boutiques = useMemo(
     () => utilisateur?.boutiques ?? [],
@@ -205,7 +204,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         definirCookie(CLE_RETOUR, "", 0);
       }
 
-      // Validation de sécurité sur la destination
+      // Résolution de l'URL de destination sécurisée
+      let cible = "/";
       if (
         destination &&
         destination.startsWith("/") &&
@@ -215,17 +215,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         !destination.startsWith("/merci")
       ) {
         if (user.role === "admin" && !destination.startsWith("/admin")) {
-          router.push("/admin");
+          cible = "/admin";
         } else if (user.role !== "admin" && destination.startsWith("/admin")) {
-          router.push("/");
+          cible = "/";
         } else {
-          router.push(destination);
+          cible = destination;
         }
       } else {
-        router.push(user.role === "admin" ? "/admin" : "/");
+        cible = user.role === "admin" ? "/admin" : "/";
+      }
+
+      // Navigation native complète (Full Page Reload) pour éliminer toute latence/blocage SPA
+      if (typeof window !== "undefined") {
+        window.location.replace(cible);
       }
     },
-    [router],
+    [],
   );
 
   /**
@@ -237,10 +242,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * affiche alors le champ prévu.
    */
   const connexion = useCallback(
-    async (email: string, motDePasse: string) => {
+    async (email: string, motDePasse: string, securite?: Record<string, unknown>) => {
       const reponse = await api.post<ReponseConnexion>("/login", {
         email,
         password: motDePasse,
+        ...(securite ?? {}),
       });
 
       if (reponse.deux_facteurs_requis) {
@@ -275,10 +281,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     effacerToken();
     effacerDerniereActivite();
-    window.localStorage.removeItem(CLE_BOUTIQUE);
-    setUtilisateur(null);
-    router.push("/connexion");
-  }, [router]);
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(CLE_BOUTIQUE);
+      window.location.replace("/connexion");
+    }
+  }, []);
 
   // Surveillance d'inactivité (déconnexion automatique après 60 minutes)
   useEffect(() => {
@@ -296,15 +303,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       effacerDerniereActivite();
       if (typeof window !== "undefined") {
         window.localStorage.removeItem(CLE_BOUTIQUE);
+        window.location.replace("/connexion?inactivite=1");
       }
-      setUtilisateur(null);
-      router.push("/connexion?inactivite=1");
     });
 
     return () => {
       stopperSurveillance();
     };
-  }, [utilisateur, router]);
+  }, [utilisateur]);
 
   const [deviseChoisie, setDeviseChoisie] = useState<string | null>(null);
   const [deviseDetectee, setDeviseDetectee] = useState<string | null>(null);
@@ -391,4 +397,8 @@ export function useAuth() {
   }
 
   return contexte;
+}
+
+export function useAuthOptionnel() {
+  return useContext(Contexte);
 }

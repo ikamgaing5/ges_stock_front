@@ -56,7 +56,9 @@ export function PiedDePageLegal({
   ];
 
   return (
-    <footer className={`w-full border-t border-border/40 py-5 text-muted-foreground ${className}`}>
+    <footer
+      className={`w-full border-t border-border/40 py-5 text-muted-foreground ${className}`}
+    >
       <div className="container mx-auto max-w-6xl px-4 flex flex-col lg:flex-row items-center justify-between gap-4">
         {/* Logo de l'application à l'extrême gauche */}
         <div className="flex items-center gap-2 shrink-0">
@@ -66,7 +68,7 @@ export function PiedDePageLegal({
           >
             <IconeTelora size={24} />
             <span className="font-heading text-xs font-bold tracking-tight">
-              TELORA
+              Telora
             </span>
           </Link>
         </div>

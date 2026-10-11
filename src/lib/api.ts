@@ -89,6 +89,16 @@ export class ErreurApi extends Error {
     return this.statut === 429 || this.retryApres !== undefined;
   }
 
+  /** Indique si cette erreur correspond au mode maintenance de la plateforme (503). */
+  estMaintenance(): boolean {
+    return this.statut === 503 && Boolean(this.donnees?.maintenance);
+  }
+
+  /** Retourne les détails de la maintenance en cours si présents. */
+  infosMaintenance(): Record<string, unknown> | undefined {
+    return this.donnees?.maintenance as Record<string, unknown> | undefined;
+  }
+
   /** Retourne le nombre de secondes restantes (ou un repli par défaut). */
   secondesRestantes(defaut: number = 60): number {
     if (typeof this.retryApres === "number" && this.retryApres > 0) {
@@ -306,6 +316,23 @@ async function requete<T>(chemin: string, options: Options = {}): Promise<T> {
       if (!window.location.pathname.startsWith("/mon-compte/abonnement")) {
         window.location.href = "/mon-compte/abonnement?expire=1";
       }
+    }
+
+    // 503 = Plateforme en maintenance
+    if (reponse.status === 503 && donnees?.maintenance) {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("telora:maintenance", {
+            detail: donnees.maintenance,
+          }),
+        );
+      }
+      throw new ErreurApi(
+        donnees.message ?? "La plateforme est actuellement en cours de maintenance.",
+        503,
+        {},
+        donnees,
+      );
     }
 
     let messageAffiche = donnees?.message ?? "Une erreur est survenue.";

@@ -47,6 +47,7 @@ import {
   nettoyerRccm,
   validerRccm,
 } from "@/lib/validation-legale";
+import { useAntiBot } from "@/components/securite/champ-anti-bot";
 import type { Utilisateur } from "@/types";
 
 /** Délai imposé par le serveur entre deux envois de code, en secondes. */
@@ -56,6 +57,7 @@ export default function PageInscription() {
   const router = useRouter();
   const { rafraichir } = useAuth();
   const { t, lang } = useI18n();
+  const { antiBotData, ChampAntiBot } = useAntiBot();
 
   const [etape, setEtape] = useState<"vous" | "boutique" | "code">("vous");
 
@@ -82,8 +84,12 @@ export default function PageInscription() {
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [erreurGenerale, setErreurGenerale] = useState<string | null>(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
-  const [verificationEmailEnCours, setVerificationEmailEnCours] = useState(false);
-  const [emailVerifie, setEmailVerifie] = useState<{ email: string; disponible: boolean } | null>(null);
+  const [verificationEmailEnCours, setVerificationEmailEnCours] =
+    useState(false);
+  const [emailVerifie, setEmailVerifie] = useState<{
+    email: string;
+    disponible: boolean;
+  } | null>(null);
 
   // Rate limiting dynamique sur les différentes étapes
   const rateLimitFormulaire = useRateLimit();
@@ -121,7 +127,10 @@ export default function PageInscription() {
   const verifierDisponibiliteEmail = useCallback(
     async (emailSaisi: string): Promise<boolean> => {
       const emailNormalise = emailSaisi.trim().toLowerCase();
-      if (!emailNormalise || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalise)) {
+      if (
+        !emailNormalise ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalise)
+      ) {
         return false;
       }
 
@@ -138,12 +147,15 @@ export default function PageInscription() {
 
       setVerificationEmailEnCours(true);
       try {
-        const reponse = await api.post<{ disponible: boolean; message?: string }>(
-          "/inscription/verifier-email",
-          { email: emailNormalise }
-        );
+        const reponse = await api.post<{
+          disponible: boolean;
+          message?: string;
+        }>("/inscription/verifier-email", { email: emailNormalise });
 
-        setEmailVerifie({ email: emailNormalise, disponible: reponse.disponible });
+        setEmailVerifie({
+          email: emailNormalise,
+          disponible: reponse.disponible,
+        });
 
         if (!reponse.disponible) {
           const msg = reponse.message || t("auth.emailIndisponible");
@@ -180,7 +192,7 @@ export default function PageInscription() {
         setVerificationEmailEnCours(false);
       }
     },
-    [emailVerifie, t]
+    [emailVerifie, t],
   );
 
   // Vérification automatique après une courte pause de saisie (debounce)
@@ -227,7 +239,7 @@ export default function PageInscription() {
         label: lang === "en" ? "Good" : "Bon",
         couleur: "bg-blue-500",
       };
-    } 
+    }
     return {
       score: 4,
       label: lang === "en" ? "Strong" : "Solide",
@@ -242,10 +254,7 @@ export default function PageInscription() {
     const errs: Record<string, string> = {};
 
     if (!champs.name.trim()) {
-      errs.name =
-        lang === "en"
-          ? "Enter your name."
-          : "Indiquez votre nom.";
+      errs.name = lang === "en" ? "Enter your name." : "Indiquez votre nom.";
     }
 
     const emailNormalise = champs.email.trim().toLowerCase();
@@ -329,8 +338,7 @@ export default function PageInscription() {
     }
 
     if (!champs.pays) {
-      errs.pays =
-        lang === "en" ? "Select a country." : "Sélectionnez un pays.";
+      errs.pays = lang === "en" ? "Select a country." : "Sélectionnez un pays.";
     }
 
     if (!champs.boutique_ville.trim()) {
@@ -370,6 +378,7 @@ export default function PageInscription() {
       await api.post("/inscription/code", {
         email: champs.email,
         name: champs.name,
+        ...antiBotData,
       });
 
       setEtape("code");
@@ -416,7 +425,10 @@ export default function PageInscription() {
         donneesFormulaire.append("telephone", champs.telephone);
         donneesFormulaire.append("boutique_telephone", champs.telephone);
         donneesFormulaire.append("password", champs.password);
-        donneesFormulaire.append("password_confirmation", champs.password_confirmation);
+        donneesFormulaire.append(
+          "password_confirmation",
+          champs.password_confirmation,
+        );
         donneesFormulaire.append("pays", champs.pays);
         donneesFormulaire.append("boutique_nom", champs.boutique_nom);
         donneesFormulaire.append("boutique_adresse", champs.boutique_adresse);
@@ -424,12 +436,15 @@ export default function PageInscription() {
         donneesFormulaire.append("niu", nettoyerNiu(champs.niu));
         donneesFormulaire.append(
           "registre_commerce",
-          nettoyerRccm(champs.registre_commerce)
+          nettoyerRccm(champs.registre_commerce),
         );
         donneesFormulaire.append("code", codeSaisi);
         if (logoFichier) {
           donneesFormulaire.append("logo", logoFichier);
         }
+        Object.entries(antiBotData).forEach(([k, v]) => {
+          donneesFormulaire.append(k, String(v));
+        });
 
         const reponse = await api.post<{ token: string; user: Utilisateur }>(
           "/inscription",
@@ -437,17 +452,36 @@ export default function PageInscription() {
         );
 
         enregistrerToken(reponse.token);
-        await rafraichir();
-        router.push("/merci");
+        if (typeof window !== "undefined") {
+          window.location.replace("/merci");
+        }
       } catch (e) {
         if (e instanceof ErreurApi) {
           rateLimitCreation.gererErreur(e);
           const parChamp = e.parChamp();
           setErreurs(parChamp);
 
-          const champsBoutique = ["boutique_nom", "pays", "boutique_ville", "boutique_adresse", "niu", "registre_commerce", "logo"];
-          const erreursBoutique = Object.keys(parChamp).filter((c) => champsBoutique.includes(c));
-          const erreursVous = Object.keys(parChamp).filter((c) => ["name", "email", "telephone", "password", "password_confirmation"].includes(c));
+          const champsBoutique = [
+            "boutique_nom",
+            "pays",
+            "boutique_ville",
+            "boutique_adresse",
+            "niu",
+            "registre_commerce",
+            "logo",
+          ];
+          const erreursBoutique = Object.keys(parChamp).filter((c) =>
+            champsBoutique.includes(c),
+          );
+          const erreursVous = Object.keys(parChamp).filter((c) =>
+            [
+              "name",
+              "email",
+              "telephone",
+              "password",
+              "password_confirmation",
+            ].includes(c),
+          );
 
           if (erreursVous.length > 0) {
             setEtape("vous");
@@ -462,7 +496,15 @@ export default function PageInscription() {
         setEnvoiEnCours(false);
       }
     },
-    [champs, logoFichier, rafraichir, router, t, rateLimitCreation, envoiEnCours],
+    [
+      champs,
+      logoFichier,
+      rafraichir,
+      router,
+      t,
+      rateLimitCreation,
+      envoiEnCours,
+    ],
   );
 
   async function renvoyerCode() {
@@ -509,7 +551,7 @@ export default function PageInscription() {
         <div className="flex items-center gap-3">
           <IconeTelora size={32} />
           <span className="font-heading text-xl font-bold tracking-tight">
-            TELORA
+            Telora
           </span>
         </div>
 
@@ -554,7 +596,7 @@ export default function PageInscription() {
         <div className="mb-6 flex items-center gap-2.5 lg:hidden">
           <IconeTelora size={32} />
           <span className="font-heading text-lg font-bold tracking-tight">
-            TELORA
+            Telora
           </span>
         </div>
 
@@ -565,7 +607,9 @@ export default function PageInscription() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">
-                  {lang === "en" ? "Step 1 of 3: your credentials" : "Étape 1 sur 3 : vos identifiants"}
+                  {lang === "en"
+                    ? "Step 1 of 3: your credentials"
+                    : "Étape 1 sur 3 : vos identifiants"}
                 </span>
                 <span>33%</span>
               </div>
@@ -595,7 +639,11 @@ export default function PageInscription() {
               </div>
             )}
 
-            <form noValidate onSubmit={passerAEtapeBoutique} className="space-y-5">
+            <form
+              noValidate
+              onSubmit={passerAEtapeBoutique}
+              className="space-y-5"
+            >
               {/* SECTION 1 : VOUS */}
               <div className="rounded-2xl border border-border/80 bg-card/60 p-5 shadow-xs backdrop-blur-xs space-y-4">
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2.5">
@@ -635,16 +683,21 @@ export default function PageInscription() {
                         className={`h-10 pr-9 ${
                           erreurs.email
                             ? "border-destructive focus-visible:ring-destructive/30"
-                            : emailVerifie?.email === champs.email.trim().toLowerCase() && emailVerifie?.disponible
-                            ? "border-emerald-500 focus-visible:ring-emerald-500/30"
-                            : ""
+                            : emailVerifie?.email ===
+                                  champs.email.trim().toLowerCase() &&
+                                emailVerifie?.disponible
+                              ? "border-emerald-500 focus-visible:ring-emerald-500/30"
+                              : ""
                         }`}
                         autoComplete="username"
                         value={champs.email}
                         onChange={(e) => modifier("email", e.target.value)}
                         onBlur={() => {
                           const normalise = champs.email.trim().toLowerCase();
-                          if (normalise && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalise)) {
+                          if (
+                            normalise &&
+                            /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalise)
+                          ) {
                             void verifierDisponibiliteEmail(normalise);
                           }
                         }}
@@ -654,7 +707,10 @@ export default function PageInscription() {
                         <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                           <Loader2 className="h-4 w-4 animate-spin text-primary" />
                         </div>
-                      ) : emailVerifie?.email === champs.email.trim().toLowerCase() && emailVerifie?.disponible && !erreurs.email ? (
+                      ) : emailVerifie?.email ===
+                          champs.email.trim().toLowerCase() &&
+                        emailVerifie?.disponible &&
+                        !erreurs.email ? (
                         <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500">
                           <CheckCircle2 className="h-4 w-4" />
                         </div>
@@ -707,7 +763,9 @@ export default function PageInscription() {
                       />
                       <button
                         type="button"
-                        onClick={() => setAfficherMotDePasse(!afficherMotDePasse)}
+                        onClick={() =>
+                          setAfficherMotDePasse(!afficherMotDePasse)
+                        }
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       >
                         {afficherMotDePasse ? (
@@ -798,13 +856,17 @@ export default function PageInscription() {
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       <span>
-                        {lang === "en" ? "Checking email..." : "Vérification de l'e-mail..."}
+                        {lang === "en"
+                          ? "Checking email..."
+                          : "Vérification de l'e-mail..."}
                       </span>
                     </>
                   ) : (
                     <>
                       <span>
-                        {lang === "en" ? "Continue: set up store" : "Continuer : configurer ma boutique"}
+                        {lang === "en"
+                          ? "Continue: set up store"
+                          : "Continuer : configurer ma boutique"}
                       </span>
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </>
@@ -832,7 +894,9 @@ export default function PageInscription() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">
-                  {lang === "en" ? "Step 2 of 3: your store" : "Étape 2 sur 3 : votre boutique"}
+                  {lang === "en"
+                    ? "Step 2 of 3: your store"
+                    : "Étape 2 sur 3 : votre boutique"}
                 </span>
                 <span>66%</span>
               </div>
@@ -851,13 +915,19 @@ export default function PageInscription() {
               className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              <span>{lang === "en" ? "Back to credentials" : "Retour à vos identifiants"}</span>
+              <span>
+                {lang === "en"
+                  ? "Back to credentials"
+                  : "Retour à vos identifiants"}
+              </span>
             </button>
 
             {/* Titre et accroche */}
             <div>
               <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                {lang === "en" ? "Your store details" : "Informations de votre boutique"}
+                {lang === "en"
+                  ? "Your store details"
+                  : "Informations de votre boutique"}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {lang === "en"
@@ -878,6 +948,7 @@ export default function PageInscription() {
             )}
 
             <form noValidate onSubmit={demanderCode} className="space-y-5">
+              <ChampAntiBot />
               {/* SECTION BOUTIQUE & POINT DE VENTE */}
               <div className="rounded-2xl border border-border/80 bg-card/60 p-5 shadow-xs backdrop-blur-xs space-y-4">
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2.5">
@@ -1068,9 +1139,7 @@ export default function PageInscription() {
                     </>
                   ) : (
                     <>
-                      <span>
-                        {t("auth.CreerBoutiqueCode")}
-                      </span>
+                      <span>{t("auth.CreerBoutiqueCode")}</span>
                       <MailCheck className="ml-2 h-4 w-4" />
                     </>
                   )}
@@ -1078,6 +1147,50 @@ export default function PageInscription() {
 
                 <p className="text-center text-xs text-muted-foreground">
                   {t("auth.EssaieGratuit")}
+                </p>
+
+                <p className="text-center text-[11px] text-muted-foreground/80 leading-relaxed px-2">
+                  {lang === "en" ? (
+                    <>
+                      By creating an account, you agree to our{" "}
+                      <Link
+                        href="/legal/cgu"
+                        target="_blank"
+                        className="underline underline-offset-2 hover:text-foreground text-primary transition-colors font-medium"
+                      >
+                        Terms of Service
+                      </Link>{" "}
+                      and our{" "}
+                      <Link
+                        href="/legal/confidentialite"
+                        target="_blank"
+                        className="underline underline-offset-2 hover:text-foreground text-primary transition-colors font-medium"
+                      >
+                        Privacy & Confidentiality Agreement
+                      </Link>
+                      .
+                    </>
+                  ) : (
+                    <>
+                      En créant un compte, vous acceptez nos{" "}
+                      <Link
+                        href="/legal/cgu"
+                        target="_blank"
+                        className="underline underline-offset-2 hover:text-foreground text-primary transition-colors font-medium"
+                      >
+                        Conditions d'utilisation
+                      </Link>{" "}
+                      et notre{" "}
+                      <Link
+                        href="/legal/confidentialite"
+                        target="_blank"
+                        className="underline underline-offset-2 hover:text-foreground text-primary transition-colors font-medium"
+                      >
+                        Accord de confidentialité
+                      </Link>
+                      .
+                    </>
+                  )}
                 </p>
               </div>
             </form>
@@ -1091,7 +1204,9 @@ export default function PageInscription() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="font-medium text-foreground">
-                  {lang === "en" ? "Step 3 of 3: confirm your email" : "Étape 3 sur 3 : confirmez votre email"}
+                  {lang === "en"
+                    ? "Step 3 of 3: confirm your email"
+                    : "Étape 3 sur 3 : confirmez votre email"}
                 </span>
                 <span>100%</span>
               </div>
@@ -1198,7 +1313,9 @@ export default function PageInscription() {
                   className="inline-flex items-center gap-1.5 font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  {lang === "en" ? "Back to store setup" : "Modifier les informations de la boutique"}
+                  {lang === "en"
+                    ? "Back to store setup"
+                    : "Modifier les informations de la boutique"}
                 </button>
 
                 <button

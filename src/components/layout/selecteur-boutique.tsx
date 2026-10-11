@@ -15,6 +15,7 @@ import { Check, ChevronsUpDown, Store } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +26,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function SelecteurBoutique() {
+export function SelecteurBoutique({
+  compact = false,
+  className = "",
+}: {
+  compact?: boolean;
+  className?: string;
+}) {
   const { boutiques, boutiqueActive, changerBoutique, utilisateur } = useAuth();
   const { t } = useI18n();
 
@@ -35,15 +42,15 @@ export function SelecteurBoutique() {
   if (boutiques.length === 1) {
     const b = boutiques[0];
     return (
-      <p className="flex min-w-0 items-center gap-2 text-sm">
-        <Store className="h-4 w-4 shrink-0 text-muted-foreground" />
-        <span className="truncate font-medium">{b.nom}</span>
-        {b.adresse && (
+      <div className={cn("flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground", className)}>
+        <Store className={compact ? "h-3.5 w-3.5 shrink-0" : "h-4 w-4 shrink-0 text-muted-foreground"} />
+        <span className="truncate font-medium text-foreground">{b.nom}</span>
+        {b.adresse && !compact && (
           <span className="truncate text-xs text-muted-foreground font-normal">
             ({b.adresse})
           </span>
         )}
-      </p>
+      </div>
     );
   }
 
@@ -57,13 +64,25 @@ export function SelecteurBoutique() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        render={<Button variant="outline" size="sm" className="max-w-64" />}
+        render={
+          compact ? (
+            <button
+              type="button"
+              className={cn(
+                "flex h-7 max-w-56 items-center gap-1.5 rounded-md border border-border/70 bg-background/80 px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer shadow-2xs outline-none",
+                className,
+              )}
+            />
+          ) : (
+            <Button variant="outline" size="sm" className={cn("max-w-64", className)} />
+          )
+        }
       >
-        <Store className="h-4 w-4 shrink-0" />
+        <Store className={compact ? "h-3.5 w-3.5 shrink-0 text-muted-foreground" : "h-4 w-4 shrink-0"} />
         <span className="truncate font-medium">
           {libelleActif}
         </span>
-        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+        <ChevronsUpDown className={compact ? "h-3 w-3 shrink-0 opacity-50" : "h-3.5 w-3.5 shrink-0 opacity-60"} />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="w-72">

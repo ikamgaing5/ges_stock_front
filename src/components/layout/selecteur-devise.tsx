@@ -29,7 +29,7 @@ export function SelecteurDevise({
 }) {
   const { devise, changerDevise, deviseBoutique } = useAuth();
   const { lang } = useI18n();
-
+  const { t } = useI18n();
   const deviseActive = obtenirDevise(devise);
 
   return (
@@ -58,7 +58,7 @@ export function SelecteurDevise({
       <DropdownMenuContent align="end" className="w-64 max-h-96 overflow-y-auto">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
-            {lang === "en" ? "Display currency" : "Devise d'affichage"}
+            {t("commun.deviseAffichage")}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
 
@@ -80,7 +80,7 @@ export function SelecteurDevise({
                     </span>
                     {estBoutique && (
                       <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                        {lang === "en" ? "Store base" : "Boutique"}
+                        {t("commun.boutiqueBase")}
                       </span>
                     )}
                   </div>

@@ -44,7 +44,7 @@ import type { Boutique } from "@/types";
 
 export default function PageBoutiques() {
   const { rafraichir, utilisateur } = useAuth();
-  const { t, formatNombre, lang } = useI18n();
+  const { t, formatNombre } = useI18n();
 
   const [boutiques, setBoutiques] = useState<Boutique[]>([]);
   const [chargement, setChargement] = useState(true);
@@ -228,7 +228,7 @@ export default function PageBoutiques() {
                         <strong className="font-medium mr-1">NIU :</strong> {boutique.niu}
                         {boutique.afficher_niu_facture === false && (
                           <span className="ml-1.5 text-[10px] text-muted-foreground italic font-normal">
-                            ({lang === "en" ? "hidden on invoices" : "masqué sur factures"})
+                            ({t("boutiques.masqueSurFactures")})
                           </span>
                         )}
                       </span>
@@ -238,7 +238,7 @@ export default function PageBoutiques() {
                         <strong className="font-medium mr-1">RCCM :</strong> {boutique.registre_commerce}
                         {boutique.afficher_rccm_facture === false && (
                           <span className="ml-1.5 text-[10px] text-muted-foreground italic font-normal">
-                            ({lang === "en" ? "hidden on invoices" : "masqué sur factures"})
+                            ({t("boutiques.masqueSurFactures")})
                           </span>
                         )}
                       </span>
@@ -337,14 +337,10 @@ export default function PageBoutiques() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {lang === "en"
-                ? `Delete "${aSupprimer?.nom}"?`
-                : `Supprimer « ${aSupprimer?.nom} » ?`}
+              {t("boutiques.supprimerBoutiqueTitre", { nom: aSupprimer?.nom ?? "" })}
             </DialogTitle>
             <DialogDescription>
-              {lang === "en"
-                ? "A store that still contains devices cannot be deleted. Transfer them first or simply mark the store as closed."
-                : "Une boutique qui contient encore des appareils ne peut pas être supprimée. Transférez-les d'abord, ou marquez simplement la boutique comme fermée."}
+              {t("boutiques.supprimerBoutiqueDesc")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -473,7 +469,7 @@ function FenetreBoutique({
   const memePays = champs.pays === (utilisateur?.pays || "CM");
   const paysActif = LISTE_PAYS.find((p) => p.code === champs.pays);
   const nomPaysChoisi =
-    lang === "en" ? paysActif?.nomEn : paysActif?.nomFr || champs.pays;
+    (lang === "en" ? paysActif?.nomEn : paysActif?.nomFr) || champs.pays;
 
   async function envoyer(evenement: React.FormEvent) {
     evenement.preventDefault();
@@ -481,16 +477,10 @@ function FenetreBoutique({
 
     const errs: Record<string, string> = {};
     if (!champs.ville.trim()) {
-      errs.ville =
-        lang === "en"
-          ? "Store city is required."
-          : "La ville du point de vente est obligatoire.";
+      errs.ville = t("boutiques.villeRequise");
     }
     if (!champs.adresse.trim()) {
-      errs.adresse =
-        lang === "en"
-          ? "Store address is required."
-          : "L'adresse du point de vente est obligatoire.";
+      errs.adresse = t("boutiques.adresseRequise");
     }
 
     if (!memePays) {
@@ -515,8 +505,7 @@ function FenetreBoutique({
     }
 
     if (!champs.telephone.trim()) {
-      errs.telephone =
-        lang === "en" ? "Phone number is required." : "Le numéro de téléphone est obligatoire.";
+      errs.telephone = t("boutiques.telephoneObligatoire");
     }
 
     if (Object.keys(errs).length > 0) {
@@ -555,9 +544,7 @@ function FenetreBoutique({
     try {
       if (modification) {
         await api.put(`/boutiques/${boutique!.id}`, formData);
-        toast.success(
-          lang === "en" ? "Store updated." : "Boutique mise à jour.",
-        );
+        toast.success(t("boutiques.boutiqueModifiee"));
       } else {
         await api.post("/boutiques", formData);
         toast.success(t("boutiques.boutiqueCreee"));
@@ -588,9 +575,7 @@ function FenetreBoutique({
           <DialogHeader>
             <DialogTitle>
               {modification
-                ? lang === "en"
-                  ? "Edit Store"
-                  : "Modifier la boutique"
+                ? t("boutiques.modifierLaBoutique")
                 : t("boutiques.ajouterBoutique")}
             </DialogTitle>
           </DialogHeader>
@@ -605,16 +590,14 @@ function FenetreBoutique({
                 className="bg-muted/50 font-medium text-foreground cursor-not-allowed"
               />
               <p className="text-[11px] text-muted-foreground">
-                {lang === "en"
-                  ? "All your stores share your enterprise name. Differentiate them with the address below."
-                  : "Toutes vos boutiques portent le nom de votre entreprise. Elles sont différenciées par leur adresse."}
+                {t("boutiques.explicationNomEntreprise")}
               </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="b-pays">
-                  {lang === "en" ? "Country" : "Pays"}
+                  {t("boutiques.pays")}
                 </Label>
                 <SelectRecherche
                   id="b-pays"
@@ -626,12 +609,8 @@ function FenetreBoutique({
                   }))}
                   valeur={champs.pays}
                   onChange={(v) => v && modifier("pays", v)}
-                  placeholder={
-                    lang === "en" ? "Select country" : "Sélectionner un pays"
-                  }
-                  placeholderRecherche={
-                    lang === "en" ? "Search country..." : "Rechercher un pays…"
-                  }
+                  placeholder={t("boutiques.selectionnerPays")}
+                  placeholderRecherche={t("boutiques.rechercherPays")}
                 />
               </div>
 
@@ -648,11 +627,7 @@ function FenetreBoutique({
                   valeur={champs.devise}
                   onChange={(v) => v && modifier("devise", v)}
                   placeholder={t("boutiques.devise")}
-                  placeholderRecherche={
-                    lang === "en"
-                      ? "Search currency..."
-                      : "Rechercher une devise…"
-                  }
+                  placeholderRecherche={t("boutiques.rechercherDevise")}
                 />
               </div>
             </div>
@@ -707,23 +682,23 @@ function FenetreBoutique({
                 <div className="flex items-center gap-2 font-semibold text-emerald-700 dark:text-emerald-400">
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
                   <span>
-                    {lang === "en"
-                      ? "Legal identifiers automatically inherited"
-                      : "Identifiants légaux hérités de l'entreprise"}
+                    {t("boutiques.identifiantsLegauxHerites")}
                   </span>
                 </div>
                 <p className="text-muted-foreground text-[11px] leading-relaxed">
-                  {lang === "en"
-                    ? `This store is located in your enterprise's home country (${nomPaysChoisi}). It automatically shares your enterprise NIU (${utilisateur?.niu || "—"}) and RCCM (${utilisateur?.registre_commerce || "—"}).`
-                    : `Cette boutique se trouve dans le même pays que votre entreprise (${nomPaysChoisi}). Elle hérite automatiquement de votre NIU (${utilisateur?.niu || "—"}) et de votre RCCM (${utilisateur?.registre_commerce || "—"}).`}
+                  {t("boutiques.identifiantsHeritesDesc", {
+                    pays: nomPaysChoisi,
+                    niu: utilisateur?.niu || "—",
+                    rccm: utilisateur?.registre_commerce || "—",
+                  })}
                 </p>
               </div>
             ) : (
               <div className="space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3.5">
                 <div className="text-xs text-amber-700 dark:text-amber-400 font-medium">
-                  {lang === "en"
-                    ? `This store is located in ${nomPaysChoisi}. Please enter its local NIU and RCCM:`
-                    : `Cette boutique est située en ${nomPaysChoisi}. Veuillez renseigner le NIU et le RCCM locaux :`}
+                  {t("boutiques.boutiqueSitueeDans", {
+                    pays: nomPaysChoisi,
+                  })}
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
@@ -778,9 +753,7 @@ function FenetreBoutique({
             {/* Options d'affichage factures pour le NIU et le RCCM */}
             <div className="rounded-xl border border-border/80 bg-muted/20 p-3.5 space-y-2.5">
               <div className="text-xs font-semibold text-foreground">
-                {lang === "en"
-                  ? "Invoices & Receipts Display"
-                  : "Affichage sur les factures et reçus"}
+                {t("boutiques.affichageFacturesEtRecus")}
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="flex items-center gap-2.5">
@@ -793,9 +766,7 @@ function FenetreBoutique({
                     htmlFor="b-afficher-niu"
                     className="text-xs font-normal text-muted-foreground cursor-pointer"
                   >
-                    {lang === "en"
-                      ? "Display NIU on invoices"
-                      : "Afficher le NIU sur les factures"}
+                    {t("boutiques.afficherNiuFactures")}
                   </Label>
                 </div>
 
@@ -809,9 +780,7 @@ function FenetreBoutique({
                     htmlFor="b-afficher-rccm"
                     className="text-xs font-normal text-muted-foreground cursor-pointer"
                   >
-                    {lang === "en"
-                      ? "Display RCCM on invoices"
-                      : "Afficher le RCCM sur les factures"}
+                    {t("boutiques.afficherRccmFactures")}
                   </Label>
                 </div>
               </div>
@@ -842,14 +811,10 @@ function FenetreBoutique({
               />
               <div className="min-w-0 flex-1 text-xs">
                 <p className="font-semibold text-foreground">
-                  {lang === "en"
-                    ? "Unified Enterprise Logo"
-                    : "Logo unique de l'entreprise"}
+                  {t("boutiques.logoUniqueEntreprise")}
                 </p>
                 <p className="text-muted-foreground text-[11px] leading-relaxed">
-                  {lang === "en"
-                    ? "All your stores share this logo on receipts and invoices. You can update it in My Account."
-                    : "Toutes vos boutiques partagent ce logo sur les factures et reçus. Vous pouvez le modifier depuis Mon Compte."}
+                  {t("boutiques.logoPartageFacturesDesc")}
                 </p>
               </div>
             </div>
@@ -876,9 +841,7 @@ function FenetreBoutique({
               )}
               {modification
                 ? t("commun.enregistrer")
-                : lang === "en"
-                  ? "Create store"
-                  : "Créer la boutique"}
+                : t("boutiques.creerLaBoutique")}
             </Button>
           </DialogFooter>
         </form>
@@ -886,3 +849,4 @@ function FenetreBoutique({
     </Dialog>
   );
 }
+

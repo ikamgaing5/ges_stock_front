@@ -55,7 +55,7 @@ export function ModalFactureAbonnement({ reference, ouvert, onFermer }: Props) {
           setErreur(
             err instanceof ErreurApi
               ? err.resume()
-              : "Impossible de charger la facture demandée."
+              : "Impossible de charger la facture demandée.",
           );
         }
       })
@@ -122,7 +122,7 @@ export function ModalFactureAbonnement({ reference, ouvert, onFermer }: Props) {
                   <div className="flex items-center gap-2">
                     <IconeTelora size={32} />
                     <span className="font-heading text-lg font-bold tracking-tight text-foreground">
-                      TELORA
+                      Telora
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground space-y-0.5">
@@ -134,7 +134,9 @@ export function ModalFactureAbonnement({ reference, ouvert, onFermer }: Props) {
                       {facture.emetteur.ville}, {facture.emetteur.pays}
                     </p>
                     <p>
-                      NIU : <span className="font-mono">{facture.emetteur.niu}</span> • RCCM :{" "}
+                      NIU :{" "}
+                      <span className="font-mono">{facture.emetteur.niu}</span>{" "}
+                      • RCCM :{" "}
                       <span className="font-mono">{facture.emetteur.rccm}</span>
                     </p>
                     <p>Contact : {facture.emetteur.email}</p>
@@ -175,7 +177,9 @@ export function ModalFactureAbonnement({ reference, ouvert, onFermer }: Props) {
                     </p>
                     <p className="text-muted-foreground">
                       {facture.client.email}
-                      {facture.client.telephone ? ` • ${facture.client.telephone}` : ""}
+                      {facture.client.telephone
+                        ? ` • ${facture.client.telephone}`
+                        : ""}
                     </p>
                     {facture.client.adresse && (
                       <p className="text-muted-foreground">
@@ -192,12 +196,18 @@ export function ModalFactureAbonnement({ reference, ouvert, onFermer }: Props) {
                   <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
                     {facture.client.niu && (
                       <p>
-                        NIU : <span className="font-mono font-medium text-foreground">{facture.client.niu}</span>
+                        NIU :{" "}
+                        <span className="font-mono font-medium text-foreground">
+                          {facture.client.niu}
+                        </span>
                       </p>
                     )}
                     {facture.client.rccm && (
                       <p>
-                        RCCM : <span className="font-mono font-medium text-foreground">{facture.client.rccm}</span>
+                        RCCM :{" "}
+                        <span className="font-mono font-medium text-foreground">
+                          {facture.client.rccm}
+                        </span>
                       </p>
                     )}
                     <p>Pays : {facture.client.pays}</p>
@@ -224,7 +234,8 @@ export function ModalFactureAbonnement({ reference, ouvert, onFermer }: Props) {
                             {ligne.designation}
                           </p>
                           <p className="text-[11px] text-muted-foreground">
-                            Accès complet logiciel de stock, caisse, impression tickets et support.
+                            Accès complet logiciel de stock, caisse, impression
+                            tickets et support.
                           </p>
                         </td>
                         <td className="py-3 px-3 text-center text-foreground font-medium">
@@ -264,11 +275,12 @@ export function ModalFactureAbonnement({ reference, ouvert, onFermer }: Props) {
                       )}
                       {facture.moyen_paiement === "carte" && (
                         <span className="inline-flex items-center gap-1 font-semibold text-foreground">
-                          <IconeCarteBancaires className="h-4 w-6" /> Carte Bancaire
+                          <IconeCarteBancaires className="h-4 w-6" /> Carte
+                          Bancaire
                         </span>
                       )}
                       {!["orange_money", "mtn_momo", "carte"].includes(
-                        facture.moyen_paiement || ""
+                        facture.moyen_paiement || "",
                       ) && (
                         <span className="font-semibold text-foreground">
                           {facture.moyen_paiement || "Paiement en ligne"}
@@ -296,7 +308,9 @@ export function ModalFactureAbonnement({ reference, ouvert, onFermer }: Props) {
                   </div>
                   <div className="flex justify-between text-muted-foreground py-1 border-b">
                     <span>TVA (0% — Prestation SaaS) :</span>
-                    <span className="font-semibold text-foreground">0 FCFA</span>
+                    <span className="font-semibold text-foreground">
+                      0 FCFA
+                    </span>
                   </div>
                   <div className="flex justify-between items-center py-2 text-sm font-bold text-foreground">
                     <span>Total TTC Réglé :</span>
@@ -310,10 +324,13 @@ export function ModalFactureAbonnement({ reference, ouvert, onFermer }: Props) {
               {/* Mentions légales de bas de page */}
               <div className="pt-4 border-t text-[11px] text-muted-foreground text-center space-y-1">
                 <p>
-                  Facture acquittée conformément aux dispositions fiscales en vigueur. Prestation logicielle exonérée de retenue à la source.
+                  Facture acquittée conformément aux dispositions fiscales en
+                  vigueur. Prestation logicielle exonérée de retenue à la
+                  source.
                 </p>
                 <p className="text-[10px] text-muted-foreground/80">
-                  Telora — Solution certifiée de gestion de stock et caisse pour boutiques de téléphonie.
+                  Telora — Solution certifiée de gestion de stock et caisse pour
+                  boutiques de téléphonie.
                 </p>
               </div>
             </div>

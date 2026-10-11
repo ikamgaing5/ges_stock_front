@@ -84,7 +84,9 @@ export default function PageInvitation({
       );
       enregistrerToken(reponse.token);
       toast.success(t("auth.compteActive"));
-      router.push("/telephones");
+      if (typeof window !== "undefined") {
+        window.location.replace("/telephones");
+      }
     } catch (err) {
       if (err instanceof ErreurApi) {
         setErreurs(err.parChamp());

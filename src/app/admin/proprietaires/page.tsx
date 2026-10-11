@@ -4,7 +4,15 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Building2, Loader2, Search, Settings2 } from "lucide-react";
+import {
+  Building2,
+  Loader2,
+  Search,
+  Settings2,
+  ShieldBan,
+  UserCheck,
+  AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { api, ErreurApi } from "@/lib/api";
 import { useListe } from "@/lib/useListe";
@@ -31,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -50,12 +59,17 @@ import {
 import type { Page, PlanAbonnement, StatutAbonnement, Utilisateur } from "@/types";
 
 export default function PageClients() {
-  const { t, formatDate, formatDateCourte, libelleAbonnement, lang } = useI18n();
+  const { t, formatDate, formatDateCourte, libelleAbonnement } = useI18n();
   const parametresUrl = useSearchParams();
 
   const [recherche, setRecherche] = useState("");
   const [statut, setStatut] = useState(parametresUrl.get("statut") ?? "tous");
   const [enEdition, setEnEdition] = useState<Utilisateur | null>(null);
+
+  // Modération & Bannissement
+  const [clientABannir, setClientABannir] = useState<Utilisateur | null>(null);
+  const [motifBannissement, setMotifBannissement] = useState("");
+  const [envoiBannissement, setEnvoiBannissement] = useState(false);
 
   const statutsDispo: StatutAbonnement[] = ["essai", "actif", "suspendu", "expire"];
 
@@ -78,6 +92,34 @@ export default function PageClients() {
   );
 
   const clients = donnees?.data ?? [];
+
+  async function confirmerBannissement() {
+    if (!clientABannir || !motifBannissement.trim()) return;
+    setEnvoiBannissement(true);
+    try {
+      await api.post(`/admin/users/${clientABannir.id}/bannir`, {
+        motif: motifBannissement.trim(),
+      });
+      toast.success("L'utilisateur a été banni avec succès.");
+      setClientABannir(null);
+      setMotifBannissement("");
+      recharger();
+    } catch (e) {
+      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
+    } finally {
+      setEnvoiBannissement(false);
+    }
+  }
+
+  async function debloquerClient(client: Utilisateur) {
+    try {
+      await api.post(`/admin/users/${client.id}/debloquer`);
+      toast.success(`Le compte de ${client.name} a été débloqué et réactivé.`);
+      recharger();
+    } catch (e) {
+      toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
+    }
+  }
 
   if (!donnees) {
     return (
@@ -159,7 +201,7 @@ export default function PageClients() {
                         {t("equipe.titre")}
                       </TableHead>
                       <TableHead className="hidden xl:table-cell">
-                        {lang === "en" ? "Registered on" : "Inscrit le"}
+                        {t("admin.inscritLe")}
                       </TableHead>
                       <TableHead className="text-right">
                         {t("commun.actions")}
@@ -170,15 +212,32 @@ export default function PageClients() {
                     {clients.map((client) => (
                       <TableRow key={client.id}>
                         <TableCell>
-                          <p className="font-medium">{client.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{client.name}</p>
+                            {client.statut_securite === "banni" && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+                                <ShieldBan className="h-3 w-3" />
+                                {t("admin.banniBadge")}
+                              </span>
+                            )}
+                            {client.statut_securite === "bloque_auto" && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                                <AlertTriangle className="h-3 w-3" />
+                                {t("admin.bloqueAutoBadge")}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {client.email}
                           </p>
-                          {!client.actif && (
+                          {client.derniere_ip && (
+                            <p className="text-[10px] font-mono text-muted-foreground">
+                              IP: {client.derniere_ip} {client.derniere_mac ? `• MAC: ${client.derniere_mac}` : ""}
+                            </p>
+                          )}
+                          {!client.actif && client.statut_securite !== "banni" && client.statut_securite !== "bloque_auto" && (
                             <p className="text-xs text-statut-alerte">
-                              {lang === "en"
-                                ? "Account disabled"
-                                : "Compte désactivé"}
+                              {t("admin.compteDesactive")}
                             </p>
                           )}
                         </TableCell>
@@ -220,16 +279,49 @@ export default function PageClients() {
                           {formatDate(client.created_at)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => setEnEdition(client)}
-                          >
-                            <Settings2 className="h-4 w-4" />
-                            <span className="sr-only">
-                              {t("admin.modifierAcces")}
-                            </span>
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            {client.statut_securite === "banni" || client.statut_securite === "bloque_auto" ? (
+                              <Button
+                                variant="outline"
+                                size="icon-sm"
+                                className="h-8 w-8 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700"
+                                onClick={() => void debloquerClient(client)}
+                                title={t("admin.debloquerUtilisateur")}
+                              >
+                                <UserCheck className="h-4 w-4" />
+                                <span className="sr-only">
+                                  {t("admin.debloquerUtilisateur")}
+                                </span>
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                onClick={() => {
+                                  setClientABannir(client);
+                                  setMotifBannissement("");
+                                }}
+                                title={t("admin.bannirUtilisateur")}
+                              >
+                                <ShieldBan className="h-4 w-4" />
+                                <span className="sr-only">
+                                  {t("admin.bannirUtilisateur")}
+                                </span>
+                              </Button>
+                            )}
+
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => setEnEdition(client)}
+                            >
+                              <Settings2 className="h-4 w-4" />
+                              <span className="sr-only">
+                                {t("admin.modifierAcces")}
+                              </span>
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -249,6 +341,67 @@ export default function PageClients() {
           recharger();
         }}
       />
+
+      {/* Modal de bannissement */}
+      <Dialog
+        open={clientABannir !== null}
+        onOpenChange={(o) => !o && setClientABannir(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void confirmerBannissement();
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <ShieldBan className="h-5 w-5" />
+                <span>{t("admin.bannirUtilisateur")}</span>
+              </DialogTitle>
+              <DialogDescription>
+                Bannir définitivement l'accès pour{" "}
+                <strong>{clientABannir?.name}</strong> (
+                {clientABannir?.email}) et révoquer l'ensemble de ses sessions actives.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 p-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="motif-ban">{t("admin.motifBannissement")}</Label>
+                <Textarea
+                  id="motif-ban"
+                  placeholder={t("admin.motifBannissementPlaceholder")}
+                  value={motifBannissement}
+                  onChange={(e) => setMotifBannissement(e.target.value)}
+                  rows={3}
+                  required
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setClientABannir(null)}
+                disabled={envoiBannissement}
+              >
+                {t("commun.annuler")}
+              </Button>
+              <Button
+                type="submit"
+                variant="destructive"
+                disabled={envoiBannissement}
+              >
+                {envoiBannissement
+                  ? t("commun.validerEnCours")
+                  : t("admin.confirmerBannissement")}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
@@ -312,18 +465,41 @@ function FenetreAbonnement({
         <form onSubmit={envoyer} className="flex min-h-0 flex-1 flex-col">
           <DialogHeader>
             <DialogTitle>
-              {lang === "en"
-                ? `Subscription for ${client?.name}`
-                : `Abonnement de ${client?.name}`}
+              {t("admin.abonnementDe", { nom: client?.name ?? "" })}
             </DialogTitle>
             <DialogDescription>
-              {lang === "en"
-                ? "A suspended or expired subscription blocks access for the client and their entire team. Data remains preserved."
-                : "Un abonnement suspendu ou expiré bloque l'accès du client et de toute son équipe. Les données restent conservées."}
+              {t("admin.abonnementDeDesc")}
             </DialogDescription>
           </DialogHeader>
 
           <DialogCorps>
+            {client?.statut_securite === "banni" && (
+              <div className="flex items-center gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive">
+                <ShieldBan className="h-4 w-4 shrink-0" />
+                <div>
+                  <p className="font-semibold">{t("admin.compteActuellementBanni")}</p>
+                  {client.banni_motif && (
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {t("admin.motifDeuxPoints", { motif: client.banni_motif })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+            {client?.statut_securite === "bloque_auto" && (
+              <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-400">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <div>
+                  <p className="font-semibold">{t("admin.compteBloqueAutoSurcharge")}</p>
+                  {client.banni_motif && (
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {t("admin.motifDeuxPoints", { motif: client.banni_motif })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>{t("commun.statut")}</Label>
               <Select
@@ -349,14 +525,11 @@ function FenetreAbonnement({
             </div>
 
             <div className="space-y-2">
-              <Label>{lang === "en" ? "Subscription Tier" : "Formule d'abonnement"}</Label>
+              <Label>{t("admin.formuleAbonnement")}</Label>
               <Select
                 items={{
-                  standard: lang === "en" ? "Standard" : "Standard",
-                  premium:
-                    lang === "en"
-                      ? "Premium (IMEI lookup enabled)"
-                      : "Premium (Identification IMEI incluse)",
+                  standard: t("admin.formuleStandard"),
+                  premium: t("admin.formulePremium"),
                 }}
                 value={plan}
                 onValueChange={(v) => setPlan((v ?? "standard") as PlanAbonnement)}
@@ -366,12 +539,10 @@ function FenetreAbonnement({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="standard">
-                    {lang === "en" ? "Standard" : "Standard"}
+                    {t("admin.formuleStandard")}
                   </SelectItem>
                   <SelectItem value="premium">
-                    {lang === "en"
-                      ? "Premium (IMEI lookup enabled)"
-                      : "Premium (Identification IMEI incluse)"}
+                    {t("admin.formulePremium")}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -387,18 +558,14 @@ function FenetreAbonnement({
                 onChange={(e) => setEcheance(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                {lang === "en"
-                  ? "Past this date, access is automatically blocked."
-                  : "Passée cette date, l'accès se bloque automatiquement."}
+                {t("admin.echeanceDateAlerte")}
               </p>
             </div>
 
             <div className="flex items-center gap-3 border-t pt-4">
               <Switch id="a-actif" checked={actif} onCheckedChange={setActif} />
               <Label htmlFor="a-actif" className="font-normal">
-                {lang === "en"
-                  ? "Account can sign in"
-                  : "Le compte peut se connecter"}
+                {t("admin.comptePeutSeConnecter")}
               </Label>
             </div>
           </DialogCorps>

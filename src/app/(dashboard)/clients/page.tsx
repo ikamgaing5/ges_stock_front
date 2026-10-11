@@ -74,7 +74,7 @@ const URL_API = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8001/api";
 
 export default function PageClients() {
   const { boutiques, boutiqueActive, parametresBoutique, devise } = useAuth();
-  const { t, formatMontant, formatDate, lang } = useI18n();
+  const { t, formatMontant, formatDate } = useI18n();
 
   // État des données
   const [clients, setClients] = useState<ClientResume[]>([]);
@@ -96,42 +96,30 @@ export default function PageClients() {
     () => [
       {
         id: "recent",
-        label: lang === "en" ? "Recent" : "Plus récents",
-        description:
-          lang === "en"
-            ? "Sort by most recent purchase"
-            : "Trier par date du dernier achat",
+        label: t("clients.triPlusRecents"),
+        description: t("clients.triDernierAchatInfo"),
         icon: Clock,
       },
       {
         id: "depenses_desc",
-        label: lang === "en" ? "Top Spenders" : "Plus dépensiers",
-        description:
-          lang === "en"
-            ? "Sort by total amount spent"
-            : "Trier par total des dépenses",
+        label: t("clients.triPlusDepensiers"),
+        description: t("clients.triTotalDepenseInfo"),
         icon: TrendingUp,
       },
       {
         id: "achats_desc",
-        label: lang === "en" ? "Most Loyal" : "Plus fidèles",
-        description:
-          lang === "en"
-            ? "Sort by number of purchases"
-            : "Trier par nombre d'achats",
+        label: t("clients.triPlusFideles"),
+        description: t("clients.triPlusFidelesDesc"),
         icon: Star,
       },
       {
         id: "nom_asc",
-        label: lang === "en" ? "Name (A-Z)" : "Nom (A-Z)",
-        description:
-          lang === "en"
-            ? "Sort alphabetically by name"
-            : "Trier par ordre alphabétique",
+        label: t("clients.triNomAZ"),
+        description: t("clients.triNomInfo"),
         icon: ArrowDownAZ,
       },
     ],
-    [lang]
+    [t]
   );
 
   // Sélection multiple
@@ -192,16 +180,12 @@ export default function PageClients() {
       if (e instanceof ErreurApi) {
         toast.error(e.resume());
       } else {
-        toast.error(
-          lang === "en"
-            ? "Failed to load customers."
-            : "Impossible de charger la liste des clients."
-        );
+        toast.error(t("clients.impossibleChargerClients"));
       }
     } finally {
       setChargement(false);
     }
-  }, [parametresBoutique.boutique_id, recherche, tri, lang]);
+  }, [parametresBoutique.boutique_id, recherche, tri, t]);
 
   useEffect(() => {
     chargerClients();
@@ -250,11 +234,7 @@ export default function PageClients() {
       });
       setDetailsClient(res);
     } catch (e) {
-      toast.error(
-        lang === "en"
-          ? "Failed to load customer details."
-          : "Impossible de charger les détails du client."
-      );
+      toast.error(t("clients.impossibleChargerDetailsClient"));
     } finally {
       setChargementFiche(false);
     }
@@ -379,11 +359,7 @@ export default function PageClients() {
   // Télécharger le fichier vCard (.vcf) pour les clients sélectionnés
   async function telechargerVcard(cibleClients: ClientResume[]) {
     if (cibleClients.length === 0) {
-      toast.warning(
-        lang === "en"
-          ? "Please select at least one customer."
-          : "Veuillez sélectionner au moins un client."
-      );
+      toast.warning(t("clients.selectionnerAuMoinsUnClient"));
       return;
     }
 
@@ -425,17 +401,9 @@ export default function PageClients() {
       a.remove();
       window.URL.revokeObjectURL(url);
 
-      toast.success(
-        lang === "en"
-          ? "vCard file downloaded! Open it on your phone to import contacts into WhatsApp."
-          : "Fichier vCard téléchargé ! Ouvrez-le sur votre téléphone pour ajouter les contacts à WhatsApp."
-      );
+      toast.success(t("clients.vcardTelechargee"));
     } catch (e) {
-      toast.error(
-        lang === "en"
-          ? "Failed to export vCard file."
-          : "Échec de l'exportation du fichier de contacts."
-      );
+      toast.error(t("clients.erreurExportVcard"));
     } finally {
       setTelechargementVcardEnCours(false);
     }
@@ -468,15 +436,9 @@ export default function PageClients() {
       a.remove();
       window.URL.revokeObjectURL(url);
 
-      toast.success(
-        lang === "en"
-          ? "CSV export downloaded."
-          : "Exportation CSV téléchargée avec succès."
-      );
+      toast.success(t("clients.csvTelecharge"));
     } catch (e) {
-      toast.error(
-        lang === "en" ? "Failed to export CSV." : "Échec de l'exportation CSV."
-      );
+      toast.error(t("clients.erreurExportCsv"));
     }
   }
 
@@ -488,18 +450,14 @@ export default function PageClients() {
       .join(", ");
 
     if (!numeros) {
-      toast.warning(
-        lang === "en" ? "No phone numbers found." : "Aucun numéro de téléphone."
-      );
+      toast.warning(t("clients.aucunNumeroTelephone"));
       return;
     }
 
     navigator.clipboard.writeText(numeros);
     setNumerosCopies(true);
     toast.success(
-      lang === "en"
-        ? `${clientsSelectionnes.length} phone numbers copied!`
-        : `${clientsSelectionnes.length} numéros copiés dans le presse-papier !`
+      t("clients.numerosCopiesCount", { count: clientsSelectionnes.length })
     );
     setTimeout(() => setNumerosCopies(false), 2500);
   }
@@ -587,7 +545,7 @@ export default function PageClients() {
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <Card
             onClick={() => setTri("recent")}
-            title={lang === "en" ? "Click to sort by recent" : "Cliquer pour trier par clients récents"}
+            title={t("clients.triRecentInfo")}
             className={cn(
               "cursor-pointer border-border/60 bg-card/60 backdrop-blur-xs transition-all hover:border-primary/40 hover:shadow-xs",
               tri === "recent" && "ring-2 ring-primary/40 border-primary/50 shadow-xs"
@@ -615,7 +573,7 @@ export default function PageClients() {
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {stats.total_ventes} {t("clients.achats").toLowerCase()}{" "}
-                      {lang === "en" ? "recorded" : "enregistrés"}
+                      {t("clients.enregistres")}
                     </p>
                   </>
                 )}
@@ -625,7 +583,7 @@ export default function PageClients() {
 
           <Card
             onClick={() => setTri("depenses_desc")}
-            title={lang === "en" ? "Click to sort by revenue" : "Cliquer pour trier par plus dépensiers"}
+            title={t("clients.triDepenseInfo")}
             className={cn(
               "cursor-pointer border-border/60 bg-card/60 backdrop-blur-xs transition-all hover:border-emerald-500/40 hover:shadow-xs",
               tri === "depenses_desc" && "ring-2 ring-emerald-500/40 border-emerald-500/50 shadow-xs"
@@ -652,9 +610,7 @@ export default function PageClients() {
                       {formatMontant(stats.chiffre_affaires, deviseAffichee)}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {lang === "en"
-                        ? "Cumulative customer revenue"
-                        : "Cumul total des achats"}
+                      {t("clients.cumulTotalAchats")}
                     </p>
                   </>
                 )}
@@ -684,9 +640,7 @@ export default function PageClients() {
                       {formatMontant(stats.panier_moyen, deviseAffichee)}
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {lang === "en"
-                        ? "Average amount per purchase"
-                        : "Montant moyen par vente"}
+                      {t("clients.montantMoyenParVente")}
                     </p>
                   </>
                 )}
@@ -696,7 +650,7 @@ export default function PageClients() {
 
           <Card
             onClick={() => setTri("achats_desc")}
-            title={lang === "en" ? "Click to sort by loyalty" : "Cliquer pour trier par clients fidèles"}
+            title={t("clients.triFideleInfo")}
             className={cn(
               "cursor-pointer border-border/60 bg-card/60 backdrop-blur-xs transition-all hover:border-amber-500/40 hover:shadow-xs",
               tri === "achats_desc" && "ring-2 ring-amber-500/40 border-amber-500/50 shadow-xs"
@@ -724,8 +678,10 @@ export default function PageClients() {
                     </p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {stats.total_clients > 0
-                        ? `${Math.round((stats.clients_fideles / stats.total_clients) * 100)}% de clients récurrents`
-                        : "Plus d'un achat"}
+                        ? t("clients.pourcentageClientsRecurrents", {
+                            pourcentage: Math.round((stats.clients_fideles / stats.total_clients) * 100),
+                          })
+                        : t("clients.plusDUnAchat")}
                     </p>
                   </>
                 )}
@@ -761,7 +717,7 @@ export default function PageClients() {
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
                 <div className="hidden sm:flex items-center gap-1 text-[11px] font-medium text-muted-foreground uppercase tracking-wider mr-1 shrink-0">
                   <SlidersHorizontal className="h-3.5 w-3.5" />
-                  <span>{lang === "en" ? "Sort:" : "Trier :"}</span>
+                  <span>{t("clients.trier")}</span>
                 </div>
                 {optionsTri.map((opt) => {
                   const Icon = opt.icon;
@@ -834,7 +790,7 @@ export default function PageClients() {
                 className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
               >
                 <X className="h-3.5 w-3.5 mr-1" />
-                {lang === "en" ? "Clear" : "Désélectionner"}
+                {t("clients.deselectionner")}
               </Button>
             </div>
           </div>
@@ -858,7 +814,7 @@ export default function PageClients() {
                   <TableHead
                     onClick={() => setTri("nom_asc")}
                     className="cursor-pointer select-none group hover:text-primary transition-colors"
-                    title={lang === "en" ? "Sort by name (A-Z)" : "Trier par nom (A-Z)"}
+                    title={t("clients.triNomInfo")}
                   >
                     <div className="flex items-center gap-1.5">
                       <span className={tri === "nom_asc" ? "text-primary font-semibold" : ""}>
@@ -875,7 +831,7 @@ export default function PageClients() {
                   <TableHead
                     onClick={() => setTri("depenses_desc")}
                     className="cursor-pointer select-none group hover:text-primary transition-colors"
-                    title={lang === "en" ? "Sort by total spent" : "Trier par total dépensé"}
+                    title={t("clients.triTotalDepenseInfo")}
                   >
                     <div className="flex items-center gap-1.5">
                       <span className={tri === "depenses_desc" ? "text-primary font-semibold" : ""}>
@@ -891,7 +847,7 @@ export default function PageClients() {
                   <TableHead
                     onClick={() => setTri("recent")}
                     className="cursor-pointer select-none group hover:text-primary transition-colors"
-                    title={lang === "en" ? "Sort by recent purchase" : "Trier par date du dernier achat"}
+                    title={t("clients.triDernierAchatInfo")}
                   >
                     <div className="flex items-center gap-1.5">
                       <span className={tri === "recent" ? "text-primary font-semibold" : ""}>
@@ -963,9 +919,7 @@ export default function PageClients() {
                         <p className="text-xs text-muted-foreground max-w-sm">
                           {recherche || boutiqueActive
                             ? t("clients.aucunClientDesc")
-                            : lang === "en"
-                            ? "Customers will appear here automatically as soon as sales are recorded."
-                            : "Les clients apparaîtront automatiquement ici dès que des ventes seront enregistrées."}
+                            : t("clients.clientsApparaitrontAutomatiquement")}
                         </p>
                       </div>
                     </TableCell>
@@ -1017,7 +971,7 @@ export default function PageClients() {
                               {client.nombre_achats > 1 && (
                                 <span className="inline-flex items-center gap-0.5 rounded-sm bg-amber-500/15 px-1.5 py-0.2 text-[10px] font-medium text-amber-700 dark:text-amber-300">
                                   <Star className="h-2.5 w-2.5 fill-amber-500" />
-                                  {lang === "en" ? "Loyal" : "Fidèle"}
+                                  {t("clients.fideleBadge")}
                                 </span>
                               )}
                             </div>
@@ -1053,26 +1007,6 @@ export default function PageClients() {
                           </div>
                         </TableCell>
 
-                        {/* Nombre d'achats & aperçu appareils */}
-                        {/* <TableCell>
-                          <div>
-                            <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-foreground">
-                              {client.nombre_achats}{" "}
-                              {client.nombre_achats > 1
-                                ? lang === "en"
-                                  ? "devices"
-                                  : "appareils"
-                                : lang === "en"
-                                ? "device"
-                                : "appareil"}
-                            </span>
-                            {client.derniers_appareils.length > 0 && (
-                              <p className="mt-1 text-[11px] text-muted-foreground truncate max-w-[180px]">
-                                {client.derniers_appareils.join(", ")}
-                              </p>
-                            )}
-                          </div>
-                        </TableCell> */}
 
                         {/* Total Dépensé */}
                         <TableCell>
@@ -1160,7 +1094,7 @@ export default function PageClients() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-emerald-950 dark:text-emerald-200">
                 <div className="p-3 rounded-lg bg-background/80 border border-emerald-500/15">
                   <p className="font-semibold text-emerald-800 dark:text-emerald-300 mb-1">
-                    {lang === "en" ? "1. Export contacts" : "1. Exporter les contacts"}
+                    {t("clients.exporterContacts")}
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
                     {t("clients.guideDiffusionEtape1")}
@@ -1168,7 +1102,7 @@ export default function PageClients() {
                 </div>
                 <div className="p-3 rounded-lg bg-background/80 border border-emerald-500/15">
                   <p className="font-semibold text-emerald-800 dark:text-emerald-300 mb-1">
-                    {lang === "en" ? "2. Open vCard (.vcf)" : "2. Ouvrir le fichier .vcf"}
+                    {t("clients.ouvrirVcf")}
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
                     {t("clients.guideDiffusionEtape2")}
@@ -1176,7 +1110,7 @@ export default function PageClients() {
                 </div>
                 <div className="p-3 rounded-lg bg-background/80 border border-emerald-500/15">
                   <p className="font-semibold text-emerald-800 dark:text-emerald-300 mb-1">
-                    {lang === "en" ? "3. WhatsApp Broadcast" : "3. Liste de diffusion"}
+                    {t("clients.whatsappBroadcast")}
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
                     {t("clients.guideDiffusionEtape3")}
@@ -1261,7 +1195,7 @@ export default function PageClients() {
               <div className="max-h-64 sm:max-h-72 overflow-y-auto space-y-1.5 pr-1 divide-y divide-border/40 border border-border/60 rounded-xl p-2 bg-muted/20">
                 {clientsSelectionnes.length === 0 ? (
                   <p className="py-6 text-center text-xs text-muted-foreground">
-                    {lang === "en" ? "No clients selected." : "Aucun client sélectionné."}
+                    {t("clients.aucunClientSelectionne")}
                   </p>
                 ) : (
                   clientsSelectionnes.map((client) => {
@@ -1286,7 +1220,7 @@ export default function PageClients() {
                           className="inline-flex items-center gap-1.5 rounded-lg bg-[#25D366] hover:bg-[#20bd5a] text-white px-3 py-1.5 text-xs font-semibold shadow-2xs transition-colors shrink-0"
                         >
                           <IconeWhatsapp className="h-3.5 w-3.5" monochrome />
-                          <span>{lang === "en" ? "Send" : "Envoyer"}</span>
+                          <span>{t("clients.envoyer")}</span>
                         </a>
                       </div>
                     );
@@ -1303,7 +1237,7 @@ export default function PageClients() {
               onClick={() => setModalWhatsappOuvert(false)}
               className="px-5"
             >
-              {lang === "en" ? "Close" : "Fermer"}
+              {t("commun.fermer")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1491,7 +1425,7 @@ export default function PageClients() {
               variant="outline"
               onClick={() => setClientEnConsultation(null)}
             >
-              {lang === "en" ? "Close" : "Fermer"}
+              {t("commun.fermer")}
             </Button>
           </DialogFooter>
         </DialogContent>

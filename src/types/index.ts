@@ -95,6 +95,51 @@ export interface Utilisateur {
   /** Compteurs de l'espace administrateur. */
   boutiques_possedees_count?: number;
   employes_count?: number;
+  statut_securite?: "normal" | "bloque_auto" | "banni";
+  banni_motif?: string | null;
+  banni_le?: string | null;
+  derniere_ip?: string | null;
+  derniere_mac?: string | null;
+}
+
+export type TypeIncidentSecurite =
+  | "honeypot"
+  | "surcharge_requetes"
+  | "bruteforce"
+  | "manuel";
+
+export interface IncidentSecurite {
+  id: number;
+  user_id: number | null;
+  ip: string;
+  mac_address: string | null;
+  type: TypeIncidentSecurite;
+  motif: string;
+  donnees_contexte?: Record<string, unknown> | null;
+  est_bloque: boolean;
+  bloque_jusqu_a: string | null;
+  debloque_le: string | null;
+  debloque_par_id: number | null;
+  created_at: string;
+  updated_at: string;
+  user?: { id: number; name: string; email: string } | null;
+  debloque_par?: { id: number; name: string } | null;
+}
+
+export interface StatistiquesSecurite {
+  nb_comptes_bannis: number;
+  nb_comptes_bloques_auto: number;
+  nb_ips_bloquees: number;
+  nb_honeypot_neutralises: number;
+  nb_floods_bloques: number;
+}
+
+export interface InfosMaintenance {
+  active: boolean;
+  motif?: string | null;
+  fin_estimee?: string | null;
+  declenchee_le?: string | null;
+  declenchee_par?: string | null;
 }
 
 export interface InvitationEmploye {
