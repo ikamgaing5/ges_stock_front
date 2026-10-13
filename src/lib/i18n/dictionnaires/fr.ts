@@ -268,6 +268,14 @@ export const fr = {
       "Votre session a expiré après 60 minutes d'inactivité. Veuillez vous reconnecter.",
     accesRefuse: "Accès refusé.",
     reessayerDans: "Réessayer dans {secondes}s",
+    activiteSuspecteTitre: "Activité suspecte détectée",
+    activiteSuspecteDesc:
+      "Plusieurs tentatives de connexion infructueuses consécutives ont été constatées sur votre compte. Par mesure de sécurité, toutes les sessions ont été déconnectées et l'accès est verrouillé.",
+    activiteSuspecteConsigne:
+      "Un lien de réinitialisation sécurisé (valable 15 minutes) a été envoyé par e-mail. Cliquez dessus pour définir un nouveau mot de passe et débloquer votre accès.",
+    renvoyerLienSecurite: "Renvoyer l'e-mail de réinitialisation",
+    renvoyerDans: "Renvoyer dans",
+    lienRenvoyeSucces: "L'e-mail de réinitialisation a été renvoyé avec succès.",
     patienter: "Patienter ({secondes}s)",
     tropDeTentatives:
       "Trop de tentatives. Veuillez réessayer dans {secondes} secondes.",

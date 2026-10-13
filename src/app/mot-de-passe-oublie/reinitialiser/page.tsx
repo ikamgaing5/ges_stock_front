@@ -181,6 +181,10 @@ function ContenuReinitialisation() {
         enregistrerToken(reponse.token);
       }
 
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem("telora_activite_suspecte_email");
+      }
+
       setStatut("succes");
       toast.success(t("auth.motDePasseReinitialiseSucces"));
 

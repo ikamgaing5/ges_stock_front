@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Mail, ShieldAlert, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
 import { BasculeTheme } from "@/components/bascule-theme";
 import { BasculeLangue } from "@/components/bascule-langue";
 import { ChampCode } from "@/components/champ-code";
-import { ErreurApi } from "@/lib/api";
+import { api, ErreurApi } from "@/lib/api";
 import { useRateLimit } from "@/lib/useRateLimit";
 import { AlerteRateLimit } from "@/components/ui/alerte-rate-limit";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,33 @@ export default function PageConnexion() {
   // Renseigné seulement quand le compte a la double authentification.
   const [jetonDefi, setJetonDefi] = useState<string | null>(null);
   const [code, setCode] = useState("");
+
+  // Activité suspecte (9 échecs récents consécutifs avec mot de passe trouvé)
+  const [activiteSuspecte, setActiviteSuspecte] = useState(false);
+  const [emailSuspect, setEmailSuspect] = useState("");
+  const [renvoiEnCours, setRenvoiEnCours] = useState(false);
+  const [countdownRenvoi, setCountdownRenvoi] = useState(0);
+  const [messageRenvoi, setMessageRenvoi] = useState<string | null>(null);
+
+  // Restauration de l'écran verrouillé si déjà déclenché dans la session
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const emailMemorise = window.sessionStorage.getItem("telora_activite_suspecte_email");
+      if (emailMemorise) {
+        setActiviteSuspecte(true);
+        setEmailSuspect(emailMemorise);
+      }
+    }
+  }, []);
+
+  // Décompte pour le bouton de renvoi d'e-mail
+  useEffect(() => {
+    if (countdownRenvoi <= 0) return;
+    const intervalle = setInterval(() => {
+      setCountdownRenvoi((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(intervalle);
+  }, [countdownRenvoi]);
 
   useEffect(() => {
     if (!chargement && utilisateur) {
@@ -102,8 +130,14 @@ export default function PageConnexion() {
   }, [t]);
 
   useEffect(() => {
-    document.title = `${jetonDefi ? t("auth.titre2faOnglet") : t("auth.titreConnexionOnglet")} | Telora`;
-  }, [lang, jetonDefi, t]);
+    document.title = `${
+      activiteSuspecte
+        ? t("auth.activiteSuspecteTitre")
+        : jetonDefi
+          ? t("auth.titre2faOnglet")
+          : t("auth.titreConnexionOnglet")
+    } | Telora`;
+  }, [lang, activiteSuspecte, jetonDefi, t]);
 
   useEffect(() => {
     setIsDesktop(
@@ -197,6 +231,18 @@ export default function PageConnexion() {
       }
     } catch (e) {
       if (e instanceof ErreurApi) {
+        // Détection de l'activité suspecte (9 échecs récents avec mot de passe correct)
+        if (e.donnees?.activite_suspecte) {
+          const emailCible = (e.donnees.email as string) || email;
+          setActiviteSuspecte(true);
+          setEmailSuspect(emailCible);
+          if (typeof window !== "undefined") {
+            window.sessionStorage.setItem("telora_activite_suspecte_email", emailCible);
+          }
+          setEnvoiEnCours(false);
+          return;
+        }
+
         const estRateLimite = rateLimitLogin.gererErreur(e);
         const msg = e.erreurDe("email") ?? e.message;
         setErreur(msg);
@@ -207,6 +253,30 @@ export default function PageConnexion() {
         setErreur(t("commun.erreur"));
       }
       setEnvoiEnCours(false);
+    }
+  }
+
+  /** Renvoyer l'email sécurisé de réinitialisation lors d'une suspicion */
+  async function renvoyerEmailSecurite() {
+    if (renvoiEnCours || countdownRenvoi > 0) return;
+    setRenvoiEnCours(true);
+    setMessageRenvoi(null);
+
+    const emailCible = emailSuspect || email;
+
+    try {
+      await api.post("/mot-de-passe/code", { email: emailCible });
+      setMessageRenvoi(t("auth.lienRenvoyeSucces"));
+      setCountdownRenvoi(60);
+      toast.success(t("auth.lienRenvoyeSucces"));
+    } catch (e) {
+      if (e instanceof ErreurApi) {
+        toast.error(e.message || t("commun.erreur"));
+      } else {
+        toast.error(t("commun.erreur"));
+      }
+    } finally {
+      setRenvoiEnCours(false);
     }
   }
 
@@ -253,26 +323,92 @@ export default function PageConnexion() {
       <div className="flex-1 flex items-center justify-center w-full py-8">
         <div className="anim-apparait w-full max-w-sm">
           <div className="mb-8 flex flex-col items-center gap-3 text-center">
-            {jetonDefi ? (
+            {activiteSuspecte ? (
+              // <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive ring-8 ring-destructive/5 animate-pulse">
+              //   <ShieldAlert className="h-7 w-7" />
+              // </div>
+              <></>
+            ) : jetonDefi ? (
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                 <ShieldCheck className="h-6 w-6" />
-              </div>
+                </div>
+            // <></>
             ) : (
               <IconeTelora size={52} />
             )}
             <div>
               <h1 className="font-heading text-xl font-semibold tracking-tight">
-                {jetonDefi ? t("auth.deuxFacteursTitre") : "Telora"}
+                {activiteSuspecte
+                  ? t("auth.activiteSuspecteTitre")
+                  : jetonDefi
+                    ? t("auth.deuxFacteursTitre")
+                    : "Telora"}
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {jetonDefi
-                  ? t("auth.deuxFacteursDesc")
-                  : t("auth.connexionDesc")}
+                {activiteSuspecte
+                  ? t("auth.activiteSuspecteDesc")
+                  : jetonDefi
+                    ? t("auth.deuxFacteursDesc")
+                    : t("auth.connexionDesc")}
               </p>
             </div>
           </div>
 
-          {jetonDefi ? (
+          {activiteSuspecte ? (
+            /* ------------- Écran de sécurité : Activité suspecte détectée ------------- */
+            <div className="space-y-5 rounded-2xl border border-destructive/20 bg-card p-6 shadow-lg shadow-destructive/5 anim-apparait text-center">
+              <div className="rounded-xl border border-border/70 bg-muted/40 p-4 text-left space-y-2">
+                <div className="flex items-center gap-2 font-medium text-foreground text-sm">
+                  {/* <Mail className="h-4 w-4 text-primary shrink-0" /> */}
+                  <span className="truncate">{emailSuspect || email}</span>
+                </div>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  {t("auth.activiteSuspecteConsigne")}
+                </p>
+              </div>
+
+              {messageRenvoi && (
+                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-left text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                  <span>{messageRenvoi}</span>
+                </div>
+              )}
+
+              <div className="space-y-2.5 pt-1">
+                <Button
+                  type="button"
+                  variant="default"
+                  size="lg"
+                  className="w-full gap-2 font-medium"
+                  disabled={renvoiEnCours || countdownRenvoi > 0}
+                  onClick={renvoyerEmailSecurite}
+                >
+                  {renvoiEnCours && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {countdownRenvoi > 0
+                    ? `${t("auth.renvoyerDans")} (${countdownRenvoi}s)`
+                    : t("auth.renvoyerLienSecurite")}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    setActiviteSuspecte(false);
+                    setMotDePasse("");
+                    setErreur(null);
+                    if (typeof window !== "undefined") {
+                      window.sessionStorage.removeItem("telora_activite_suspecte_email");
+                    }
+                  }}
+                >
+                  <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+                  {t("auth.retourConnexion")}
+                </Button>
+              </div>
+            </div>
+          ) : jetonDefi ? (
             /* ------------- Deuxième étape : le code ------------- */
             <div className="space-y-5 rounded-xl border bg-card p-6 shadow-sm">
               <ChampCode
@@ -459,7 +595,7 @@ export default function PageConnexion() {
             </form>
           )}
 
-          {!jetonDefi && (
+          {!jetonDefi && !activiteSuspecte && (
             <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
               <p>
                 {t("auth.gererBoutiqueQuestion")}{" "}

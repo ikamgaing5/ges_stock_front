@@ -260,6 +260,14 @@ export const en = {
       "Your session has expired after 60 minutes of inactivity. Please log in again.",
     accesRefuse: "Access denied.",
     reessayerDans: "Retry in {secondes}s",
+    activiteSuspecteTitre: "Suspicious activity detected",
+    activiteSuspecteDesc:
+      "Multiple consecutive failed sign-in attempts were detected on your account. For security purposes, all sessions were signed out and access has been locked.",
+    activiteSuspecteConsigne:
+      "A secure reset link (valid for 15 minutes) has been sent by email. Click it to set a new password and unlock your account.",
+    renvoyerLienSecurite: "Resend reset email",
+    renvoyerDans: "Resend in",
+    lienRenvoyeSucces: "The reset email has been resent successfully.",
     patienter: "Wait ({secondes}s)",
     tropDeTentatives: "Too many attempts. Please retry in {secondes} seconds.",
     delaiSecuriteActif: "Security cooldown active ({secondes}s)",
