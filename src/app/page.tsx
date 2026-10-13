@@ -411,25 +411,15 @@ export default function LandingPage() {
                   <div className="size-3 rounded-full bg-amber-500/80" />
                   <div className="size-3 rounded-full bg-emerald-500/80" />
                   <span className="ml-3 text-xs font-mono text-muted-foreground">
-                    Telora — {lang === "en" ? "Live Dashboard" : "Tableau de bord en direct"}
+                    Telora 
                   </span>
                 </div>
-                <button
-                  onClick={() => setModalImageZoom(srcCapture)}
-                  title={lang === "en" ? "Expand screenshot" : "Agrandir"}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                >
-                  <Maximize2 className="size-3.5 text-primary" />
-                  <span className="text-[11px] font-medium hidden sm:inline">
-                    {lang === "en" ? "Full screen" : "Plein écran"}
-                  </span>
-                </button>
+                
               </div>
 
               {/* Vraie capture d'écran sans aucun rognage (responsive 100%) */}
               <div
-                className="group relative mt-3 w-full overflow-hidden rounded-xl border border-border/60 bg-muted/20 cursor-pointer shadow-sm"
-                onClick={() => setModalImageZoom(srcCapture)}
+                className="group relative mt-3 w-full overflow-hidden rounded-xl border border-border/60 bg-muted/20 shadow-sm"
               >
                 <Image
                   key={srcCapture}
@@ -442,7 +432,7 @@ export default function LandingPage() {
                   width={1918}
                   height={885}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 95vw, 1200px"
-                  className="w-full h-auto rounded-xl object-contain transition-transform duration-300 group-hover:scale-[1.005]"
+                  className="w-full h-auto rounded-xl object-contain "
                   priority
                   onError={() => {
                     if (estSombre) {
@@ -452,12 +442,12 @@ export default function LandingPage() {
                 />
 
                 {/* Overlay discret de zoom au clic / survol */}
-                <div className="absolute inset-0 bg-background/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center pointer-events-none">
+                {/* <div className="absolute inset-0 bg-background/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center pointer-events-none">
                   <span className="inline-flex items-center gap-2 rounded-xl bg-background/90 border border-border/80 px-3.5 py-1.5 text-xs font-semibold text-foreground shadow-xl backdrop-blur-md">
                     <Maximize2 className="size-3.5 text-primary" />
                     {lang === "en" ? "Tap to view full resolution" : "Cliquer pour agrandir en HD"}
                   </span>
-                </div>
+                </div> */}
               </div>
 
               {/* Badges d'atouts sous la capture */}
