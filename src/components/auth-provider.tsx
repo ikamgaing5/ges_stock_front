@@ -205,10 +205,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Résolution de l'URL de destination sécurisée
-      let cible = "/";
+      let cible = "/dashboard";
       if (
         destination &&
         destination.startsWith("/") &&
+        destination !== "/" &&
         !destination.startsWith("/connexion") &&
         !destination.startsWith("/inscription") &&
         !destination.startsWith("/mot-de-passe-oublie") &&
@@ -217,12 +218,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (user.role === "admin" && !destination.startsWith("/admin")) {
           cible = "/admin";
         } else if (user.role !== "admin" && destination.startsWith("/admin")) {
-          cible = "/";
+          cible = "/dashboard";
         } else {
           cible = destination;
         }
       } else {
-        cible = user.role === "admin" ? "/admin" : "/";
+        cible = user.role === "admin" ? "/admin" : "/dashboard";
       }
 
       // Navigation native complète (Full Page Reload) pour éliminer toute latence/blocage SPA

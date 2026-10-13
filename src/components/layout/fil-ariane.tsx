@@ -27,7 +27,7 @@ export function FilAriane({
   const domaine = process.env.NEXT_PUBLIC_APP_URL || "https://telora.app";
 
   const listeComplete: ElementFilAriane[] = inclureAccueil
-    ? [{ label: "Accueil", href: "/" }, ...elements]
+    ? [{ label: "Accueil", href: "/dashboard" }, ...elements]
     : elements;
 
   // Schéma JSON-LD BreadcrumbList pour le référencement Google

@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 // Routes publiques ne nécessitant pas d'authentification
 const ROUTES_PUBLIQUES = [
+  "/",
   "/connexion",
   "/inscription",
   "/mot-de-passe-oublie",
@@ -19,6 +20,7 @@ const ROUTES_PUBLIQUES = [
   "/etudes-de-cas",
   // "/invitation/",
   "/hors-ligne",
+  "/landing-v2",
 ];
 
 const CLE_TOKEN = "gestion-stock-token";
@@ -42,27 +44,37 @@ export function middleware(request: NextRequest) {
 
   const estRoutePublique =
     ROUTES_PUBLIQUES.some(
-      (route) => pathname === route || pathname.startsWith(`${route}/`),
+      (route) => pathname === route || (route !== "/" && pathname.startsWith(`${route}/`)),
     ) || pathname.startsWith("/invitation/");
 
-  // 1. Accès à la page de connexion
+  // 1. Accès à la racine (Landing Page)
+  if (pathname === "/") {
+    // Si l'utilisateur est déjà connecté avec un jeton valide, redirection immédiate vers le dashboard
+    if (token) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // 2. Accès à la page de connexion
   if (pathname === "/connexion") {
     // Si l'utilisateur est déjà connecté avec un token valide
     if (token) {
       const retourParam = request.nextUrl.searchParams.get("retour");
       const dernierChemin = request.cookies.get(CLE_RETOUR)?.value;
-      const destination = retourParam || dernierChemin || "/";
+      const destination = retourParam || dernierChemin || "/dashboard";
 
       if (
         destination &&
         destination.startsWith("/") &&
+        destination !== "/" &&
         !destination.startsWith("/connexion") &&
         !destination.startsWith("/inscription")
       ) {
         return NextResponse.redirect(new URL(destination, request.url));
       }
 
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
     return NextResponse.next();

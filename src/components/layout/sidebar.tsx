@@ -75,7 +75,7 @@ type LienDef = {
 };
 
 const liens: LienDef[] = [
-  { href: "/", cleLibelle: "nav.tableauDeBord", icone: LayoutDashboard },
+  { href: "/dashboard", cleLibelle: "nav.tableauDeBord", icone: LayoutDashboard },
   {
     href: "/scanner",
     cleLibelle: "nav.scanner",
@@ -124,7 +124,7 @@ export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
         {/* En-tête : logo, et bouton de fermeture dans le tiroir */}
         <div className="flex items-center gap-2.5 px-4 py-3.5">
           <Link
-            href="/"
+            href="/dashboard"
             onClick={onNaviguer}
             className="flex min-w-0 flex-1 items-center gap-2.5"
           >
@@ -146,7 +146,9 @@ export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
         <div className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-3">
           {visibles.map((lien) => {
             const actif =
-              lien.href === "/" ? chemin === "/" : chemin.startsWith(lien.href);
+              lien.href === "/dashboard"
+                ? chemin === "/dashboard"
+                : chemin.startsWith(lien.href);
             const Icone = lien.icone;
 
             return (

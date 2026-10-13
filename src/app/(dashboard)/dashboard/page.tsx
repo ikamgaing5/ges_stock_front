@@ -1,6 +1,6 @@
 "use client";
 
-/** Tableau de bord — la page d'accueil (/). */
+/** Tableau de bord (/dashboard). */
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";

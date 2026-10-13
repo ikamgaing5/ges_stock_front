@@ -54,7 +54,7 @@ export default function AdminLayout({
 
     if (utilisateur.role !== "admin") {
       if (typeof window !== "undefined") {
-        window.location.replace("/");
+        window.location.replace("/dashboard");
       }
     }
   }, [chargement, utilisateur]);

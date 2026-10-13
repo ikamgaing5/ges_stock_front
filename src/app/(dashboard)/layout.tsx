@@ -37,7 +37,7 @@ export default function DashboardLayout({
           ? window.location.pathname + window.location.search
           : "";
       const destination =
-        cheminActuel && cheminActuel !== "/"
+        cheminActuel && cheminActuel !== "/" && cheminActuel !== "/dashboard"
           ? `/connexion?retour=${encodeURIComponent(cheminActuel)}`
           : "/connexion";
       if (typeof window !== "undefined") {
