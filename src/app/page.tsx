@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { useTheme } from "next-themes";
+import { useI18n } from "@/lib/i18n";
 import {
   ArrowRight,
   BadgeCheck,
@@ -16,6 +19,7 @@ import {
   Laptop,
   Layers,
   Lock,
+  Maximize2,
   Monitor,
   PackageCheck,
   Printer,
@@ -168,6 +172,25 @@ export default function LandingPage() {
     plateforme?: Plateforme;
   }>({ ouverte: false });
   const [faqOuverte, setFaqOuverte] = useState<number | null>(null);
+  const [modalImageZoom, setModalImageZoom] = useState<string | null>(null);
+  const [darkImgIntrouvable, setDarkImgIntrouvable] = useState(false);
+
+  const { lang } = useI18n();
+  const { resolvedTheme } = useTheme();
+
+  // Détection de la capture selon la langue (FR/EN) et le thème (clair/sombre)
+  // Prévoyez /capture-ecran-dark.png et /screenshot-dark.png pour le mode sombre !
+  const estSombre = resolvedTheme === "dark";
+  const srcCapture = React.useMemo(() => {
+    if (lang === "en") {
+      return estSombre && !darkImgIntrouvable
+        ? "/screenshot-dark.png"
+        : "/screenshot.png";
+    }
+    return estSombre && !darkImgIntrouvable
+      ? "/capture-ecran-dark.png"
+      : "/capture-ecran.png";
+  }, [lang, estSombre, darkImgIntrouvable]);
 
   // Détection automatique de l'OS du visiteur
   useEffect(() => {
@@ -381,7 +404,7 @@ export default function LandingPage() {
             </div>
 
             {/* ─────────────────────────────────────────────────────────────
-                APERÇU INTERFACE IMMERSIF (MOCKUP LIVE)
+                APERÇU INTERFACE IMMERSIF (CAPTURE D'ÉCRAN RÉELLE)
             ───────────────────────────────────────────────────────────── */}
             <div className="relative mx-auto mt-12 max-w-5xl rounded-2xl border border-border/70 bg-card/60 p-2 sm:p-4 shadow-2xl shadow-primary/10 backdrop-blur-xl">
               {/* Barre de fenêtre factice (Style macOS / Frameless) */}
@@ -391,132 +414,51 @@ export default function LandingPage() {
                   <div className="size-3 rounded-full bg-amber-500/80" />
                   <div className="size-3 rounded-full bg-emerald-500/80" />
                   <span className="ml-3 hidden sm:inline text-xs font-mono text-muted-foreground">
-                    Telora Desktop — Caisse & Parc IMEI
+                    Telora 
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
-                  <span className="hidden md:inline rounded bg-muted/60 px-2 py-0.5">
-                    Boutique Principale (Bonapriso)
-                  </span>
-                  <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>En ligne</span>
-                </div>
+                
               </div>
 
-              {/* Contenu visuel interactif simulé */}
-              <div className="pt-4 text-left">
-                {/* Métriques clés en tête */}
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 mb-4">
-                  <div className="rounded-xl border border-border/50 bg-background/50 p-3">
-                    <p className="text-xs text-muted-foreground">En stock (IMEI)</p>
-                    <p className="mt-1 font-mono text-xl sm:text-2xl font-bold text-foreground">
-                      142
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">18 450 000 FCFA</p>
-                  </div>
-                  <div className="rounded-xl border border-border/50 bg-background/50 p-3">
-                    <p className="text-xs text-muted-foreground">Ventes du jour</p>
-                    <p className="mt-1 font-mono text-xl sm:text-2xl font-bold text-emerald-500">
-                      8
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">1 680 000 FCFA</p>
-                  </div>
-                  <div className="rounded-xl border border-border/50 bg-background/50 p-3">
-                    <p className="text-xs text-muted-foreground">En réparation (SAV)</p>
-                    <p className="mt-1 font-mono text-xl sm:text-2xl font-bold text-amber-500">
-                      3
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">Sous garantie</p>
-                  </div>
-                  <div className="rounded-xl border border-border/50 bg-background/50 p-3">
-                    <p className="text-xs text-muted-foreground">Alertes rupture</p>
-                    <p className="mt-1 font-mono text-xl sm:text-2xl font-bold text-sky-500">
-                      0
-                    </p>
-                    <p className="text-[11px] text-emerald-500">Stock optimal</p>
-                  </div>
-                </div>
-
-                {/* Table simulée de téléphones uniques avec IMEI */}
-                <div className="overflow-hidden rounded-xl border border-border/60 bg-background/70">
-                  <div className="flex items-center justify-between border-b border-border/60 bg-muted/30 px-4 py-2.5">
-                    <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
-                      Derniers appareils scannés
-                    </span>
-                    <span className="text-xs font-mono text-primary flex items-center gap-1">
-                      <ScanLine className="size-3.5" /> Douchette prête (F2)
-                    </span>
-                  </div>
-                  <div className="divide-y divide-border/40 text-xs sm:text-sm">
-                    <div className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors">
-                      <div className="min-w-0 pr-2">
-                        <p className="font-medium text-foreground">
-                          iPhone 15 Pro Max 256 Go Titane Naturel
-                        </p>
-                        <p className="font-mono text-xs text-muted-foreground">
-                          IMEI : 356938035643809
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-500">
-                          En stock
-                        </span>
-                        <span className="font-mono font-semibold text-foreground hidden sm:inline">
-                          850 000 FCFA
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors">
-                      <div className="min-w-0 pr-2">
-                        <p className="font-medium text-foreground">
-                          Samsung Galaxy S24 Ultra 512 Go Noir
-                        </p>
-                        <p className="font-mono text-xs text-muted-foreground">
-                          IMEI : 490154203237518 · Vendu à Mireille F.
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-medium text-blue-500">
-                          Vendu (Facturé)
-                        </span>
-                        <span className="font-mono font-semibold text-foreground hidden sm:inline">
-                          790 000 FCFA
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors">
-                      <div className="min-w-0 pr-2">
-                        <p className="font-medium text-foreground">
-                          Tecno Camon 30 Pro 5G 256 Go
-                        </p>
-                        <p className="font-mono text-xs text-muted-foreground">
-                          IMEI : 356303489916807 · Réservation avec acompte
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-500">
-                          Réservé
-                        </span>
-                        <span className="font-mono font-semibold text-foreground hidden sm:inline">
-                          195 000 FCFA
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Badges d'atouts sous le mockup */}
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <Printer className="size-3.5 text-primary" />
-                    Impression thermique directe sans pop-up (ESC/POS)
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Lock className="size-3.5 text-emerald-500" />
-                    Chaque mouvement signé par l'employé
-                  </span>
-                </div>
+              {/* Vraie capture d'écran avec zoom interactif */}
+              <div
+                className="group relative mt-3 aspect-[16/9] sm:aspect-[1918/885] w-full overflow-hidden rounded-xl border border-border/60 bg-muted/20 "
+              >
+                <Image
+                  key={srcCapture}
+                  src={srcCapture}
+                  alt={
+                    lang === "en"
+                      ? "Telora Live Application Dashboard"
+                      : "Aperçu réel du tableau de bord Telora"
+                  }
+                  fill
+                  sizes="(max-width: 1200px) 100vw, 1200px"
+                  className="object-cover object-top "
+                  priority
+                  onError={() => {
+                    if (estSombre) {
+                      setDarkImgIntrouvable(true);
+                    }
+                  }}
+                />               
               </div>
+
+              {/* Badges d'atouts sous la capture */}
+              {/* <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <Printer className="size-3.5 text-primary" />
+                  {lang === "en"
+                    ? "Direct thermal printing without pop-up (ESC/POS)"
+                    : "Impression thermique directe sans pop-up (ESC/POS)"}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Lock className="size-3.5 text-emerald-500" />
+                  {lang === "en"
+                    ? "Every stock move audited and signed by user"
+                    : "Chaque mouvement tracé et signé par l'employé"}
+                </span>
+              </div> */}
             </div>
           </div>
         </section>
@@ -1316,6 +1258,43 @@ export default function LandingPage() {
                   Fermer
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          MODAL D'AGRANDISSEMENT DE LA CAPTURE D'ÉCRAN
+      ───────────────────────────────────────────────────────────── */}
+      {modalImageZoom && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setModalImageZoom(null)}
+        >
+          <div
+            className="relative max-w-6xl w-full max-h-[90vh] rounded-2xl border border-border bg-card overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-border bg-muted/40 px-4 py-3">
+              <span className="text-xs font-mono text-muted-foreground">
+                {lang === "en"
+                  ? "Telora Dashboard — Full Resolution Preview"
+                  : "Tableau de bord Telora — Résolution originale"}
+              </span>
+              <button
+                onClick={() => setModalImageZoom(null)}
+                className="rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="relative aspect-[16/9] sm:aspect-[1918/885] w-full">
+              <Image
+                src={modalImageZoom}
+                alt="Capture d'écran Telora en taille réelle"
+                fill
+                className="object-contain"
+              />
             </div>
           </div>
         </div>
