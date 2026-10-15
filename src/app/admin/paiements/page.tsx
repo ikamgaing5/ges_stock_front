@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * Administration des paiements et de la passerelle CinetPay (/admin/paiements).
+ * Administration des paiements et de la passerelle SaasPay (/admin/paiements).
  *
  * Interface soignée et rédigée avec simplicité et humanité :
- * - Commutateur limpide : Mode Test (essais sans argent réel) ⇄ Mode En Direct (paiements réels CinetPay)
- * - Identifiants marchands CinetPay (Site ID, Clé API, Clé secrète de signature)
+ * - Commutateur limpide : Mode Test (essais sans argent réel) ⇄ Mode En Direct (paiements réels SaasPay)
+ * - Identifiants marchands SaasPay (Clé API secrète, Secret de signature Webhook)
  * - Tarifs des forfaits proposés aux commerçants (Standard & Premium, mensuel & annuel en FCFA)
  * - Journal en temps réel des règlements effectués avec filtres conviviaux
  */
@@ -14,8 +14,10 @@ import { useCallback, useEffect, useState } from "react";
 import {
   AlertTriangle,
   ArrowRightLeft,
+  Check,
   CheckCircle2,
   Clock,
+  Copy,
   CreditCard,
   Eye,
   EyeOff,
@@ -52,11 +54,11 @@ export default function PageAdminPaiements() {
 
   // Formulaire de configuration
   const [mode, setMode] = useState<ModePaiement>("test");
-  const [siteId, setSiteId] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [secretKey, setSecretKey] = useState("");
   const [voirApiKey, setVoirApiKey] = useState(false);
   const [voirSecretKey, setVoirSecretKey] = useState(false);
+  const [copieWebhook, setCopieWebhook] = useState(false);
 
   // Tarifs
   const [prixStandardMensuel, setPrixStandardMensuel] = useState(10000);
@@ -75,10 +77,9 @@ export default function PageAdminPaiements() {
     try {
       const donnees = await api.get<ConfigurationPaiementAdmin>("/admin/paiements/configuration");
       setConfig(donnees);
-      setMode(donnees.cinetpay_mode);
-      setSiteId(donnees.cinetpay_site_id ?? "");
-      setApiKey(donnees.cinetpay_api_key ?? "");
-      setSecretKey(donnees.cinetpay_secret_key ?? "");
+      setMode(donnees.saaspay_mode);
+      setApiKey(donnees.saaspay_api_key ?? "");
+      setSecretKey(donnees.saaspay_webhook_secret ?? "");
       setPrixStandardMensuel(donnees.tarifs.prix_standard_mensuel);
       setPrixStandardAnnuel(donnees.tarifs.prix_standard_annuel);
       setPrixPremiumMensuel(donnees.tarifs.prix_premium_mensuel);
@@ -124,10 +125,9 @@ export default function PageAdminPaiements() {
 
     try {
       await api.put("/admin/paiements/configuration", {
-        cinetpay_mode: modeFinal,
-        cinetpay_site_id: siteId,
-        cinetpay_api_key: apiKey,
-        cinetpay_secret_key: secretKey,
+        saaspay_mode: modeFinal,
+        saaspay_api_key: apiKey,
+        saaspay_webhook_secret: secretKey,
         prix_standard_mensuel: Number(prixStandardMensuel),
         prix_standard_annuel: Number(prixStandardAnnuel),
         prix_premium_mensuel: Number(prixPremiumMensuel),
@@ -296,7 +296,7 @@ export default function PageAdminPaiements() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Les commerçants règlent avec leur vrai compte Orange Money, MTN MoMo ou Carte bancaire via CinetPay. Leurs boutiques sont prolongées immédiatement dès confirmation.
+                    Les commerçants règlent avec leur vrai compte Orange Money, MTN MoMo ou Carte bancaire via SaasPay. Leurs boutiques sont prolongées immédiatement dès confirmation.
                   </p>
                 </div>
 
@@ -306,11 +306,11 @@ export default function PageAdminPaiements() {
               </div>
             </div>
 
-            {mode === "production" && (!config.cle_api_renseignee || !config.site_id_renseigne) && (
+            {mode === "production" && !config.cle_api_renseignee && (
               <div className="flex items-center gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 text-xs text-amber-800 dark:text-amber-300">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <span>
-                  <strong>Attention :</strong> Le mode En Direct est activé, mais votre <strong>Site ID</strong> ou votre <strong>Clé API CinetPay</strong> n&apos;est pas encore renseigné ci-dessous. Pensez à les enregistrer pour que vos commerçants puissent payer sans blocage.
+                  <strong>Attention :</strong> Le mode En Direct est activé, mais votre <strong>Clé API SaasPay (sk_live_...)</strong> n&apos;est pas encore renseignée ci-dessous. Pensez à l&apos;enregistrer pour que vos commerçants puissent payer sans blocage.
                 </span>
               </div>
             )}
@@ -319,42 +319,28 @@ export default function PageAdminPaiements() {
       </Apparait>
 
       {/* ------------------------------------------------------------- */}
-      {/* 2. IDENTIFIANTS CINETPAY & TARIFS                             */}
+      {/* 2. IDENTIFIANTS SAASPAY & TARIFS                             */}
       {/* ------------------------------------------------------------- */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Identifiants CinetPay */}
+        {/* Identifiants SaasPay */}
         <Apparait index={1}>
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-heading flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-primary" />
-                <span>Vos identifiants marchands CinetPay</span>
+                <span>Vos identifiants marchands SaasPay</span>
               </CardTitle>
               <CardDescription className="text-xs">
-                Ces informations vous sont fournies par CinetPay lors de l&apos;ouverture de votre compte marchand.
+                Ces informations sont générées depuis votre console SaasPay (section Développeur / Clés API &amp; Webhooks).
               </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4 pt-1">
-              {/* Site ID */}
-              <div className="space-y-1.5">
-                <Label htmlFor="cinetpay-site-id" className="text-xs font-medium">
-                  Identifiant de site (Site ID)
-                </Label>
-                <Input
-                  id="cinetpay-site-id"
-                  placeholder="ex: 123456"
-                  value={siteId}
-                  onChange={(e) => setSiteId(e.target.value)}
-                  className="font-mono text-xs"
-                />
-              </div>
-
               {/* API Key */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="cinetpay-api-key" className="text-xs font-medium">
-                    Clé API secrète (API Key)
+                  <Label htmlFor="saaspay-api-key" className="text-xs font-medium">
+                    Clé API secrète (sk_test_... ou sk_live_...)
                   </Label>
                   <button
                     type="button"
@@ -366,9 +352,9 @@ export default function PageAdminPaiements() {
                   </button>
                 </div>
                 <Input
-                  id="cinetpay-api-key"
+                  id="saaspay-api-key"
                   type={voirApiKey ? "text" : "password"}
-                  placeholder={config.cle_api_renseignee ? "•••••••••••• (déjà enregistrée)" : "ex: 1234567890abcdef..."}
+                  placeholder={config.cle_api_renseignee ? "•••••••••••• (déjà enregistrée)" : "sk_test_... ou sk_live_..."}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   className="font-mono text-xs"
@@ -378,8 +364,8 @@ export default function PageAdminPaiements() {
               {/* Secret Key */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="cinetpay-secret-key" className="text-xs font-medium">
-                    Clé secrète de notification Webhook (Secret Key)
+                  <Label htmlFor="saaspay-webhook-secret" className="text-xs font-medium">
+                    Secret de signature Webhook (signing_secret)
                   </Label>
                   <button
                     type="button"
@@ -391,14 +377,46 @@ export default function PageAdminPaiements() {
                   </button>
                 </div>
                 <Input
-                  id="cinetpay-secret-key"
+                  id="saaspay-webhook-secret"
                   type={voirSecretKey ? "text" : "password"}
-                  placeholder={config.cle_secrete_renseignee ? "•••••••••••• (déjà enregistrée)" : "Clé de signature secrète"}
+                  placeholder={config.cle_webhook_renseignee ? "•••••••••••• (déjà enregistré)" : "Secret fourni lors de la création du webhook"}
                   value={secretKey}
                   onChange={(e) => setSecretKey(e.target.value)}
                   className="font-mono text-xs"
                 />
               </div>
+
+              {/* URL du Webhook à enregistrer */}
+              {config.webhook_url && (
+                <div className="space-y-1.5 rounded-lg border bg-muted/40 p-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-medium text-foreground">
+                      URL Webhook à renseigner dans SaasPay
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (config.webhook_url) {
+                          void navigator.clipboard.writeText(config.webhook_url);
+                          setCopieWebhook(true);
+                          toast.success("URL de webhook copiée !");
+                          setTimeout(() => setCopieWebhook(false), 2000);
+                        }
+                      }}
+                      className="text-[11px] text-primary hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                    >
+                      {copieWebhook ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      <span>{copieWebhook ? "Copié !" : "Copier"}</span>
+                    </button>
+                  </div>
+                  <code className="block rounded bg-background px-2 py-1.5 text-[11px] font-mono text-muted-foreground break-all select-all border">
+                    {config.webhook_url}
+                  </code>
+                  <p className="text-[10px] text-muted-foreground">
+                    Événements recommandés : <code>transaction.success</code>, <code>transaction.failed</code>
+                  </p>
+                </div>
+              )}
 
               <div className="pt-2">
                 <Button
@@ -411,7 +429,7 @@ export default function PageAdminPaiements() {
                   {enregistrementConfig && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  <span>Enregistrer les identifiants CinetPay</span>
+                  <span>Enregistrer les identifiants SaasPay</span>
                 </Button>
               </div>
             </CardContent>

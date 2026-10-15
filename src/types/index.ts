@@ -356,8 +356,8 @@ export interface Paiement {
   moyen_paiement: string | null;
   statut: StatutPaiement;
   mode: ModePaiement;
-  cinetpay_token?: string | null;
-  cinetpay_operator_id?: string | null;
+  saaspay_token?: string | null;
+  saaspay_operator_id?: string | null;
   donnees_reponse?: Record<string, unknown> | null;
   paye_a?: string | null;
   created_at: string;
@@ -495,13 +495,12 @@ export interface FactureAbonnementDetail {
 }
 
 export interface ConfigurationPaiementAdmin {
-  cinetpay_mode: ModePaiement;
-  cinetpay_site_id: string;
-  cinetpay_api_key: string;
-  cinetpay_secret_key: string;
+  saaspay_mode: ModePaiement;
+  saaspay_api_key: string;
+  saaspay_webhook_secret: string;
   cle_api_renseignee: boolean;
-  cle_secrete_renseignee: boolean;
-  site_id_renseigne: boolean;
+  cle_webhook_renseignee: boolean;
+  webhook_url?: string;
   tarifs: {
     prix_standard_mensuel: number;
     prix_standard_annuel: number;

@@ -1086,7 +1086,7 @@ export const en = {
     dansLes7Jours: "Within 7 days",
     chiffresVolumesGlobauxNote: "These numbers represent global aggregates. Individual client stock details are neither accessible here nor via API: only the store owner and their team have access.",
     passerellePaiementTitre: "Payment Gateway & Subscriptions",
-    passerellePaiementDesc: "Switch between testing and live processing, set up your CinetPay keys, and audit merchant subscriptions.",
+    passerellePaiementDesc: "Switch between testing and live processing, set up your SaasPay keys, and audit merchant subscriptions.",
     environnementActuelPaiements: "Active Payment Environment",
     environnementActuelPaiementsDesc: "Choose whether merchant payments are simulated or processed directly by operators.",
     inscritLe: "Registered on",

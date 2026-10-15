@@ -454,3 +454,30 @@
 html.telora-desktop .barre-navigation-haut {
   display: none !important;
 }
+
+/*
+ * VERSION DESKTOP - Page de connexion :
+ * Occupe tout l'espace disponible sous la barre de titre sans déborder,
+ * le défilement (scroll) est strictement désactivé.
+ */
+html.telora-desktop:has(.page-connexion),
+html.telora-desktop:has(.page-connexion) body {
+  height: 100vh !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+html.telora-desktop .page-connexion {
+  height: calc(100dvh - var(--hauteur-barre-titre, 0px)) !important;
+  max-height: calc(100dvh - var(--hauteur-barre-titre, 0px)) !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+}
+
+/*
+ * VERSION DESKTOP - Modale facture :
+ * Retirer le bouton d'ouverture vers une nouvelle page externe
+ */
+html.telora-desktop .bouton-externe-facture {
+  display: none !important;
+}

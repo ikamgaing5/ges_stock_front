@@ -115,7 +115,8 @@ export const fr = {
     choixConfidentialite: "Vos choix en matière de confidentialité",
     raccourcisClavier: "Raccourcis clavier",
     modalRaccourcisTitre: "Raccourcis clavier",
-    modalRaccourcisDesc: "Combinaisons de touches pour naviguer rapidement dans Telora.",
+    modalRaccourcisDesc:
+      "Combinaisons de touches pour naviguer rapidement dans Telora.",
     raccourciF1: "À propos & Licence de poste",
     raccourciF11: "Plein écran Mode Caisse",
     raccourciCompte: "Paramètres & Mon compte",
@@ -178,23 +179,31 @@ export const fr = {
     inscriptionTitre: "Créer un compte",
     inscriptionDesc: "Commencez votre essai gratuit de 14 jours",
     motDePasseOublieTitre: "Mot de passe oublié",
-    motDePasseOublieDesc: "Recevez un lien de réinitialisation pour récupérer votre accès",
+    motDePasseOublieDesc:
+      "Recevez un lien de réinitialisation pour récupérer votre accès",
     envoyerLien: "Envoyer le lien de réinitialisation",
     envoiLienEnCours: "Envoi en cours...",
-    lienEnvoyeEmail: "Si une adresse existe, un e-mail de réinitialisation du mot de passe vient de vous être envoyé.",
+    lienEnvoyeEmail:
+      "Si une adresse existe, un e-mail de réinitialisation du mot de passe vient de vous être envoyé.",
     emailEnvoyeTitre: "Vérifiez vos e-mails",
-    emailEnvoyeDesc: "Si un compte est associé à cette adresse, un e-mail contenant un lien de réinitialisation sécurisé vient d'être envoyé.",
+    emailEnvoyeDesc:
+      "Si un compte est associé à cette adresse, un e-mail contenant un lien de réinitialisation sécurisé vient d'être envoyé.",
     lienValidite15Min: "Le lien est valable pendant 15 minutes.",
-    consigneSecuriteMail: "Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité : votre mot de passe reste inchangé.",
-    verifierSpams: "Si vous ne recevez rien d'ici quelques instants, vérifiez votre dossier de spams.",
+    consigneSecuriteMail:
+      "Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité : votre mot de passe reste inchangé.",
+    verifierSpams:
+      "Si vous ne recevez rien d'ici quelques instants, vérifiez votre dossier de spams.",
     renvoyerLien: "Renvoyer le lien",
     renvoyerLienDans: "Renvoyer le lien dans {secondes}s",
-    lienExpireOuInvalide: "Ce lien de réinitialisation a expiré ou est invalide.",
+    lienExpireOuInvalide:
+      "Ce lien de réinitialisation a expiré ou est invalide.",
     faireNouvelleDemande: "Faire une nouvelle demande",
     nouveauMotDePasseTitre: "Nouveau mot de passe",
-    nouveauMotDePasseDesc: "Choisissez un mot de passe sécurisé d'au moins 8 caractères pour votre compte.",
+    nouveauMotDePasseDesc:
+      "Choisissez un mot de passe sécurisé d'au moins 8 caractères pour votre compte.",
     reinitialiserEnCours: "Mise à jour du mot de passe...",
-    motDePasseReinitialiseSucces: "Votre mot de passe a été réinitialisé avec succès.",
+    motDePasseReinitialiseSucces:
+      "Votre mot de passe a été réinitialisé avec succès.",
     verificationLienEnCours: "Vérification du lien de réinitialisation...",
     invitationTitre: "Rejoindre l'équipe",
     invitationDesc: "Finalisez votre inscription pour accéder à vos boutiques",
@@ -275,7 +284,8 @@ export const fr = {
       "Un lien de réinitialisation sécurisé (valable 15 minutes) a été envoyé par e-mail. Cliquez dessus pour définir un nouveau mot de passe et débloquer votre accès.",
     renvoyerLienSecurite: "Renvoyer l'e-mail de réinitialisation",
     renvoyerDans: "Renvoyer dans",
-    lienRenvoyeSucces: "L'e-mail de réinitialisation a été renvoyé avec succès.",
+    lienRenvoyeSucces:
+      "L'e-mail de réinitialisation a été renvoyé avec succès.",
     patienter: "Patienter ({secondes}s)",
     tropDeTentatives:
       "Trop de tentatives. Veuillez réessayer dans {secondes} secondes.",
@@ -426,21 +436,27 @@ export const fr = {
     identificationEtImei: "Identification & IMEI",
     optionnelModem4g: "Optionnel / Modem 4G",
     specificationsTechniques: "Spécifications Techniques",
-    imei15ChiffresValides: "L'IMEI doit comporter 15 chiffres valides (clé de Luhn).",
+    imei15ChiffresValides:
+      "L'IMEI doit comporter 15 chiffres valides (clé de Luhn).",
     imei2_15ChiffresValides: "L'IMEI 2 doit comporter 15 chiffres valides.",
     imeiConforme: "IMEI conforme",
     etatEtCaracteristiques: "État & Caractéristiques",
     tarificationEtCommerce: "Tarification & Commerce",
     cleLuhnInvalide: "Clé Luhn invalide",
     retourAuParc: "Retour au parc",
-    descriptionEntreeOrdinateur: "Scannez ou saisissez le N° de série (S/N). Les spécifications restent remplies pour le suivant.",
-    descriptionEntreeTelephone: "Scannez l'IMEI de chaque appareil. Les autres champs restent remplis pour le suivant.",
+    descriptionEntreeOrdinateur:
+      "Scannez ou saisissez le N° de série (S/N). Les spécifications restent remplies pour le suivant.",
+    descriptionEntreeTelephone:
+      "Scannez l'IMEI de chaque appareil. Les autres champs restent remplis pour le suivant.",
     identifierAppareil: "Identifier l'appareil",
-    premiumDetectionNotice: "L'identification automatique du modèle par IMEI est réservée aux abonnés Premium.",
+    premiumDetectionNotice:
+      "L'identification automatique du modèle par IMEI est réservée aux abonnés Premium.",
     identificationEnCours: "Identification du modèle en cours...",
-    nonTrouveTacNotice: "Modèle non répertorié dans la base TAC pour cet IMEI. Vous pouvez sélectionner la marque et le modèle manuellement ci-dessous.",
+    nonTrouveTacNotice:
+      "Modèle non répertorié dans la base TAC pour cet IMEI. Vous pouvez sélectionner la marque et le modèle manuellement ci-dessous.",
     appareilIdentifie: "Appareil identifié :",
-    modeleNonPresentCatalogue: "Ce modèle n'est pas encore enregistré dans votre catalogue.",
+    modeleNonPresentCatalogue:
+      "Ce modèle n'est pas encore enregistré dans votre catalogue.",
     ajouterAuCatalogue: "Ajouter au catalogue",
     modeleSelectionne: "Modèle sélectionné : {nom}",
     choisirMarque: "Choisir la marque",
@@ -455,17 +471,22 @@ export const fr = {
     ajouterAuStock: "Ajouter au stock",
     ordinateurPortable: "L'ordinateur",
     leTelephone: "Le téléphone",
-    laisserTelQuelPrixAffiche: "Laissez tel quel si le client paie le prix affiché.",
+    laisserTelQuelPrixAffiche:
+      "Laissez tel quel si le client paie le prix affiché.",
     aucuneAutreBoutiqueAcces: "Vous n'avez accès à aucune autre boutique.",
     motifPertePlaceholder: "Vol, casse, disparition…",
     preciserRaisonPlaceholder: "Précisez la raison",
     modeleCreeEtSelectionne: "Modèle « {modele} » créé et sélectionné !",
-    appareilReconnuEtSelectionne: "Appareil reconnu et sélectionné : {marque} {modele}",
-    appareilDetecteInfo: "Appareil détecté : {marque} {modele}. Cliquez sur « Ajouter au catalogue » pour le sélectionner.",
+    appareilReconnuEtSelectionne:
+      "Appareil reconnu et sélectionné : {marque} {modele}",
+    appareilDetecteInfo:
+      "Appareil détecté : {marque} {modele}. Cliquez sur « Ajouter au catalogue » pour le sélectionner.",
     choisirModeleDabord: "Choisissez d'abord le modèle.",
     choisirStockageDabord: "Choisissez d'abord le stockage.",
-    renseignerNumeroSerieSn: "Veuillez renseigner ou scanner le numéro de série (S/N).",
-    scannerCodeBarresOuTaperSn: "Scannez le code-barres avec une douchette ou tapez le numéro de série. Appuyez sur Entrée pour valider.",
+    renseignerNumeroSerieSn:
+      "Veuillez renseigner ou scanner le numéro de série (S/N).",
+    scannerCodeBarresOuTaperSn:
+      "Scannez le code-barres avec une douchette ou tapez le numéro de série. Appuyez sur Entrée pour valider.",
     chargementMarques: "Chargement des marques…",
     chargementGammes: "Chargement des gammes de la marque…",
     choisirGamme: "Choisir la gamme",
@@ -474,12 +495,15 @@ export const fr = {
     choisirModele: "Choisir le modèle",
     choisirGammeDabord: "Choisissez d'abord la gamme",
     choisirStockage: "Choisir le stockage",
-    aucunStockageConfigure: "Aucun stockage configuré pour ce modèle. Ajoutez-en un depuis le catalogue.",
+    aucunStockageConfigure:
+      "Aucun stockage configuré pour ce modèle. Ajoutez-en un depuis le catalogue.",
     ouEntreAppareilPlaceholder: "Où entre cet appareil ?",
     fournisseurPlaceholder: "Import Dubaï, grossiste local…",
-    scanDouchetteAutomatique: "Avec une douchette, l'enregistrement se fait tout seul au scan.",
+    scanDouchetteAutomatique:
+      "Avec une douchette, l'enregistrement se fait tout seul au scan.",
     enregistresDansCetteSession: "Enregistrés dans cette session",
-    appareilsAjoutesApparaitrontIci: "Les appareils ajoutés apparaîtront ici au fur et à mesure.",
+    appareilsAjoutesApparaitrontIci:
+      "Les appareils ajoutés apparaîtront ici au fur et à mesure.",
   },
   modeles: {
     titre: "Catalogue",
@@ -520,13 +544,16 @@ export const fr = {
     creer: "Créer",
     alertesReapprovisionnerSeulement: "À réapprovisionner seulement",
     supprimerModeleTitre: "Supprimer « {nom} » ?",
-    supprimerModeleDesc: "Un modèle dont des appareils existent encore ne peut pas être supprimé. Désactivez-le plutôt : il disparaîtra des listes de saisie sans effacer l'historique.",
+    supprimerModeleDesc:
+      "Un modèle dont des appareils existent encore ne peut pas être supprimé. Désactivez-le plutôt : il disparaîtra des listes de saisie sans effacer l'historique.",
     modifierLeModele: "Modifier le modèle",
-    referenceUniquePartagee: "La référence complète (marque, gamme, nom) est unique et partagée par toutes les boutiques.",
+    referenceUniquePartagee:
+      "La référence complète (marque, gamme, nom) est unique et partagée par toutes les boutiques.",
     actifProposeSaisie: "Actif (proposé à la saisie d'un appareil)",
     aucunStockagePourLinstant: "Aucun stockage pour l'instant.",
     renseignerNomMarque: "Veuillez renseigner le nom de la marque.",
-    marqueDisponibleToutesBoutiques: "Elle sera disponible pour toutes les boutiques et tous les modèles.",
+    marqueDisponibleToutesBoutiques:
+      "Elle sera disponible pour toutes les boutiques et tous les modèles.",
     choisirMarqueErreur: "Veuillez choisir une marque.",
     renseignerNomGamme: "Veuillez renseigner le nom de la gamme.",
     exempleGammePlaceholder: "Ex: iPhone, Galaxy S, MacBook Pro…",
@@ -727,25 +754,31 @@ export const fr = {
     boutiqueOuverte: "Boutique ouverte",
     ajouterBoutique: "Nouvelle boutique",
     supprimerBoutiqueTitre: "Supprimer « {nom} » ?",
-    supprimerBoutiqueDesc: "Une boutique qui contient encore des appareils ne peut pas être supprimée. Transférez-les d'abord, ou marquez simplement la boutique comme fermée.",
+    supprimerBoutiqueDesc:
+      "Une boutique qui contient encore des appareils ne peut pas être supprimée. Transférez-les d'abord, ou marquez simplement la boutique comme fermée.",
     villeRequise: "La ville du point de vente est obligatoire.",
     adresseRequise: "L'adresse du point de vente est obligatoire.",
     modifierLaBoutique: "Modifier la boutique",
-    explicationNomEntreprise: "Toutes vos boutiques portent le nom de votre entreprise. Elles sont différenciées par leur adresse.",
+    explicationNomEntreprise:
+      "Toutes vos boutiques portent le nom de votre entreprise. Elles sont différenciées par leur adresse.",
     rechercherDevise: "Rechercher une devise…",
     identifiantsLegauxHerites: "Identifiants légaux hérités de l'entreprise",
-    identifiantsHeritesDesc: "Cette boutique se trouve dans le même pays que votre entreprise ({pays}). Elle hérite automatiquement de votre NIU ({niu}) et de votre RCCM ({rccm}).",
-    boutiqueSitueeDans: "Cette boutique est située en {pays}. Veuillez renseigner le NIU et le RCCM locaux :",
+    identifiantsHeritesDesc:
+      "Cette boutique se trouve dans le même pays que votre entreprise ({pays}). Elle hérite automatiquement de votre NIU ({niu}) et de votre RCCM ({rccm}).",
+    boutiqueSitueeDans:
+      "Cette boutique est située en {pays}. Veuillez renseigner le NIU et le RCCM locaux :",
     affichageFacturesEtRecus: "Affichage sur les factures et reçus",
     afficherNiuFactures: "Afficher le NIU sur les factures",
     afficherRccmFactures: "Afficher le RCCM sur les factures",
     logoUniqueEntreprise: "Logo unique de l'entreprise",
-    logoPartageFacturesDesc: "Toutes vos boutiques partagent ce logo sur les factures et reçus. Vous pouvez le modifier depuis Mon Compte.",
+    logoPartageFacturesDesc:
+      "Toutes vos boutiques partagent ce logo sur les factures et reçus. Vous pouvez le modifier depuis Mon Compte.",
     creerLaBoutique: "Créer la boutique",
     niuRequis: "Le Numéro d'Identification Unique (NIU) est obligatoire.",
     niuInvalide: "Format NIU non conforme (ex: M052012345678X ou 14 chiffres).",
     rccmRequis: "Le registre de commerce (RCCM) est obligatoire.",
-    rccmInvalide: "Format RCCM non conforme (ex: RC/DLA/2023/B/1234 ou CM-DLA-2023-B-1234).",
+    rccmInvalide:
+      "Format RCCM non conforme (ex: RC/DLA/2023/B/1234 ou CM-DLA-2023-B-1234).",
     verificationRequiseTitre: "Confirmation d'identité requise",
     verificationRequiseDesc:
       "Pour gérer vos points de vente (ajouter, modifier ou supprimer une boutique), veuillez confirmer votre identité.",
@@ -877,9 +910,11 @@ export const fr = {
     aucunClientSelectionne: "Aucun client sélectionné.",
     envoyer: "Envoyer",
     impossibleChargerClients: "Impossible de charger la liste des clients.",
-    impossibleChargerDetailsClient: "Impossible de charger les détails du client.",
+    impossibleChargerDetailsClient:
+      "Impossible de charger les détails du client.",
     selectionnerAuMoinsUnClient: "Veuillez sélectionner au moins un client.",
-    vcardTelechargee: "Fichier vCard téléchargé ! Ouvrez-le sur votre téléphone pour ajouter les contacts à WhatsApp.",
+    vcardTelechargee:
+      "Fichier vCard téléchargé ! Ouvrez-le sur votre téléphone pour ajouter les contacts à WhatsApp.",
     erreurExportVcard: "Échec de l'exportation du fichier de contacts.",
     csvTelecharge: "Exportation CSV téléchargée avec succès.",
     numerosCopiesCount: "{count} numéros copiés dans le presse-papier !",
@@ -887,7 +922,8 @@ export const fr = {
     montantMoyenParVente: "Montant moyen par vente",
     pourcentageClientsRecurrents: "{pourcentage}% de clients récurrents",
     plusDUnAchat: "Plus d'un achat",
-    clientsApparaitrontAutomatiquement: "Les clients apparaîtront automatiquement ici dès que des ventes seront enregistrées.",
+    clientsApparaitrontAutomatiquement:
+      "Les clients apparaîtront automatiquement ici dès que des ventes seront enregistrées.",
   },
   monCompte: {
     titre: "Mon compte",
@@ -1050,11 +1086,13 @@ export const fr = {
     recherchePlaceholder: "Rechercher par nom, email, boutique...",
     tousStatuts: "Tous les statuts",
     securite: "Sécurité & Blocages",
-    securiteDesc: "Gestion des blocages d'adresses IP, détection des bots et modération des comptes.",
+    securiteDesc:
+      "Gestion des blocages d'adresses IP, détection des bots et modération des comptes.",
     bannirUtilisateur: "Bannir cet utilisateur",
     debloquerUtilisateur: "Débloquer l'utilisateur",
     motifBannissement: "Motif du bannissement",
-    motifBannissementPlaceholder: "Ex: Comportement frauduleux, non-respect des CGU...",
+    motifBannissementPlaceholder:
+      "Ex: Comportement frauduleux, non-respect des CGU...",
     confirmerBannissement: "Confirmer le bannissement",
     banniBadge: "Banni",
     bloqueAutoBadge: "Bloqué auto (Sécurité)",
@@ -1065,7 +1103,8 @@ export const fr = {
     debloquerIp: "Débloquer cette IP",
     bloquerIp: "Bloquer une IP",
     modeMaintenance: "Mode Maintenance",
-    modeMaintenanceDesc: "Suspend l'accès des commerçants pendant vos mises à jour tout en préservant vos accès administrateur.",
+    modeMaintenanceDesc:
+      "Suspend l'accès des commerçants pendant vos mises à jour tout en préservant vos accès administrateur.",
     maintenanceActive: "Maintenance active",
     maintenanceInactive: "Plateforme en ligne",
     activerMaintenance: "Activer la maintenance",
@@ -1079,20 +1118,25 @@ export const fr = {
     ipsBloqueesActivesDesc: "Accès interdit à l'API",
     botsEtIaPieges: "Bots & IA Piégés",
     botsEtIaPiegesDesc: "Champ invisible & temps record",
-    rechercheSecuritePlaceholder: "Rechercher par IP, MAC, motif, utilisateur...",
+    rechercheSecuritePlaceholder:
+      "Rechercher par IP, MAC, motif, utilisateur...",
     aucunIncident: "Aucun incident de sécurité",
-    aucunIncidentDesc: "Aucune menace ou blocage ne correspond aux filtres appliqués.",
+    aucunIncidentDesc:
+      "Aucune menace ou blocage ne correspond aux filtres appliqués.",
     finEstimee: "Fin estimée :",
     declenchePar: "Déclenché par :",
-    bypassAdminActif: "🛡️ Bypass Admin actif : votre accès reste 100% opérationnel",
+    bypassAdminActif:
+      "🛡️ Bypass Admin actif : votre accès reste 100% opérationnel",
     ajuster: "Ajuster",
-    configurerMaintenanceDesc: "Passez Telora en maintenance. Tous les commerçants et caisses verront un écran de veille animé et sécurisé pendant que vous effectuez vos tests.",
+    configurerMaintenanceDesc:
+      "Passez Telora en maintenance. Tous les commerçants et caisses verront un écran de veille animé et sécurisé pendant que vous effectuez vos tests.",
     motifAfficheCommercants: "Motif affiché aux commerçants",
     dureeEstimeeCoupure: "Durée estimée de la coupure",
     dureeIndeterminee: "Indéterminée (sans estimation)",
     repriseVers: "Reprise vers {heure}",
     accesAdminPreserve: "Accès administrateur préservé",
-    accesAdminPreserveDesc: "En tant qu'administrateur, votre session n'est jamais bloquée. L'écran de veille disparaîtra automatiquement sur tous les postes dès que vous cliquerez sur « Désactiver ».",
+    accesAdminPreserveDesc:
+      "En tant qu'administrateur, votre session n'est jamais bloquée. L'écran de veille disparaîtra automatiquement sur tous les postes dès que vous cliquerez sur « Désactiver ».",
     activationEnCours: "Activation...",
     dateEtHeure: "Date & Heure",
     visiteurAnonyme: "Visiteur anonyme",
@@ -1101,22 +1145,27 @@ export const fr = {
     inscriptions30JoursDetail: "{nombre} inscription(s) sur 30 jours",
     accesCoupe: "Accès coupé",
     dansLes7Jours: "Dans les 7 jours",
-    chiffresVolumesGlobauxNote: "Ces chiffres sont des volumes globaux. Le détail du stock d'un client n'est accessible ni ici ni par l'API : seul son propriétaire et son équipe peuvent le consulter.",
-    passerellePaiementTitre: "Gestion des Encaissements & Passerelle CinetPay",
-    passerellePaiementDesc: "Basculez facilement entre les tests et les paiements réels, configurez vos identifiants CinetPay et suivez les règlements effectués par les commerçants.",
+    chiffresVolumesGlobauxNote:
+      "Ces chiffres sont des volumes globaux. Le détail du stock d'un client n'est accessible ni ici ni par l'API : seul son propriétaire et son équipe peuvent le consulter.",
+    passerellePaiementTitre: "Gestion des Encaissements & Passerelle SaasPay",
+    passerellePaiementDesc:
+      "Basculez facilement entre les tests et les paiements réels, configurez vos identifiants SaasPay et suivez les règlements effectués par les commerçants.",
     environnementActuelPaiements: "Environnement actuel des paiements",
-    environnementActuelPaiementsDesc: "Déterminez si les règlements des commerçants sont simulés ou réellement prélevés par les opérateurs.",
+    environnementActuelPaiementsDesc:
+      "Déterminez si les règlements des commerçants sont simulés ou réellement prélevés par les opérateurs.",
     inscritLe: "Inscrit le",
     compteDesactive: "Compte désactivé",
     abonnementDe: "Abonnement de {nom}",
-    abonnementDeDesc: "Un abonnement suspendu ou expiré bloque l'accès du client et de toute son équipe. Les données restent conservées.",
+    abonnementDeDesc:
+      "Un abonnement suspendu ou expiré bloque l'accès du client et de toute son équipe. Les données restent conservées.",
     formuleAbonnement: "Formule d'abonnement",
     formuleStandard: "Standard",
     formulePremium: "Premium (Identification IMEI incluse)",
     echeanceDateAlerte: "Passée cette date, l'accès se bloque automatiquement.",
     comptePeutSeConnecter: "Le compte peut se connecter",
     compteActuellementBanni: "Compte actuellement banni",
-    compteBloqueAutoSurcharge: "Compte bloqué automatiquement (Surcharge / Flood)",
+    compteBloqueAutoSurcharge:
+      "Compte bloqué automatiquement (Surcharge / Flood)",
     motifDeuxPoints: "Motif : {motif}",
   },
   changerEmail: {
@@ -1175,6 +1224,7 @@ export const fr = {
     terminer: "J'ai bien noté mes codes",
     activeSucces: "Double authentification activée avec succès.",
     desactiveSucces: "Double authentification désactivée.",
+    gardezPrecieusement: "Veuillez précieusement conserver ces codes.",
   },
   imei: {
     lecteurDetecte: "Lecteur détecté",
@@ -1279,8 +1329,10 @@ export const fr = {
     comparatifTitre: "Comparatif 404 :",
     optionSimple: "Option 1 : Simple (Nouvelle)",
     optionDetaillee: "Option 2 : Détaillée (Précédente)",
-    descSimple: "✨ Version épurée : message clair + 1 bouton retour vers la page précédente",
-    descDetaillee: "📋 Version détaillée : avec scanner, tableau de bord, FAQ et footer complet",
+    descSimple:
+      "✨ Version épurée : message clair + 1 bouton retour vers la page précédente",
+    descDetaillee:
+      "📋 Version détaillée : avec scanner, tableau de bord, FAQ et footer complet",
   },
   merci: {
     metaTitre: "Bienvenue sur Telora — Inscription réussie",
@@ -1317,18 +1369,23 @@ export const fr = {
   },
   maintenance: {
     titre: "Telora se modernise pour vous",
-    motifParDefaut: "Nous réalisons actuellement une mise à niveau pour améliorer vos performances et optimiser vos inventaires.",
+    motifParDefaut:
+      "Nous réalisons actuellement une mise à niveau pour améliorer vos performances et optimiser vos inventaires.",
     badge: "Maintenance planifiée",
     donneesEnSecurite: "Vos données sont en parfaite sécurité",
-    donneesEnSecuriteDesc: "Vos boutiques, stocks, numéros IMEI et factures sont intégralement préservés.",
+    donneesEnSecuriteDesc:
+      "Vos boutiques, stocks, numéros IMEI et factures sont intégralement préservés.",
     repriseEstimee: "Reprise estimée du service",
     dansEnviron: "Dans environ",
     verifierDisponibilite: "Vérifier la disponibilité",
     verificationEnCours: "Vérification en cours...",
-    rafraichissementAuto: "Cette page se réactivera automatiquement dès la réouverture du service.",
+    rafraichissementAuto:
+      "Cette page se réactivera automatiquement dès la réouverture du service.",
     accesAdminLien: "Accès Administrateur (Dérogation)",
-    deRetourSucces: "La plateforme est de nouveau en ligne ! Bon retour parmi nous.",
-    toujoursEnCours: "La maintenance est toujours en cours. Merci pour votre patience.",
+    deRetourSucces:
+      "La plateforme est de nouveau en ligne ! Bon retour parmi nous.",
+    toujoursEnCours:
+      "La maintenance est toujours en cours. Merci pour votre patience.",
     imminente: "Imminente",
   },
   desktop: {
@@ -1368,9 +1425,11 @@ export const fr = {
     centreJuridique: "Centre Juridique",
     cguTitre: "Contrat Officiel • Conditions Générales",
     imprimerPdf: "Imprimer / Enregistrer en PDF",
-    cguNomComplet: "Conditions Générales d'Utilisation et de Service (CGU / CGV)",
+    cguNomComplet:
+      "Conditions Générales d'Utilisation et de Service (CGU / CGV)",
     confidentialiteTitre: "Accord de Confidentialité & Protection des Données",
-    confidentialiteNomComplet: "Politique de Confidentialité et Engagement de Non-Divulgation",
+    confidentialiteNomComplet:
+      "Politique de Confidentialité et Engagement de Non-Divulgation",
     mentionsLegalesTitre: "Mentions Légales",
     securiteTitre: "Sécurité & Protection des Données",
     cookiesTitre: "Politique des Cookies & Stockage Local",

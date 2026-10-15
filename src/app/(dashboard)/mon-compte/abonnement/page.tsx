@@ -114,7 +114,7 @@ export default function PageAbonnement() {
     }
   }, [chargerStatut, utilisateur]);
 
-  // Retour de passerelle CinetPay externe
+  // Retour de passerelle SaasPay externe
   useEffect(() => {
     if (searchParams.get("statut") === "retour") {
       void chargerStatut();
@@ -891,7 +891,7 @@ export default function PageAbonnement() {
           <DialogFooter className="px-4 py-2.5 sm:px-6 sm:py-3 border-t bg-muted/30 flex items-center justify-between sm:justify-between">
             <span className="text-xs text-muted-foreground flex items-center gap-1.5">
               <Lock className="h-3.5 w-3.5 text-emerald-600" />
-              <span>Paiement certifié CinetPay</span>
+              <span>Paiement certifié SaasPay</span>
             </span>
 
             <Button

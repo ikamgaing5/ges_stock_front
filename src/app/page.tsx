@@ -41,6 +41,7 @@ import { BasculeTheme } from "@/components/bascule-theme";
 import { BasculeLangue } from "@/components/bascule-langue";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { BarreEcosysteme } from "@/components/barre-ecosysteme";
 
 type Plateforme = "windows" | "mac" | "linux";
 
@@ -385,17 +386,17 @@ export default function LandingPage() {
             {/* Éléments de réassurance */}
             <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-muted-foreground">
               <span className="flex items-center gap-1.5">
-                <ShieldCheck className="size-4 text-emerald-500" />
+                {/* <ShieldCheck className="size-4 text-emerald-500" /> */}
                 Sans carte bancaire requise
               </span>
               <span className="hidden sm:inline">•</span>
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="size-4 text-emerald-500" />
+                {/* <CheckCircle2 className="size-4 text-emerald-500" /> */}
                 Essai 30 jours 100% fonctionnel
               </span>
               <span className="hidden sm:inline">•</span>
               <span className="flex items-center gap-1.5">
-                <Zap className="size-4 text-amber-500" />
+                {/* <Zap className="size-4 text-amber-500" /> */}
                 Mise en service en 2 minutes
               </span>
             </div>
@@ -691,129 +692,36 @@ export default function LandingPage() {
         </section>
 
         {/* ─────────────────────────────────────────────────────────────
-            5. SECTION TÉLÉCHARGEMENT MULTI-PLATEFORMES (WINDOWS / MAC / LINUX)
+            5. SECTION ÉCOSYSTÈME MATÉRIEL DE CAISSE & TÉLÉCHARGEMENT
         ───────────────────────────────────────────────────────────── */}
-        <section id="telechargements" className="border-t border-border/40 py-20 bg-muted/10">
+        <section id="telechargements" className="py-20 border-t border-border/40 bg-muted/10 text-center">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground mb-3">
-                <HardDrive className="size-3.5 text-primary" />
-                <span>Disponible sur tous vos systèmes d'exploitation</span>
-              </div>
-              <h2 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
-                Télécharger Telora pour votre poste de caisse
-              </h2>
-              <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-                Choisissez votre système d'exploitation ci-dessous. Le logiciel
-                s'installe en quelques secondes sans configuration complexe.
-              </p>
-            </div>
+            <h2 className="font-heading text-3xl font-extrabold tracking-tight sm:text-4xl text-foreground">
+              Une solution compatible avec tout votre matériel de caisse
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm sm:text-base text-muted-foreground">
+              Installez l'application sur votre ordinateur de comptoir ou utilisez-la sur n'importe quel navigateur.
+            </p>
 
-            {/* Onglets de sélection du système */}
+            {/* Rangée d'icônes épurées - Style Photo 1 écosystème Telora */}
+            <BarreEcosysteme />
+
+            {/* Bouton Télécharger Bleu arrondi */}
             <div className="mt-10 flex justify-center">
-              <div className="inline-flex rounded-xl border border-border/70 bg-card p-1 shadow-sm">
-                {(Object.keys(TELECHARGEMENTS) as Plateforme[]).map((cle) => {
-                  const info = TELECHARGEMENTS[cle];
-                  const Icone = info.icone;
-                  const estActif = plateformeActive === cle;
-
-                  return (
-                    <button
-                      key={cle}
-                      onClick={() => setPlateformeActive(cle)}
-                      className={cn(
-                        "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all",
-                        estActif
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                      )}
-                      id={`tab-os-${cle}`}
-                    >
-                      <Icone className="size-4" />
-                      <span>{info.nom}</span>
-                      {osDetecte === cle && (
-                        <span className="hidden sm:inline text-[10px] uppercase font-bold tracking-wide opacity-80">
-                          (Détecté)
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Carte de téléchargement pour l'OS sélectionné */}
-            <div className="mx-auto mt-8 max-w-3xl rounded-2xl border border-border/80 bg-card p-6 sm:p-8 shadow-lg">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/60 pb-6">
-                <div>
-                  <div className="flex items-center gap-2.5">
-                    <h3 className="font-heading text-2xl font-bold text-foreground">
-                      Telora pour {TELECHARGEMENTS[plateformeActive].nom}
-                    </h3>
-                    <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                      {TELECHARGEMENTS[plateformeActive].badge}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                    {TELECHARGEMENTS[plateformeActive].description}
-                  </p>
-                </div>
-              </div>
-
-              {/* Liste des versions téléchargeables */}
-              <div className="mt-6 space-y-3">
-                {TELECHARGEMENTS[plateformeActive].versions.map((ver, idx) => (
-                  <div
-                    key={idx}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-xl border border-border/60 bg-background/50 p-4 transition-colors hover:border-primary/40"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm sm:text-base text-foreground">
-                          {ver.nom}
-                        </span>
-                        {ver.recommande && (
-                          <span className="rounded bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-500">
-                            Recommandé
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {ver.description} ·{" "}
-                        <span className="font-mono">{ver.taille}</span>
-                      </p>
-                    </div>
-
-                    <Button
-                      onClick={() => declencherTelechargement(ver, plateformeActive)}
-                      size="sm"
-                      className="shrink-0 gap-1.5"
-                      id={`btn-dl-${plateformeActive}-${idx}`}
-                    >
-                      <Download className="size-4" />
-                      <span>Télécharger {ver.type}</span>
-                    </Button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Guide d'installation rapide */}
-              <div className="mt-8 rounded-xl bg-muted/40 p-4 text-xs text-muted-foreground">
-                <p className="font-semibold text-foreground mb-1">
-                  💡 Comment démarrer après le téléchargement ?
-                </p>
-                <ol className="list-decimal list-inside space-y-1">
-                  <li>Lancez le fichier d'installation téléchargé sur votre ordinateur.</li>
-                  <li>
-                    Connectez-vous avec vos identifiants ou créez un compte (30 jours
-                    d'essai gratuit).
-                  </li>
-                  <li>
-                    Votre imprimante à ticket thermique et votre douchette sont reconnues
-                    automatiquement dès la première utilisation.
-                  </li>
-                </ol>
-              </div>
+              <Button
+                onClick={() =>
+                  declencherTelechargement(
+                    TELECHARGEMENTS[osDetecte].versions[0],
+                    osDetecte,
+                  )
+                }
+                size="lg"
+                className="rounded-full bg-[#0052CC] hover:bg-[#0047B3] text-white px-8 py-6 text-base font-bold shadow-lg shadow-blue-500/20"
+                id="btn-telecharger-materiel"
+              >
+                <Download className="mr-2 size-5" />
+                <span>Télécharger pour {TELECHARGEMENTS[osDetecte].nom}</span>
+              </Button>
             </div>
           </div>
         </section>
@@ -952,44 +860,42 @@ export default function LandingPage() {
 
               {/* Contrôles interactifs : Période & Devise */}
               <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                {/* Bascule Mensuel / Annuel */}
-                <div className="inline-flex items-center rounded-xl border border-border/80 bg-background/80 p-1 shadow-sm backdrop-blur-sm">
+                <div className="inline-flex rounded-xl border border-slate-300 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                   <button
                     onClick={() => setPeriodeFacturation("mensuel")}
                     className={cn(
-                      "rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-medium transition-all",
+                      "rounded-lg px-4 py-2 text-xs font-bold transition-all",
                       periodeFacturation === "mensuel"
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground",
+                        ? "bg-[#0052CC] text-white shadow-sm"
+                        : "text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white",
                     )}
                   >
-                    {lang === "en" ? "Monthly" : "Mensuel"}
+                    Facturation mensuelle
                   </button>
                   <button
                     onClick={() => setPeriodeFacturation("annuel")}
                     className={cn(
-                      "flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-medium transition-all",
+                      "rounded-lg px-4 py-2 text-xs font-bold transition-all flex items-center gap-1.5",
                       periodeFacturation === "annuel"
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground",
+                        ? "bg-[#0052CC] text-white shadow-sm"
+                        : "text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white",
                     )}
                   >
-                    <span>{lang === "en" ? "Annual" : "Annuel"}</span>
-                    <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                      {lang === "en" ? "2 months free" : "-17% (2 mois offerts)"}
+                    <span>Facturation annuelle</span>
+                    <span className="rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.2 text-[10px] font-bold">
+                      -17% (2 mois offerts)
                     </span>
                   </button>
                 </div>
 
-                {/* Bascule Devise : XAF (FCFA) / USD ($) */}
-                <div className="inline-flex items-center rounded-xl border border-border/80 bg-background/80 p-1 shadow-sm backdrop-blur-sm">
+                <div className="inline-flex rounded-xl border border-slate-300 bg-white p-1 shadow-sm dark:border-slate-700 dark:bg-slate-900">
                   <button
                     onClick={() => setDeviseTarif("XAF")}
                     className={cn(
-                      "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
+                      "rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
                       deviseTarif === "XAF"
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground",
+                        ? "bg-[#0052CC] text-white shadow-sm"
+                        : "text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white",
                     )}
                   >
                     FCFA (XAF)
@@ -997,10 +903,10 @@ export default function LandingPage() {
                   <button
                     onClick={() => setDeviseTarif("USD")}
                     className={cn(
-                      "rounded-lg px-3 py-1.5 text-xs font-semibold transition-all",
+                      "rounded-lg px-3 py-1.5 text-xs font-bold transition-all",
                       deviseTarif === "USD"
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground",
+                        ? "bg-[#0052CC] text-white shadow-sm"
+                        : "text-slate-600 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white",
                     )}
                   >
                     $ USD
@@ -1009,55 +915,46 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* ─────────────────────────────────────────────────────────────
-                TABLEAU COMPARATIF STYLE FLAMEPAGES
-            ───────────────────────────────────────────────────────────── */}
+            {/* Tableau comparatif exact à la capture utilisateur */}
             <div className="mt-12 overflow-x-auto pb-4">
-              <div className="min-w-[760px] rounded-2xl border border-border/80 bg-card/70 shadow-xl backdrop-blur-md overflow-hidden">
+              <div className="min-w-[760px] rounded-2xl border border-slate-300 bg-white shadow-xl dark:border-slate-800 dark:bg-[#0F172A] overflow-hidden">
                 <table className="w-full text-left text-sm border-collapse">
                   <thead>
-                    <tr className="border-b border-border/70 bg-muted/30">
-                      {/* Colonne 1 : Vide pour alignement des critères */}
+                    <tr className="border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/60">
                       <th className="p-5 w-1/4 align-bottom">
-                        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                          {lang === "en" ? "Features & Limits" : "Critères & Capacités"}
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                          CRITÈRES & CAPACITÉS
                         </span>
                       </th>
 
-                      {/* Colonne 2 : Essai Gratuit */}
-                      <th className="p-5 w-1/4 border-l border-border/50 align-top">
+                      {/* Gratuit 30 jours */}
+                      <th className="p-5 w-1/4 border-l border-slate-200 dark:border-slate-800 align-top">
                         <div className="flex flex-col">
-                          <span className="font-heading text-lg font-bold text-foreground">
-                            {lang === "en" ? "Free Trial" : "Gratuit"}
+                          <span className="font-heading text-lg font-bold text-slate-950 dark:text-white">
+                            Essai Gratuit
                           </span>
-                          <span className="text-xs text-muted-foreground mt-0.5">
-                            {lang === "en" ? "30 days • No credit card" : "30 jours • Sans frais"}
-                          </span>
+                          <span className="text-xs text-slate-500 mt-0.5">30 jours • Sans frais</span>
                           <div className="mt-3">
-                            <span className="font-mono text-2xl font-extrabold text-foreground">
+                            <span className="font-mono text-2xl font-extrabold text-slate-950 dark:text-white">
                               0 {deviseTarif === "XAF" ? "FCFA" : "$"}
                             </span>
-                            <span className="text-xs text-muted-foreground">
-                              {lang === "en" ? " / 30 days" : " / 30 jours"}
-                            </span>
+                            <span className="text-xs text-slate-500"> / 30 jours</span>
                           </div>
-                          <span className="mt-2 inline-flex items-center text-[11px] font-medium text-emerald-500">
-                            ✓ {lang === "en" ? "Full Premium access" : "Accès Premium inclus"}
+                          <span className="mt-2 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                            ✓ Accès Premium inclus
                           </span>
                         </div>
                       </th>
 
-                      {/* Colonne 3 : Standard */}
-                      <th className="p-5 w-1/4 border-l border-border/50 align-top">
+                      {/* Standard */}
+                      <th className="p-5 w-1/4 border-l border-slate-200 dark:border-slate-800 align-top">
                         <div className="flex flex-col">
-                          <span className="font-heading text-lg font-bold text-foreground">
+                          <span className="font-heading text-lg font-bold text-slate-950 dark:text-white">
                             Standard
                           </span>
-                          <span className="text-xs text-muted-foreground mt-0.5">
-                            {lang === "en" ? "For single-store shops" : "Boutique individuelle"}
-                          </span>
+                          <span className="text-xs text-slate-500 mt-0.5">1 seule boutique</span>
                           <div className="mt-3">
-                            <span className="font-mono text-2xl font-extrabold text-foreground">
+                            <span className="font-mono text-2xl font-extrabold text-slate-950 dark:text-white">
                               {deviseTarif === "XAF"
                                 ? periodeFacturation === "mensuel"
                                   ? "10 000"
@@ -1067,37 +964,26 @@ export default function LandingPage() {
                                 : "13"}
                               {" "}{deviseTarif === "XAF" ? "FCFA" : "$"}
                             </span>
-                            <span className="text-xs text-muted-foreground">
-                              {lang === "en" ? " / month" : " / mois"}
-                            </span>
+                            <span className="text-xs text-slate-500"> / mois</span>
                           </div>
-                          {periodeFacturation === "annuel" && (
-                            <span className="mt-1 text-[11px] text-muted-foreground">
-                              {lang === "en"
-                                ? `Billed ${deviseTarif === "XAF" ? "100 000 FCFA" : "$160"} / yr`
-                                : `Facturé ${deviseTarif === "XAF" ? "100 000 FCFA" : "160 $"} / an`}
-                            </span>
-                          )}
                         </div>
                       </th>
 
-                      {/* Colonne 4 : Premium [LE PLUS CHOISI] */}
-                      <th className="relative p-5 w-1/4 border-l border-border/50 bg-primary/[0.04] dark:bg-primary/[0.07] align-top">
-                        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-amber-500 via-primary to-indigo-500" />
+                      {/* Premium */}
+                      <th className="relative p-5 w-1/4 border-l border-slate-200 bg-blue-50/40 dark:border-slate-800 dark:bg-blue-950/20 align-top">
+                        <div className="absolute top-0 inset-x-0 h-1 bg-[#E61E2A]" />
                         <div className="flex flex-col">
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-heading text-lg font-bold text-foreground">
+                            <span className="font-heading text-lg font-bold text-slate-950 dark:text-white">
                               Premium
                             </span>
-                            <span className="rounded-full bg-gradient-to-r from-amber-500 to-primary px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider shadow-sm">
-                              {lang === "en" ? "Most Popular" : "Le plus choisi"}
+                            <span className="rounded-full bg-[#E61E2A] px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
+                              POPULAIRE
                             </span>
                           </div>
-                          <span className="text-xs text-muted-foreground mt-0.5">
-                            {lang === "en" ? "Unlimited & Multi-store" : "Multi-boutiques & Tout illimité"}
-                          </span>
+                          <span className="text-xs text-slate-500 mt-0.5">Multi-boutiques illimité</span>
                           <div className="mt-3">
-                            <span className="font-mono text-2xl font-extrabold text-foreground bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text">
+                            <span className="font-mono text-2xl font-extrabold text-slate-950 dark:text-white">
                               {deviseTarif === "XAF"
                                 ? periodeFacturation === "mensuel"
                                   ? "25 000"
@@ -1107,216 +993,59 @@ export default function LandingPage() {
                                 : "33"}
                               {" "}{deviseTarif === "XAF" ? "FCFA" : "$"}
                             </span>
-                            <span className="text-xs text-muted-foreground">
-                              {lang === "en" ? " / month" : " / mois"}
-                            </span>
+                            <span className="text-xs text-slate-500"> / mois</span>
                           </div>
-                          {periodeFacturation === "annuel" && (
-                            <span className="mt-1 text-[11px] text-muted-foreground">
-                              {lang === "en"
-                                ? `Billed ${deviseTarif === "XAF" ? "250 000 FCFA" : "$400"} / yr`
-                                : `Facturé ${deviseTarif === "XAF" ? "250 000 FCFA" : "400 $"} / an`}
-                            </span>
-                          )}
                         </div>
                       </th>
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-border/50 text-xs sm:text-sm">
-                    {/* Ligne 1 : Boutiques */}
-                    <tr className="hover:bg-muted/20 transition-colors">
-                      <td className="p-4 font-medium text-foreground">
-                        {lang === "en" ? "Active stores / branches" : "Boutiques incluses"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-foreground font-semibold">
-                        {lang === "en" ? "Unlimited (30d)" : "Illimité (30j)"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-foreground">
-                        {lang === "en" ? "1 single store" : "1 boutique max"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 bg-primary/[0.02] dark:bg-primary/[0.04] text-foreground font-semibold">
-                        {lang === "en" ? "Unlimited stores" : "Illimité (Multi-boutiques)"}
-                      </td>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs sm:text-sm">
+                    <tr>
+                      <td className="p-4 font-semibold text-slate-900 dark:text-white">Boutiques incluses</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800 font-bold">Illimité (30j)</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800">1 boutique max</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800 bg-blue-50/20 dark:bg-blue-950/10 font-bold text-[#0052CC] dark:text-sky-400">Illimité</td>
                     </tr>
-
-                    {/* Ligne 2 : Utilisateurs / Équipe */}
-                    <tr className="hover:bg-muted/20 transition-colors">
-                      <td className="p-4 font-medium text-foreground">
-                        {lang === "en" ? "Team members / cashiers" : "Membres de l'équipe"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-foreground font-semibold">
-                        {lang === "en" ? "Unlimited (30d)" : "Illimité (30j)"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-foreground">
-                        {lang === "en" ? "2 members (+ owner)" : "2 collaborateurs (+ gérant)"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 bg-primary/[0.02] dark:bg-primary/[0.04] text-foreground font-semibold">
-                        {lang === "en" ? "Unlimited members" : "Illimité (Comptes illimités)"}
-                      </td>
+                    <tr>
+                      <td className="p-4 font-semibold text-slate-900 dark:text-white">Membres d'équipe</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800 font-bold">Illimité (30j)</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800">3 employés</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800 bg-blue-50/20 dark:bg-blue-950/10 font-bold text-[#0052CC] dark:text-sky-400">Illimité</td>
                     </tr>
-
-                    {/* Ligne 3 : Appareils & Stock */}
-                    <tr className="hover:bg-muted/20 transition-colors">
-                      <td className="p-4 font-medium text-foreground">
-                        {lang === "en" ? "Devices & stock capacity" : "Appareils & Stock max"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-foreground font-semibold">
-                        {lang === "en" ? "Unlimited (30d)" : "Illimité (30j)"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-foreground">
-                        {lang === "en" ? "Up to 500 devices" : "Jusqu'à 500 appareils"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 bg-primary/[0.02] dark:bg-primary/[0.04] text-foreground font-semibold">
-                        {lang === "en" ? "Unlimited devices" : "Illimité (Sans plafond)"}
-                      </td>
+                    <tr>
+                      <td className="p-4 font-semibold text-slate-900 dark:text-white">Traçabilité IMEI unitaire</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800 text-emerald-600 font-bold">✓ Inclus</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800 text-emerald-600 font-bold">✓ Inclus</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800 bg-blue-50/20 dark:bg-blue-950/10 text-emerald-600 font-bold">✓ Inclus</td>
                     </tr>
-
-                    {/* Ligne 4 : Traçabilité IMEI */}
-                    <tr className="hover:bg-muted/20 transition-colors">
-                      <td className="p-4 font-medium text-foreground">
-                        {lang === "en" ? "Individual IMEI tracking" : "Traçabilité IMEI unitaire"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 bg-primary/[0.02] dark:bg-primary/[0.04] text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
+                    <tr>
+                      <td className="p-4 font-semibold text-slate-900 dark:text-white">Caisse PC Desktop (ESC/POS)</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800 text-emerald-600 font-bold">✓ Inclus</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800 text-emerald-600 font-bold">✓ Inclus</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800 bg-blue-50/20 dark:bg-blue-950/10 text-emerald-600 font-bold">✓ Inclus</td>
                     </tr>
-
-                    {/* Ligne 5 : Caisse tactile & Scanner */}
-                    <tr className="hover:bg-muted/20 transition-colors">
-                      <td className="p-4 font-medium text-foreground">
-                        {lang === "en" ? "Touch POS & Barcode scan" : "Caisse tactile & Scan code-barres"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 bg-primary/[0.02] dark:bg-primary/[0.04] text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
+                    <tr>
+                      <td className="p-4 font-semibold text-slate-900 dark:text-white">Support & Assistance</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800">Standard</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800">Email</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800 bg-blue-50/20 dark:bg-blue-950/10 font-bold text-[#0052CC] dark:text-sky-400">WhatsApp 7j/7</td>
                     </tr>
-
-                    {/* Ligne 6 : Impression thermique */}
-                    <tr className="hover:bg-muted/20 transition-colors">
-                      <td className="p-4 font-medium text-foreground">
-                        {lang === "en" ? "Thermal receipts (ESC/POS)" : "Reçus thermiques & Factures"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 bg-primary/[0.02] dark:bg-primary/[0.04] text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                    </tr>
-
-                    {/* Ligne 7 : Suivi en temps réel Cloud */}
-                    <tr className="hover:bg-muted/20 transition-colors">
-                      <td className="p-4 font-medium text-foreground">
-                        {lang === "en" ? "Real-time sync & Cloud tracking" : "Suivi en temps réel & Cloud"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 bg-primary/[0.02] dark:bg-primary/[0.04] text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                    </tr>
-
-                    {/* Ligne 8 : Transferts inter-boutiques */}
-                    <tr className="hover:bg-muted/20 transition-colors">
-                      <td className="p-4 font-medium text-foreground">
-                        {lang === "en" ? "Inter-store stock transfers" : "Transferts entre boutiques"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-muted-foreground">
-                        ✕ {lang === "en" ? "Not included (1 store)" : "Non inclus (1 boutique)"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 bg-primary/[0.02] dark:bg-primary/[0.04] text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                    </tr>
-
-                    {/* Ligne 9 : Rapports financiers & Consolidation */}
-                    <tr className="hover:bg-muted/20 transition-colors">
-                      <td className="p-4 font-medium text-foreground">
-                        {lang === "en" ? "Financial reports & Analytics" : "Rapports & Chiffre d'affaires"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-foreground">
-                        {lang === "en" ? "Full Advanced" : "Avancés complets"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-foreground">
-                        {lang === "en" ? "Standard (1 store)" : "Standard (1 boutique)"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 bg-primary/[0.02] dark:bg-primary/[0.04] text-foreground font-semibold">
-                        {lang === "en" ? "Advanced & Consolidated" : "Avancés & Multi-sites consolidé"}
-                      </td>
-                    </tr>
-
-                    {/* Ligne 10 : Réparations & SAV */}
-                    <tr className="hover:bg-muted/20 transition-colors">
-                      <td className="p-4 font-medium text-foreground">
-                        {lang === "en" ? "Repairs & Warranty tracking" : "Gestion Réparations & SAV"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 bg-primary/[0.02] dark:bg-primary/[0.04] text-emerald-500 font-medium">
-                        ✓ {lang === "en" ? "Included" : "Compris"}
-                      </td>
-                    </tr>
-
-                    {/* Ligne 11 : Support */}
-                    <tr className="hover:bg-muted/20 transition-colors">
-                      <td className="p-4 font-medium text-foreground">
-                        {lang === "en" ? "Customer support" : "Support & Assistance"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-muted-foreground">
-                        {lang === "en" ? "Onboarding guide" : "Guide de démarrage"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 text-foreground">
-                        {lang === "en" ? "Email & in-app chat" : "Email & Chat standard"}
-                      </td>
-                      <td className="p-4 border-l border-border/50 bg-primary/[0.02] dark:bg-primary/[0.04] text-foreground font-semibold">
-                        {lang === "en" ? "Priority WhatsApp 7/7" : "WhatsApp prioritaire 7j/7"}
-                      </td>
-                    </tr>
-
-                    {/* Ligne 12 : Ligne des boutons CTA */}
-                    <tr className="border-t border-border/70 bg-muted/10">
-                      <td className="p-5 font-semibold text-foreground">
-                        {lang === "en" ? "Get Started" : "Souscription"}
-                      </td>
-                      <td className="p-5 border-l border-border/50">
+                    {/* Ligne des boutons CTA */}
+                    <tr className="border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
+                      <td className="p-4 font-semibold text-slate-900 dark:text-white">Souscription</td>
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800">
                         <Link
                           href="/inscription"
                           className={cn(
                             buttonVariants({ variant: "outline", size: "sm" }),
-                            "w-full text-xs font-semibold hover:border-primary",
+                            "w-full text-xs font-semibold hover:border-[#0052CC]",
                           )}
                         >
-                          {lang === "en" ? "Start 30d Free Trial" : "Démarrer l'essai 30j"}
+                          Démarrer l'essai 30j
                         </Link>
                       </td>
-                      <td className="p-5 border-l border-border/50">
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800">
                         <Link
                           href="/inscription?plan=standard"
                           className={cn(
@@ -1324,18 +1053,18 @@ export default function LandingPage() {
                             "w-full text-xs font-semibold",
                           )}
                         >
-                          {lang === "en" ? "Choose Standard" : "Choisir Standard"}
+                          Choisir Standard
                         </Link>
                       </td>
-                      <td className="p-5 border-l border-border/50 bg-primary/[0.03] dark:bg-primary/[0.06]">
+                      <td className="p-4 border-l border-slate-200 dark:border-slate-800 bg-blue-50/20 dark:bg-blue-950/10">
                         <Link
                           href="/inscription?plan=premium"
                           className={cn(
                             buttonVariants({ size: "sm" }),
-                            "w-full text-xs font-bold bg-gradient-to-r from-amber-500 via-primary to-indigo-600 text-white shadow-md shadow-primary/20 hover:scale-[1.02] transition-transform",
+                            "w-full text-xs font-bold bg-[#0052CC] hover:bg-[#0047B3] text-white shadow-md shadow-blue-500/20 hover:scale-[1.02] transition-transform",
                           )}
                         >
-                          {lang === "en" ? "Choose Premium" : "Choisir Premium"}
+                          Choisir Premium
                         </Link>
                       </td>
                     </tr>

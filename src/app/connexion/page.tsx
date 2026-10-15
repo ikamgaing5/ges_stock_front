@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IconeTelora } from "@/components/ui/logo-telora";
 import { useAntiBot } from "@/components/securite/champ-anti-bot";
+import { cn } from "@/lib/utils";
 
 /** Page de connexion (/connexion). */
 export default function PageConnexion() {
@@ -140,9 +141,15 @@ export default function PageConnexion() {
   }, [lang, activiteSuspecte, jetonDefi, t]);
 
   useEffect(() => {
-    setIsDesktop(
-      typeof window !== "undefined" && Boolean(window.teloraDesktop?.isDesktop),
-    );
+    const desktop =
+      typeof window !== "undefined" && Boolean(window.teloraDesktop?.isDesktop);
+    setIsDesktop(desktop);
+    if (desktop) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
   }, []);
 
   /** Traduit dynamiquement les messages d'erreur selon la langue sélectionnée. */
@@ -311,7 +318,14 @@ export default function PageConnexion() {
   }
 
   return (
-    <div className="relative flex min-h-[100dvh] flex-col items-center justify-center bg-muted/40 p-4">
+    <div
+      className={cn(
+        "page-connexion relative flex w-full flex-col items-center justify-center bg-muted/40",
+        isDesktop
+          ? "h-[calc(100dvh-var(--hauteur-barre-titre,0px))] max-h-[calc(100dvh-var(--hauteur-barre-titre,0px))] overflow-hidden select-none px-4 py-2"
+          : "min-h-[100dvh] p-4",
+      )}
+    >
       {/* Sélecteur de langue et de thème avant même de se connecter */}
       {!isDesktop && (
         <div className="absolute top-4 right-4 flex items-center gap-1">
@@ -320,21 +334,21 @@ export default function PageConnexion() {
         </div>
       )}
 
-      <div className="flex-1 flex items-center justify-center w-full py-8">
+      <div className="flex-1 flex items-center justify-center w-full py-1 sm:py-4">
         <div className="anim-apparait w-full max-w-sm">
-          <div className="mb-8 flex flex-col items-center gap-3 text-center">
+          <div className="mb-4 sm:mb-6 flex flex-col items-center gap-2 sm:gap-2.5 text-center">
             {activiteSuspecte ? (
               // <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive ring-8 ring-destructive/5 animate-pulse">
               //   <ShieldAlert className="h-7 w-7" />
               // </div>
               <></>
             ) : jetonDefi ? (
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                <ShieldCheck className="h-6 w-6" />
-                </div>
-            // <></>
+              // <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+              //   <ShieldCheck className="h-6 w-6" />
+              //   </div>
+            <></>
             ) : (
-              <IconeTelora size={52} />
+              <IconeTelora size={isDesktop ? 44 : 52} />
             )}
             <div>
               <h1 className="font-heading text-xl font-semibold tracking-tight">
@@ -344,7 +358,7 @@ export default function PageConnexion() {
                     ? t("auth.deuxFacteursTitre")
                     : "Telora"}
               </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
                 {activiteSuspecte
                   ? t("auth.activiteSuspecteDesc")
                   : jetonDefi
@@ -496,7 +510,7 @@ export default function PageConnexion() {
             <form
               noValidate
               onSubmit={envoyer}
-              className="space-y-4 rounded-xl border bg-card p-6 shadow-sm"
+              className="space-y-3.5 sm:space-y-4 rounded-xl border bg-card p-5 sm:p-6 shadow-sm"
             >
               <ChampAntiBot />
               <div className="space-y-2">
@@ -596,7 +610,7 @@ export default function PageConnexion() {
           )}
 
           {!jetonDefi && !activiteSuspecte && (
-            <div className="mt-6 space-y-2 text-center text-sm text-muted-foreground">
+            <div className="mt-4 sm:mt-6 space-y-1.5 text-center text-xs sm:text-sm text-muted-foreground">
               <p>
                 {t("auth.gererBoutiqueQuestion")}{" "}
                 <Link

@@ -501,7 +501,7 @@ export function SectionFacturation() {
                 <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                   <span>
-                    Vos coordonnées bancaires complètes sont traitées par la passerelle certifiée PCI-DSS CinetPay.
+                    Vos coordonnées bancaires complètes sont traitées de manière sécurisée par la passerelle certifiée SaasPay.
                   </span>
                 </p>
               </div>

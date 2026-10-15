@@ -20,6 +20,8 @@ const ROUTES_PUBLIQUES = [
   "/etudes-de-cas",
   // "/invitation/",
   "/hors-ligne",
+  "/v2",
+  "/v3"
 ];
 
 const CLE_TOKEN = "gestion-stock-token";

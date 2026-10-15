@@ -9,8 +9,8 @@ import { formaterImei } from "@/lib/imei";
 export interface ModeleFactureProps {
   mouvement: Mouvement | { data: Mouvement };
   idPrint?: string;
-  zoomMode?: "auto" | "100%";
-  onZoomChange?: (mode: "auto" | "100%") => void;
+  zoomMode?: "auto" | "100%" | "ajuster";
+  onZoomChange?: (mode: "auto" | "100%" | "ajuster") => void;
   afficherControlesZoom?: boolean;
 }
 
@@ -28,19 +28,37 @@ export function ModeleFacture({
 
   const conteneurRef = useRef<HTMLDivElement>(null);
   const [echelle, setEchelle] = useState<number>(1);
-  const [modeZoomInterne, setModeZoomInterne] = useState<"auto" | "100%">(
+  const [modeZoomInterne, setModeZoomInterne] = useState<"auto" | "100%" | "ajuster">(
     "auto",
   );
 
   const modeZoom = propZoomMode ?? modeZoomInterne;
 
-  // Calcul automatique de l'échelle pour s'adapter parfaitement à la largeur de l'écran (mobile/tablette)
+  // Calcul automatique de l'échelle pour s'adapter parfaitement à l'écran (mobile/tablette/modal)
   useEffect(() => {
     const el = conteneurRef.current;
     if (!el) return;
 
     const recalculerEchelle = () => {
       const largeurConteneur = el.clientWidth;
+      const conteneurParent = el.closest(".overflow-y-auto") as HTMLElement | null;
+      const hauteurDisponible = conteneurParent
+        ? conteneurParent.clientHeight - 32
+        : (typeof window !== "undefined" ? window.innerHeight * 0.75 : DOC_HEIGHT);
+
+      if (modeZoom === "100%") {
+        setEchelle(1);
+        return;
+      }
+
+      if (modeZoom === "ajuster") {
+        const ratioL = largeurConteneur > 0 ? (largeurConteneur - 16) / DOC_WIDTH : 1;
+        const ratioH = hauteurDisponible > 0 ? (hauteurDisponible - 16) / DOC_HEIGHT : 1;
+        const ratio = Math.min(1, Math.max(0.3, Math.min(ratioL, ratioH)));
+        setEchelle(ratio);
+        return;
+      }
+
       if (largeurConteneur > 0 && largeurConteneur < DOC_WIDTH) {
         // Laisser 8px de marge visuelle sur mobile
         const ratio = Math.min(
@@ -59,6 +77,10 @@ export function ModeleFacture({
     if (typeof ResizeObserver !== "undefined") {
       observer = new ResizeObserver(() => recalculerEchelle());
       observer.observe(el);
+      const parent = el.closest(".overflow-y-auto");
+      if (parent) {
+        observer.observe(parent);
+      }
     }
 
     window.addEventListener("resize", recalculerEchelle);
@@ -66,10 +88,10 @@ export function ModeleFacture({
       observer?.disconnect();
       window.removeEventListener("resize", recalculerEchelle);
     };
-  }, []);
+  }, [modeZoom]);
 
   const basculerZoom = () => {
-    const nouveauMode = modeZoom === "auto" ? "100%" : "auto";
+    const nouveauMode = modeZoom === "ajuster" ? "100%" : "ajuster";
     if (onZoomChange) {
       onZoomChange(nouveauMode);
     } else {
@@ -145,14 +167,14 @@ export function ModeleFacture({
       : (telephone?.prix_vente_reel ?? telephone?.prix_vente ?? 0);
   const logoBoutique = boutique?.logo_url;
 
-  const doitEtreMisAEchelle = echelle < 1 && modeZoom === "auto";
+  const doitEtreMisAEchelle = echelle < 1;
 
   return (
     <div
       ref={conteneurRef}
       className="facture-responsive-wrapper w-full flex flex-col items-center overflow-x-hidden print:overflow-visible print:w-full print:block"
     >
-      {/* Barre de contrôle du zoom mobile / écran réduit (masquée à l'impression) */}
+      {/* Barre de contrôle du zoom (masquée à l'impression) */}
       {afficherControlesZoom && echelle < 1 && (
         <div className="print:hidden mb-2.5 flex items-center justify-center">
           <button
@@ -160,7 +182,7 @@ export function ModeleFacture({
             onClick={basculerZoom}
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 hover:opacity-90 active:scale-95 transition-all shadow-sm"
           >
-            {modeZoom === "auto" ? (
+            {modeZoom === "ajuster" ? (
               <>
                 <ZoomIn className="h-3.5 w-3.5" />
                 <span>{t("factures.zoomTailleReelle")}</span>
@@ -186,7 +208,7 @@ export function ModeleFacture({
             ? `${Math.ceil(DOC_HEIGHT * echelle)}px`
             : `${DOC_HEIGHT}px`,
           maxWidth: "100%",
-          overflow: modeZoom === "100%" ? "auto" : "hidden",
+          overflow: "visible",
         }}
       >
         {/* Conteneur intermédiaire appliquant la mise à l'échelle vectorielle */}
@@ -194,7 +216,7 @@ export function ModeleFacture({
           className="facture-scale-inner print:!transform-none print:!w-full print:!h-full"
           style={{
             transform: doitEtreMisAEchelle ? `scale(${echelle})` : undefined,
-            transformOrigin: "top left",
+            transformOrigin: "top center",
             width: `${DOC_WIDTH}px`,
             minWidth: `${DOC_WIDTH}px`,
             height: `${DOC_HEIGHT}px`,
@@ -276,7 +298,7 @@ export function ModeleFacture({
                             <span className="font-semibold text-neutral-800">
                               {t("factures.niu")} :
                             </span>{" "}
-                            <span className="font-mono">{boutique.niu}</span>
+                            <span className="">{boutique.niu}</span>
                           </p>
                         )}
                       {boutique?.registre_commerce &&
@@ -285,7 +307,7 @@ export function ModeleFacture({
                             <span className="font-semibold text-neutral-800">
                               {t("factures.rccm")} :
                             </span>{" "}
-                            <span className="font-mono">
+                            <span >
                               {boutique.registre_commerce}
                             </span>
                           </p>
@@ -481,9 +503,12 @@ export function ModeleFacture({
                     </tbody>
                   </table>
                 </div>
+              </div>
 
-                {/* Bloc Total de la facture */}
-                <div className="mt-4 flex justify-end break-inside-avoid">
+              {/* Pied de page & Totaux figés en bas (strictement 1 page) */}
+              <div className="mt-auto shrink-0 break-inside-avoid">
+                {/* Bloc Total de la facture (figé vers le bas) */}
+                <div className="mb-4 flex justify-end">
                   <div className="w-64 space-y-1 text-xs">
                     <div className="text-right font-bold text-neutral-900 text-sm mb-1">
                       {t("factures.totalCommande")}
@@ -502,35 +527,35 @@ export function ModeleFacture({
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Pied de page : Notes & Conditions (strictement 1 page) */}
-              <div className="mt-auto pt-4 border-t border-neutral-200 text-[11px] text-neutral-700 space-y-2.5 break-inside-avoid">
-                <div>
-                  <h4 className="font-bold text-neutral-900 mb-0.5">
-                    {t("factures.notesTitre")}
-                  </h4>
-                  <ul className="space-y-0.5 list-none pl-0">
-                    <li className="font-semibold text-neutral-900">
-                      • {t("factures.notesGarantie")}
-                    </li>
-                    <li className="font-semibold text-neutral-900">
-                      • {t("factures.notesNb")}
-                    </li>
-                    <li className="font-bold text-red-600 print:text-neutral-900">
-                      • {t("factures.notesNonRemboursable")}
-                    </li>
-                  </ul>
-                </div>
+                {/* Notes & Conditions */}
+                <div className="pt-4 border-t border-neutral-200 text-[11px] text-neutral-700 space-y-2.5">
+                  <div>
+                    <h4 className="font-bold text-neutral-900 mb-0.5">
+                      {t("factures.notesTitre")}
+                    </h4>
+                    <ul className="space-y-0.5 list-none pl-0">
+                      <li className="font-semibold text-neutral-900">
+                        • {t("factures.notesGarantie")}
+                      </li>
+                      <li className="font-semibold text-neutral-900">
+                        • {t("factures.notesNb")}
+                      </li>
+                      <li className="font-bold text-red-600 print:text-neutral-900">
+                        • {t("factures.notesNonRemboursable")}
+                      </li>
+                    </ul>
+                  </div>
 
-                <div>
-                  <h4 className="font-bold text-neutral-900 mb-0.5">
-                    {t("factures.conditionsTitre")}
-                  </h4>
-                  <p className="text-neutral-600 leading-snug">
-                    {t("factures.conditionsTexte")}{" "}
-                    {t("factures.conditionsTest")}
-                  </p>
+                  <div>
+                    <h4 className="font-bold text-neutral-900 mb-0.5">
+                      {t("factures.conditionsTitre")}
+                    </h4>
+                    <p className="text-neutral-600 leading-snug">
+                      {t("factures.conditionsTexte")}{" "}
+                      {t("factures.conditionsTest")}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

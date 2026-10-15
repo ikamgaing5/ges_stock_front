@@ -787,7 +787,7 @@ export function MenuPaiement() {
                         }`}
                       >
                         <div className="flex items-center gap-3.5 min-w-0">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-background border shadow-xs p-1">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center p-1">
                             {estCarte ? (
                               mode.carte_marque === "mastercard" ? (
                                 <IconeMastercard className="h-6 w-9 rounded" />
@@ -795,9 +795,9 @@ export function MenuPaiement() {
                                 <IconeVisa className="h-6 w-9 rounded" />
                               )
                             ) : estOrange ? (
-                              <IconeOrangeMoney className="h-6 w-6" />
+                              <IconeOrangeMoney className="h-9 w-9" />
                             ) : (
-                              <IconeMtnMomo className="h-6 w-6" />
+                              <IconeMtnMomo className="h-9 w-9" />
                             )}
                           </div>
 

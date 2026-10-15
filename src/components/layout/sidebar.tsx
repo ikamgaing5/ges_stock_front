@@ -108,6 +108,15 @@ export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
   const { t, lang, setLang, libelleRole } = useI18n();
   const [modalRaccourcisOuverte, setModalRaccourcisOuverte] = useState(false);
 
+  const ouvrirLienEnSavoirPlus = (route: string) => {
+    onNaviguer?.();
+    if (typeof window !== "undefined" && window.teloraDesktop?.ouvrirLienLegal) {
+      window.teloraDesktop.ouvrirLienLegal(route);
+    } else {
+      router.push(route);
+    }
+  };
+
   if (!utilisateur) return null;
 
   const dansLeTiroir = Boolean(onNaviguer);
@@ -269,10 +278,7 @@ export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
                 </DropdownMenuSub>
 
                 <DropdownMenuItem
-                  onClick={() => {
-                    onNaviguer?.();
-                    router.push("/faq");
-                  }}
+                  onClick={() => ouvrirLienEnSavoirPlus("/faq")}
                   className="cursor-pointer"
                 >
                   <HelpCircle className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
@@ -303,17 +309,7 @@ export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-60 text-xs">
                     <DropdownMenuItem
-                      onClick={() => {
-                        if (
-                          typeof window !== "undefined" &&
-                          window.teloraDesktop?.ouvrirAPropos
-                        ) {
-                          window.teloraDesktop.ouvrirAPropos();
-                        } else {
-                          onNaviguer?.();
-                          router.push("/legal/mentions-legales");
-                        }
-                      }}
+                      onClick={() => ouvrirLienEnSavoirPlus("/legal/mentions-legales")}
                       className="cursor-pointer"
                     >
                       <span>{t("nav.aProposTelora")}</span>
@@ -321,10 +317,7 @@ export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
-                      onClick={() => {
-                        onNaviguer?.();
-                        router.push("/faq");
-                      }}
+                      onClick={() => ouvrirLienEnSavoirPlus("/faq")}
                       className="cursor-pointer"
                     >
                       <span>{t("nav.guideEtDocumentation")}</span>
@@ -332,10 +325,7 @@ export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
-                      onClick={() => {
-                        onNaviguer?.();
-                        router.push("/legal/cgu");
-                      }}
+                      onClick={() => ouvrirLienEnSavoirPlus("/legal/cgu")}
                       className="cursor-pointer"
                     >
                       <span>{t("nav.cgu")}</span>
@@ -343,10 +333,7 @@ export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
-                      onClick={() => {
-                        onNaviguer?.();
-                        router.push("/legal/confidentialite");
-                      }}
+                      onClick={() => ouvrirLienEnSavoirPlus("/legal/confidentialite")}
                       className="cursor-pointer"
                     >
                       <span>{t("nav.politiqueConfidentialite")}</span>
@@ -354,10 +341,7 @@ export function Sidebar({ onNaviguer }: { onNaviguer?: () => void }) {
                     </DropdownMenuItem>
 
                     <DropdownMenuItem
-                      onClick={() => {
-                        onNaviguer?.();
-                        router.push("/legal/securite");
-                      }}
+                      onClick={() => ouvrirLienEnSavoirPlus("/legal/securite")}
                       className="cursor-pointer"
                     >
                       <span>{t("nav.choixConfidentialite")}</span>
