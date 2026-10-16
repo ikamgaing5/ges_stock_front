@@ -8,32 +8,32 @@
  * Cette séparation dans le code reflète la séparation des droits.
  */
 
-import { useEffect } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Building2, CreditCard, LogOut, Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Loader2, Menu } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { BasculeTheme } from "@/components/bascule-theme";
 import { BasculeLangue } from "@/components/bascule-langue";
-import { useI18n } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { SidebarAdmin } from "@/components/admin/sidebar-admin";
 import { Button } from "@/components/ui/button";
-
-const liens = [
-  { href: "/admin", cleLibelle: "admin.vueEnsemble", icone: ShieldCheck },
-  { href: "/admin/proprietaires", cleLibelle: "admin.clients", icone: Building2 },
-  { href: "/admin/paiements", cleLibelle: "admin.paiements", icone: CreditCard },
-  { href: "/admin/securite", cleLibelle: "admin.securite", icone: ShieldAlert },
-];
+import {
+  Tiroir,
+  TiroirContenu,
+  TiroirDeclencheur,
+  TiroirTitre,
+} from "@/components/ui/tiroir";
+import { useI18n } from "@/lib/i18n";
+import { IconeTelora } from "@/components/ui/logo-telora";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { utilisateur, chargement, deconnexion } = useAuth();
+  const { utilisateur, chargement } = useAuth();
   const { t } = useI18n();
   const chemin = usePathname();
+  const [tiroirOuvert, setTiroirOuvert] = useState(false);
 
   useEffect(() => {
     if (chargement) return;
@@ -59,6 +59,16 @@ export default function AdminLayout({
     }
   }, [chargement, utilisateur]);
 
+  // Verrouiller le défilement au niveau de la fenêtre pour éviter la double scrollbar
+  useEffect(() => {
+    document.documentElement.classList.add("overflow-hidden");
+    document.body.classList.add("overflow-hidden");
+    return () => {
+      document.documentElement.classList.remove("overflow-hidden");
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, []);
+
   if (chargement || utilisateur?.role !== "admin") {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center">
@@ -69,60 +79,64 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-[100dvh]">
-      <header className="border-b bg-card">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 sm:gap-6 px-3 sm:px-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background">
-              <ShieldCheck className="h-4 w-4" />
+    <div className="fixed inset-0 top-[var(--hauteur-barre-titre,0px)] flex overflow-hidden">
+      {/* 1. Sidebar admin fixe sur grand écran */}
+      <aside className="hidden h-full w-60 shrink-0 lg:block select-none">
+        <SidebarAdmin />
+      </aside>
+
+      {/* 2. Zone principale droite (Navbar + Contenu défilant) */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+        {/* Navbar admin : uniquement langue & thème à droite, tiroir mobile à gauche */}
+        <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b bg-background/85 px-4 sm:px-6 backdrop-blur-sm">
+          {/* Menu mobile (tiroir) sur petit écran */}
+          <div className="flex items-center gap-2 lg:hidden">
+            <Tiroir key={chemin} open={tiroirOuvert} onOpenChange={setTiroirOuvert}>
+              <TiroirDeclencheur
+                render={
+                  <Button variant="ghost" size="icon" className="lg:hidden" />
+                }
+              >
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">{t("nav.ouvrirMenu")}</span>
+              </TiroirDeclencheur>
+              <TiroirContenu cote="gauche">
+                <TiroirTitre className="sr-only">
+                  {t("nav.menuPrincipal")}
+                </TiroirTitre>
+                <SidebarAdmin
+                  dansLeTiroir
+                  onNaviguer={() => setTiroirOuvert(false)}
+                />
+              </TiroirContenu>
+            </Tiroir>
+
+            <div className="flex items-center gap-2">
+              <IconeTelora size={26} />
+              <span className="font-heading font-bold text-sm tracking-tight text-foreground">
+                Telora{" "}
+                <span className="text-[10px] font-semibold text-primary uppercase ml-0.5">
+                  Admin
+                </span>
+              </span>
             </div>
-            <span className="font-heading text-sm font-semibold">
-              {t("nav.administration")}
-            </span>
           </div>
 
-          <nav className="flex items-center gap-1">
-            {liens.map((lien) => {
-              const actif =
-                lien.href === "/admin"
-                  ? chemin === "/admin"
-                  : chemin.startsWith(lien.href);
+          {/* Espace gauche vide sur desktop car la sidebar contient déjà l'identité */}
+          <div className="hidden lg:block" />
 
-              return (
-                <Link
-                  key={lien.href}
-                  href={lien.href}
-                  aria-current={actif ? "page" : undefined}
-                  className={cn(
-                    "rounded-lg px-3 py-1.5 text-sm transition-colors",
-                    actif
-                      ? "bg-accent font-medium text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {t(lien.cleLibelle)}
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="ml-auto flex items-center gap-1">
+          {/* Seules la langue et le thème dans la navbar */}
+          <div className="flex items-center gap-2">
             <BasculeLangue />
             <BasculeTheme />
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => void deconnexion()}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">{t("nav.deconnexion")}</span>
-            </Button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="mx-auto max-w-6xl px-3 py-4 sm:p-6">{children}</main>
+        {/* Contenu principal de la page admin */}
+        <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8 space-y-6">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
