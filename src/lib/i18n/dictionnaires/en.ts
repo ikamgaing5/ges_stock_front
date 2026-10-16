@@ -175,21 +175,27 @@ export const en = {
     inscriptionTitre: "Create an account",
     inscriptionDesc: "Start your 14-day free trial",
     motDePasseOublieTitre: "Forgot password",
-    motDePasseOublieDesc: "Receive a reset link to recover access to your account",
+    motDePasseOublieDesc:
+      "Receive a reset link to recover access to your account",
     envoyerLien: "Send reset link",
     envoiLienEnCours: "Sending...",
-    lienEnvoyeEmail: "If this address exists, a password reset email has been sent to you.",
+    lienEnvoyeEmail:
+      "If this address exists, a password reset email has been sent to you.",
     emailEnvoyeTitre: "Check your emails",
-    emailEnvoyeDesc: "If an account is associated with this address, an email containing a secure reset link has been sent.",
+    emailEnvoyeDesc:
+      "If an account is associated with this address, an email containing a secure reset link has been sent.",
     lienValidite15Min: "The link is valid for 15 minutes.",
-    consigneSecuriteMail: "If you did not make this request, you can safely ignore this email: your password remains unchanged.",
-    verifierSpams: "If you don't receive anything shortly, please check your spam or junk folder.",
+    consigneSecuriteMail:
+      "If you did not make this request, you can safely ignore this email: your password remains unchanged.",
+    verifierSpams:
+      "If you don't receive anything shortly, please check your spam or junk folder.",
     renvoyerLien: "Resend link",
     renvoyerLienDans: "Resend link in {secondes}s",
     lienExpireOuInvalide: "This reset link has expired or is invalid.",
     faireNouvelleDemande: "Submit a new request",
     nouveauMotDePasseTitre: "New password",
-    nouveauMotDePasseDesc: "Choose a secure password of at least 8 characters for your account.",
+    nouveauMotDePasseDesc:
+      "Choose a secure password of at least 8 characters for your account.",
     reinitialiserEnCours: "Updating password...",
     motDePasseReinitialiseSucces: "Your password has been reset successfully.",
     verificationLienEnCours: "Verifying reset link...",
@@ -423,12 +429,16 @@ export const en = {
     tarificationEtCommerce: "Commercial & Pricing",
     cleLuhnInvalide: "Invalid Luhn key",
     retourAuParc: "Back to inventory",
-    descriptionEntreeOrdinateur: "Scan or enter Serial Number (S/N). Other hardware specs stay populated for the next laptop.",
-    descriptionEntreeTelephone: "Scan IMEI for each unit. Other fields stay populated for the next phone.",
+    descriptionEntreeOrdinateur:
+      "Scan or enter Serial Number (S/N). Other hardware specs stay populated for the next laptop.",
+    descriptionEntreeTelephone:
+      "Scan IMEI for each unit. Other fields stay populated for the next phone.",
     identifierAppareil: "Identify device",
-    premiumDetectionNotice: "Automatic model detection by IMEI is reserved for Premium members.",
+    premiumDetectionNotice:
+      "Automatic model detection by IMEI is reserved for Premium members.",
     identificationEnCours: "Identifying device from IMEI...",
-    nonTrouveTacNotice: "Device not recognized in TAC database for this IMEI. Please select brand and model manually below.",
+    nonTrouveTacNotice:
+      "Device not recognized in TAC database for this IMEI. Please select brand and model manually below.",
     appareilIdentifie: "Identified device:",
     modeleNonPresentCatalogue: "This model is not yet in your catalog.",
     ajouterAuCatalogue: "Add to catalog",
@@ -449,13 +459,15 @@ export const en = {
     aucuneAutreBoutiqueAcces: "You do not have access to any other store.",
     motifPertePlaceholder: "Lost, stolen, damaged...",
     preciserRaisonPlaceholder: "Specify reason",
-    modeleCreeEtSelectionne: "Model \"{modele}\" created and selected!",
+    modeleCreeEtSelectionne: 'Model "{modele}" created and selected!',
     appareilReconnuEtSelectionne: "Recognized & selected: {marque} {modele}",
-    appareilDetecteInfo: "Recognized: {marque} {modele}. Click \"Add to catalog\" to select it.",
+    appareilDetecteInfo:
+      'Recognized: {marque} {modele}. Click "Add to catalog" to select it.',
     choisirModeleDabord: "Please select a model first.",
     choisirStockageDabord: "Please select storage capacity first.",
     renseignerNumeroSerieSn: "Please enter or scan the serial number (S/N).",
-    scannerCodeBarresOuTaperSn: "Scan barcode or type serial number. Press Enter to add immediately.",
+    scannerCodeBarresOuTaperSn:
+      "Scan barcode or type serial number. Press Enter to add immediately.",
     chargementMarques: "Loading brands...",
     chargementGammes: "Loading ranges for this brand...",
     choisirGamme: "Choose range",
@@ -464,12 +476,15 @@ export const en = {
     choisirModele: "Choose model",
     choisirGammeDabord: "Choose range first",
     choisirStockage: "Choose storage",
-    aucunStockageConfigure: "No storage capacity configured for this model. Add one in the catalog.",
+    aucunStockageConfigure:
+      "No storage capacity configured for this model. Add one in the catalog.",
     ouEntreAppareilPlaceholder: "Where is this unit entering?",
     fournisseurPlaceholder: "Dubai Import, local supplier...",
-    scanDouchetteAutomatique: "With a barcode scanner, saving is automatic upon scan.",
+    scanDouchetteAutomatique:
+      "With a barcode scanner, saving is automatic upon scan.",
     enregistresDansCetteSession: "Registered in this session",
-    appareilsAjoutesApparaitrontIci: "Added devices will appear here progressively.",
+    appareilsAjoutesApparaitrontIci:
+      "Added devices will appear here progressively.",
   },
   modeles: {
     titre: "Catalog",
@@ -508,10 +523,12 @@ export const en = {
     rechercherGamme: "Search range...",
     creer: "Create",
     alertesReapprovisionnerSeulement: "Restock alerts only",
-    supprimerModeleTitre: "Delete \"{nom}\"?",
-    supprimerModeleDesc: "A model with existing registered devices cannot be deleted. Deactivate it instead so it hides from intake lists while preserving history.",
+    supprimerModeleTitre: 'Delete "{nom}"?',
+    supprimerModeleDesc:
+      "A model with existing registered devices cannot be deleted. Deactivate it instead so it hides from intake lists while preserving history.",
     modifierLeModele: "Edit Model",
-    referenceUniquePartagee: "Full reference (brand, range, model) is unique and shared across all stores.",
+    referenceUniquePartagee:
+      "Full reference (brand, range, model) is unique and shared across all stores.",
     actifProposeSaisie: "Active (available during device intake)",
     aucunStockagePourLinstant: "No storage capacity added yet.",
     renseignerNomMarque: "Please enter the brand name.",
@@ -709,26 +726,32 @@ export const en = {
     fermee: "Closed",
     boutiqueOuverte: "Store open",
     ajouterBoutique: "New store",
-    supprimerBoutiqueTitre: "Delete \"{nom}\"?",
-    supprimerBoutiqueDesc: "A store that still contains devices cannot be deleted. Transfer them first or simply mark the store as closed.",
+    supprimerBoutiqueTitre: 'Delete "{nom}"?',
+    supprimerBoutiqueDesc:
+      "A store that still contains devices cannot be deleted. Transfer them first or simply mark the store as closed.",
     villeRequise: "Store city is required.",
     adresseRequise: "Store address is required.",
     modifierLaBoutique: "Edit Store",
-    explicationNomEntreprise: "All your stores share your enterprise name. Differentiate them with the address below.",
+    explicationNomEntreprise:
+      "All your stores share your enterprise name. Differentiate them with the address below.",
     rechercherDevise: "Search currency...",
     identifiantsLegauxHerites: "Legal identifiers automatically inherited",
-    identifiantsHeritesDesc: "This store is located in your enterprise's home country ({pays}). It automatically shares your enterprise NIU ({niu}) and RCCM ({rccm}).",
-    boutiqueSitueeDans: "This store is located in {pays}. Please enter its local NIU and RCCM:",
+    identifiantsHeritesDesc:
+      "This store is located in your enterprise's home country ({pays}). It automatically shares your enterprise NIU ({niu}) and RCCM ({rccm}).",
+    boutiqueSitueeDans:
+      "This store is located in {pays}. Please enter its local NIU and RCCM:",
     affichageFacturesEtRecus: "Invoices & Receipts Display",
     afficherNiuFactures: "Display NIU on invoices",
     afficherRccmFactures: "Display RCCM on invoices",
     logoUniqueEntreprise: "Unified Enterprise Logo",
-    logoPartageFacturesDesc: "All your stores share this logo on receipts and invoices. You can update it in My Account.",
+    logoPartageFacturesDesc:
+      "All your stores share this logo on receipts and invoices. You can update it in My Account.",
     creerLaBoutique: "Create store",
     niuRequis: "Unique Tax ID (NIU) is required.",
     niuInvalide: "Invalid NIU format (e.g., M052012345678X or 14 digits).",
     rccmRequis: "Trade Register (RCCM) is required.",
-    rccmInvalide: "Invalid RCCM format (e.g., RC/DLA/2023/B/1234 or CM-DLA-2023-B-1234).",
+    rccmInvalide:
+      "Invalid RCCM format (e.g., RC/DLA/2023/B/1234 or CM-DLA-2023-B-1234).",
     verificationRequiseTitre: "Identity confirmation required",
     verificationRequiseDesc:
       "To manage your retail stores (add, edit, or delete a store), please confirm your identity.",
@@ -862,7 +885,8 @@ export const en = {
     impossibleChargerClients: "Failed to load customers.",
     impossibleChargerDetailsClient: "Failed to load customer details.",
     selectionnerAuMoinsUnClient: "Please select at least one customer.",
-    vcardTelechargee: "vCard file downloaded! Open it on your phone to import contacts into WhatsApp.",
+    vcardTelechargee:
+      "vCard file downloaded! Open it on your phone to import contacts into WhatsApp.",
     erreurExportVcard: "Failed to export vCard file.",
     csvTelecharge: "CSV export downloaded.",
     numerosCopiesCount: "{count} phone numbers copied!",
@@ -870,11 +894,11 @@ export const en = {
     montantMoyenParVente: "Average amount per purchase",
     pourcentageClientsRecurrents: "{pourcentage}% returning customers",
     plusDUnAchat: "More than one purchase",
-    clientsApparaitrontAutomatiquement: "Customers will appear here automatically as soon as sales are recorded.",
+    clientsApparaitrontAutomatiquement:
+      "Customers will appear here automatically as soon as sales are recorded.",
   },
   monCompte: {
     titre: "My Account",
-    paiements: "Payments",
     description:
       "Manage your personal profile, security settings, and preferences.",
     coordonnees: "Personal details",
@@ -926,9 +950,10 @@ export const en = {
     environnementTest: "Testing Environment",
     paiementsSecurises: "Direct Orange & MTN",
     rythmeReglement: "How often would you like to pay?",
-    mensuelSansEngagement: "Every month (flexible)",
-    annuelTitre: "1 Full Year",
+    mensuelSansEngagement: "Monthly",
+    annuelTitre: "Yearly",
     deuxMoisOfferts: "2 months free",
+    economise17:"Save 17%",
     formuleStandardTitre: "Standard Plan",
     prefereMultiBoutiques: "Multi-store favorite",
     formulePremiumTitre: "Premium Plan",
@@ -958,18 +983,199 @@ export const en = {
       "Everything is covered until {date}. You can extend anytime with no penalty.",
     formuleStandardSousTitre:
       "For a single store wanting order and zero phone loss",
-    formulePremiumSousTitre:
-      "For merchants running 2, 3 or more shops",
+    formulePremiumSousTitre: "For merchants running 2, 3 or more shops",
     parAnDouzeMois: " / year (12 months)",
     parMois: " / month",
-    payezDixMoisStandard:
-      "Pay 10 months, your store is covered for 12 months!",
+    payezDixMoisStandard: "Pay 10 months, your store is covered for 12 months!",
     payezDixMoisPremium:
       "Pay 10 months, your stores are covered for 12 months!",
     activerFormuleStandard: "Activate Standard Plan",
     activerFormulePremium: "Activate Premium Plan",
     cadreContractuelDesc:
       "Your subscription is protected by our SaaS Terms of Service (IMEI tracking compliance, anti-fencing warranties) and our bilateral Non-Disclosure Agreement (confidentiality of margins and purchase prices).",
+    paiements: "Your payment information",
+
+    // --- Forfaits & Abonnement ---
+    retourMonCompte: "Back to my account",
+    retourAuxForfaits: "Back to plans",
+    modeDemonstrationTest: "Demo & Test Mode",
+    configurezVotreForfait: "Configure your plan",
+    factureMensuellement: "Billed monthly",
+    factureAnnuellement: "Billed annually",
+    factureAnnuellementCourt: "billed annually",
+    parMoisCourt: "per month",
+    an: "yr",
+    mois: "mo",
+    soitMontantParMois: "equivalent to {montant} / mo",
+    economisez17: "Save 17%",
+    formuleStandardMensuel: "Standard monthly",
+    formulePremiumMensuel: "Premium monthly",
+    formuleStandardAnnuel: "Standard yearly",
+    formulePremiumAnnuel: "Premium yearly",
+    formuleLabel: "Plan:",
+    sansEngagementAnnulation: "No commitment · Cancel anytime",
+    desForfaitsQuiEvoluent: "Plans that scale with you",
+    taglineStandard: "Manage your physical store with complete peace of mind.",
+    taglinePremium: "Operate multiple stores and warehouses without limits.",
+    essaiActifBandeau:
+      "Active free trial: {jours} days remaining. Your data remains safe.",
+    expireBandeau:
+      "Your subscription has expired. Choose a plan below to restore access without interruption.",
+    actifBandeau: "Active subscription ({plan}) until {date}.",
+
+    // Inclusions
+    inclusionsStandardTitre: "Everything included in Standard:",
+    inclusionsPremiumTitre: "Everything included in Premium:",
+    featBoutiqueUnique: "1 complete physical store",
+    featImeiIllimite: "Unlimited IMEI scanning (barcode scanner & smartphone)",
+    featCaisseClotures: "Cash drawer management & daily reconciliations",
+    featComptesProteges: "Protected clerk accounts (purchase prices hidden)",
+    featSuiviStockAlertes: "Real-time stock tracking & low inventory alerts",
+    featBoutiquesIllimitees: "Unlimited stores and warehouses",
+    featTransfertsStock: "Stock transfers & multi-store traceability",
+    featBeneficeNetPointVente: "True net profit calculated per point of sale",
+    featExportsComptables: "Accounting exports & Excel reports",
+    featSupportWhatsapp: "Direct priority support via WhatsApp",
+
+    // Récapitulatif commande & checkout review
+    titreForfaitStandard: "Standard Plan",
+    titreForfaitPremium: "Premium Plan",
+    descForfaitStandardCourt: "Complete management for 1 physical store",
+    descForfaitPremiumCourt: "Unlimited multi-store access & warehouses",
+    periodeAnnuel: "yearly",
+    periodeMensuel: "monthly",
+    sousTotal: "Subtotal",
+    taxesEtFraisReseau: "Taxes & network fees",
+    inclusSelonReseau: "Included / Carrier fees apply",
+    totalDuAujourdhui: "Total due today",
+    factureParAn: "Billed {montant} per year",
+    factureParMois: "Billed {montant} per month",
+    boutiqueActiveJusquAu: "Store active until {date}",
+    accordCgvPrefix: "I agree to the",
+    accordCgvLien: "Terms and Conditions",
+    accordCgvSuffix: "and authorize Telora to activate my subscription.",
+    renouvellementCarteNotice:
+      "Your subscription will automatically renew on {date}. The amount billed will be {montant}/{periode}.",
+    nonRenouvellementNotice:
+      "Your plan will remain active until {date}. Reminders will be sent before expiration so you can renew seamlessly.",
+    fraisOperateurAvertissement:
+      "* Transaction fees specific to your mobile carrier or bank may apply upon payment.",
+    accordCguCartePre:
+      "You agree that Telora will charge your card the above amount today and recurringly on each renewal date until canceled in your account settings, in accordance with our ",
+    accordCguMobilePre:
+      "You agree that Telora will initiate the charge for the above amount today to activate your plan for the selected period, in accordance with our ",
+    conditionsUtilisationLien: "terms of service",
+    accordCguSuffixePoint: ".",
+    sAbonner: "Subscribe",
+    paiementChiffreSansEngagement:
+      "Encrypted & secure payment · No commitment",
+    paiementSecuriseSaaspay3d: "Secure SaasPay 3D-Secure payment",
+    inclusionsPremiumPlus: "Everything included in Standard, plus:",
+    validerAbonnement: "Confirm subscription",
+    paiementDirectSaspayInfo:
+      "Direct secure SasPay payment • Your receipt is available upon confirmation",
+    noteDiscretionPrix:
+      "Prices and plans are subject to change at Telora's discretion.",
+
+    // Renouvellement automatique
+    renouvellementAutoCarteTitre: "Automatic renewal by card",
+    renouvellementAutoActiveDesc:
+      "Your plan will automatically renew on each renewal date{carte}. Zero interruption for your stores. Cancel anytime in 1 click.",
+    renouvellementAutoDesactiveDesc:
+      "Automatically renew your subscription at each renewal date without losing access to your stores. Only available with a debit/credit card (Visa / Mastercard).",
+    avecVotreCarte: " with your card {info}",
+    avecVotreCarteBancaire: " with your bank card",
+    statutActiveBadge: "Enabled",
+    statutDesactiveBadge: "Disabled",
+    renouvellementAutoTitre: "Automatic renewal",
+    prelevementAutoDesc: "Automatic debit on each expiration date",
+    renouvellementAutoAide:
+      "You can disable automatic renewal anytime with 1 click at no charge.",
+    activerRenouvellement: "Enable automatic renewal",
+    desactiverRenouvellement: "Disable automatic renewal",
+    miseAJourEnCours: "Updating...",
+    configurerCartePourRenouvellement:
+      "Please set up a bank card first to enable automatic renewal.",
+    impossibleModifierPreference: "Unable to update this preference.",
+
+    // Boutons forfaits
+    boutonInitialisation: "Loading...",
+    boutonActiverStandard: "Activate Standard Plan",
+    boutonActiverPremium: "Activate Premium Plan",
+    boutonProlongerStandard: "Extend Standard Plan",
+    boutonProlongerPremium: "Extend Premium Plan",
+    boutonObtenirStandard: "Get Standard Plan",
+    boutonObtenirPremium: "Get Premium Plan",
+
+    // Modale Mode de paiement
+    modalModePaiementTitre: "Payment method",
+    modalModePaiementDesc:
+      "Select the payment method to use for your billings.",
+    modePaiementLabel: "Payment method:",
+    orangeMoney: "Orange Money",
+    mtnMomo: "MTN MoMo",
+    carteBancaire: "Credit / Debit Card",
+    visaMastercard: "Visa / Mastercard",
+    nonConfigure: "Not configured",
+    numeroOrangeMoneyLabel: "Orange Money number:",
+    numeroMtnMomoLabel: "MTN MoMo number:",
+    numeroEnregistreBadge: "✓ Registered number",
+    numeroEnregistreCourt: "✓ Saved",
+    demandeDebitSurCeNumero:
+      "The {moyen} debit prompt will be sent to this phone number.",
+    carteBancaireEnregistree: "Registered bank card",
+    carteActivePrete: "✓ Active card ready for your payments",
+    paiementSecuriseCarteTitre: "Secure card payment",
+    redirectionSaaspayCarteDesc:
+      "You will be redirected to the secure SaasPay 3D-Secure gateway to register or use your bank card upon checkout.",
+    paiementCertifieSaasPay: "SaasPay certified payment",
+    enregistrerCeMoyen: "Save this method",
+    moyenMisAJourSucces: "Payment method saved successfully.",
+    veuillezRenseignerTelephone:
+      "Please enter your phone number to receive the debit prompt.",
+    debitSurLeNumero: "Debit on {tel}",
+    numeroARenseigner: "Phone number required",
+    modifierMoyenPaiement: "Edit payment method",
+
+    // Modale Push direct Telora
+    enAttenteDePaiement: "Waiting for payment",
+    actualiser: "Refresh",
+    statutDuPaiement: "Payment Status:",
+    enAttenteDePaiementMaj: "WAITING FOR PAYMENT",
+    validerDemandeSurTelephone:
+      "Please approve the prompt on your phone using your secret PIN to complete.",
+    envoyeSurLe: "Sent to",
+    changer: "Change",
+    paiementValideSucces: "Payment confirmed successfully!",
+    boutiquePreteDesc:
+      "Your Telora subscription is now active. Your store is ready!",
+    echecOuDelaiExpire: "Failed or timed out",
+    transactionRefuseeDesc:
+      "The transaction was declined or failed on the carrier network.",
+    delaiDepasseDesc: "Confirmation timeout exceeded (90 seconds).",
+    reessayerPaiement: "Retry payment",
+    paiementToujoursEnAttente:
+      "Payment is still being approved on your phone.",
+    verificationImpossible: "Verification unavailable at this moment.",
+    demandePaiementEnvoyee:
+      "Payment request sent to your phone!",
+    redirectionPasserelle: "Redirecting to the secure gateway...",
+
+    // Modale Annulation
+    annulerAbonnementTitre: "Cancel your subscription?",
+    accesGarantiJusquAu:
+      "Your full access to Telora remains 100% guaranteed until {date}.",
+    termeDeLaPeriode: "the end of the period",
+    aucunPrelevementForceTitre: "No forced automatic charges",
+    aucunPrelevementForceDesc:
+      "Your payments are made via Mobile Money. No amount can be charged without your secret PIN on your phone.",
+    donneesSauvegardeesTitre: "Your inventory & data remain safe",
+    donneesSauvegardeesDesc:
+      "Your sales history, purchase prices, and recorded IMEI numbers stay completely confidential and yours.",
+    confirmerArretForfait: "Confirm plan cancellation",
+    garderMonAbonnement: "Keep my subscription",
+    demandeNonRenouvellementPriseEnCompte:
+      "Non-renewal request recorded. Your store remains active until the expiration date.",
   },
   admin: {
     titre: "Platform Administration",
@@ -1033,11 +1239,13 @@ export const en = {
     recherchePlaceholder: "Search by name, email, store...",
     tousStatuts: "All statuses",
     securite: "Security & Blocks",
-    securiteDesc: "IP address blocking, bot detection and account moderation management.",
+    securiteDesc:
+      "IP address blocking, bot detection and account moderation management.",
     bannirUtilisateur: "Ban this user",
     debloquerUtilisateur: "Unblock user",
     motifBannissement: "Ban reason",
-    motifBannissementPlaceholder: "E.g.: Fraudulent behavior, terms of service violation...",
+    motifBannissementPlaceholder:
+      "E.g.: Fraudulent behavior, terms of service violation...",
     confirmerBannissement: "Confirm ban",
     banniBadge: "Banned",
     bloqueAutoBadge: "Auto-blocked (Security)",
@@ -1048,7 +1256,8 @@ export const en = {
     debloquerIp: "Unblock this IP",
     bloquerIp: "Block an IP",
     modeMaintenance: "Maintenance Mode",
-    modeMaintenanceDesc: "Suspends merchant access during upgrades while preserving your admin access.",
+    modeMaintenanceDesc:
+      "Suspends merchant access during upgrades while preserving your admin access.",
     maintenanceActive: "Maintenance active",
     maintenanceInactive: "Platform online",
     activerMaintenance: "Enable maintenance",
@@ -1064,18 +1273,22 @@ export const en = {
     botsEtIaPiegesDesc: "Honeypot + fast submissions",
     rechercheSecuritePlaceholder: "Search by IP, MAC, Reason, User...",
     aucunIncident: "No security incidents",
-    aucunIncidentDesc: "No threats, blocks, or bot detections matching your criteria.",
+    aucunIncidentDesc:
+      "No threats, blocks, or bot detections matching your criteria.",
     finEstimee: "Est. completion:",
     declenchePar: "Triggered by:",
-    bypassAdminActif: "🛡️ Admin bypass active: your access remains 100% operational",
+    bypassAdminActif:
+      "🛡️ Admin bypass active: your access remains 100% operational",
     ajuster: "Adjust",
-    configurerMaintenanceDesc: "Put Telora into maintenance mode. All merchant and cashier sessions will display a standby screen while you perform updates or tests.",
+    configurerMaintenanceDesc:
+      "Put Telora into maintenance mode. All merchant and cashier sessions will display a standby screen while you perform updates or tests.",
     motifAfficheCommercants: "Reason / Message displayed to merchants",
     dureeEstimeeCoupure: "Estimated duration",
     dureeIndeterminee: "Indefinite (no timer)",
     repriseVers: "Resuming around {heure}",
     accesAdminPreserve: "Administrator access preserved",
-    accesAdminPreserveDesc: "As an administrator, your session is never blocked. The standby screen will automatically disappear on all devices as soon as you click 'Disable'.",
+    accesAdminPreserveDesc:
+      "As an administrator, your session is never blocked. The standby screen will automatically disappear on all devices as soon as you click 'Disable'.",
     activationEnCours: "Activation...",
     dateEtHeure: "Date & Time",
     visiteurAnonyme: "Anonymous / Guest",
@@ -1084,22 +1297,27 @@ export const en = {
     inscriptions30JoursDetail: "{nombre} sign-up(s) over 30 days",
     accesCoupe: "Access cut off",
     dansLes7Jours: "Within 7 days",
-    chiffresVolumesGlobauxNote: "These numbers represent global aggregates. Individual client stock details are neither accessible here nor via API: only the store owner and their team have access.",
+    chiffresVolumesGlobauxNote:
+      "These numbers represent global aggregates. Individual client stock details are neither accessible here nor via API: only the store owner and their team have access.",
     passerellePaiementTitre: "Payment Gateway & Subscriptions",
-    passerellePaiementDesc: "Switch between testing and live processing, set up your SaasPay keys, and audit merchant subscriptions.",
+    passerellePaiementDesc:
+      "Switch between testing and live processing, set up your SaasPay keys, and audit merchant subscriptions.",
     environnementActuelPaiements: "Active Payment Environment",
-    environnementActuelPaiementsDesc: "Choose whether merchant payments are simulated or processed directly by operators.",
+    environnementActuelPaiementsDesc:
+      "Choose whether merchant payments are simulated or processed directly by operators.",
     inscritLe: "Registered on",
     compteDesactive: "Account disabled",
     abonnementDe: "Subscription for {nom}",
-    abonnementDeDesc: "A suspended or expired subscription blocks access for the client and their entire team. Data remains preserved.",
+    abonnementDeDesc:
+      "A suspended or expired subscription blocks access for the client and their entire team. Data remains preserved.",
     formuleAbonnement: "Subscription Tier",
     formuleStandard: "Standard",
     formulePremium: "Premium (IMEI lookup enabled)",
     echeanceDateAlerte: "Past this date, access is automatically blocked.",
     comptePeutSeConnecter: "Account can sign in",
     compteActuellementBanni: "Account currently banned",
-    compteBloqueAutoSurcharge: "Account automatically blocked (Rate limit / Flood)",
+    compteBloqueAutoSurcharge:
+      "Account automatically blocked (Rate limit / Flood)",
     motifDeuxPoints: "Reason: {motif}",
   },
   changerEmail: {
@@ -1262,8 +1480,10 @@ export const en = {
     comparatifTitre: "404 Comparison:",
     optionSimple: "Option 1: Simple (New)",
     optionDetaillee: "Option 2: Detailed (Previous)",
-    descSimple: "✨ Clean version: clear message + 1 return button to previous page",
-    descDetaillee: "📋 Detailed version: with scanner, dashboard, FAQ and legal footer",
+    descSimple:
+      "✨ Clean version: clear message + 1 return button to previous page",
+    descDetaillee:
+      "📋 Detailed version: with scanner, dashboard, FAQ and legal footer",
   },
   merci: {
     metaTitre: "Welcome to Telora — Registration Successful",
@@ -1300,18 +1520,22 @@ export const en = {
   },
   maintenance: {
     titre: "Telora is getting an upgrade",
-    motifParDefaut: "We are currently performing scheduled maintenance to optimize system performance and security.",
+    motifParDefaut:
+      "We are currently performing scheduled maintenance to optimize system performance and security.",
     badge: "Scheduled Maintenance",
     donneesEnSecurite: "Your data is completely safe",
-    donneesEnSecuriteDesc: "Your stores, phone stocks, IMEI serials and invoices remain fully protected.",
+    donneesEnSecuriteDesc:
+      "Your stores, phone stocks, IMEI serials and invoices remain fully protected.",
     repriseEstimee: "Estimated completion",
     dansEnviron: "In approximately",
     verifierDisponibilite: "Check availability",
     verificationEnCours: "Checking availability...",
-    rafraichissementAuto: "This page will automatically refresh as soon as service resumes.",
+    rafraichissementAuto:
+      "This page will automatically refresh as soon as service resumes.",
     accesAdminLien: "Admin Login (Bypass Access)",
     deRetourSucces: "Platform is back online! Welcome back.",
-    toujoursEnCours: "Maintenance is still in progress. Thank you for your patience.",
+    toujoursEnCours:
+      "Maintenance is still in progress. Thank you for your patience.",
     imminente: "Imminent",
   },
   desktop: {

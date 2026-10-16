@@ -219,9 +219,9 @@ function ContenuReinitialisation() {
         <div className="anim-apparait w-full max-w-md">
           {statut === "chargement" && (
             <div className="rounded-2xl border bg-card p-8 shadow-sm flex flex-col items-center text-center space-y-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Loader2 className="h-7 w-7 animate-spin" />
-              </div>
+              {/* <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"> */}
+              <Loader2 className="h-7 w-7 animate-spin text-primary" />
+              {/* </div> */}
               <div className="space-y-1">
                 <h2 className="font-heading text-lg font-semibold">
                   {t("auth.verificationLienEnCours")}
@@ -236,7 +236,7 @@ function ContenuReinitialisation() {
           {statut === "invalide" && (
             <div className="rounded-2xl border bg-card p-6 md:p-8 shadow-sm space-y-6">
               <div className="flex flex-col items-center text-center gap-3">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10 text-destructive border border-destructive/20 shadow-inner">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl  text-destructive shadow-inner">
                   <ShieldAlert className="h-8 w-8" />
                 </div>
                 <div>
@@ -255,7 +255,10 @@ function ContenuReinitialisation() {
               <div className="space-y-3 pt-2">
                 <Link
                   href="/mot-de-passe-oublie"
-                  className={buttonVariants({ size: "lg", className: "w-full" })}
+                  className={buttonVariants({
+                    size: "lg",
+                    className: "w-full",
+                  })}
                 >
                   <RotateCcw className="mr-2 h-4 w-4" />
                   {t("auth.faireNouvelleDemande")}
@@ -263,7 +266,10 @@ function ContenuReinitialisation() {
 
                 <Link
                   href="/connexion"
-                  className={buttonVariants({ variant: "outline", className: "w-full" })}
+                  className={buttonVariants({
+                    variant: "outline",
+                    className: "w-full",
+                  })}
                 >
                   {t("auth.retourConnexion")}
                 </Link>
@@ -274,9 +280,9 @@ function ContenuReinitialisation() {
           {statut === "valide" && (
             <div className="space-y-6">
               <div className="flex flex-col items-center gap-3 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm border border-primary/20">
+                {/* <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-sm border border-primary/20">
                   <KeyRound className="h-7 w-7" />
-                </div>
+                </div> */}
                 <div>
                   <h1 className="font-heading text-2xl font-bold tracking-tight">
                     {t("auth.nouveauMotDePasseTitre")}
@@ -312,7 +318,8 @@ function ContenuReinitialisation() {
                       value={motDePasse}
                       onChange={(e) => {
                         setMotDePasse(e.target.value);
-                        if (erreurs.password) setErreurs((prev) => ({ ...prev, password: "" }));
+                        if (erreurs.password)
+                          setErreurs((prev) => ({ ...prev, password: "" }));
                       }}
                       placeholder="••••••••"
                     />
@@ -322,11 +329,17 @@ function ContenuReinitialisation() {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
                     >
-                      {afficherMdp ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {afficherMdp ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
                     </button>
                   </div>
                   {erreurs.password ? (
-                    <p className="text-xs text-destructive">{erreurs.password}</p>
+                    <p className="text-xs text-destructive">
+                      {erreurs.password}
+                    </p>
                   ) : (
                     <p className="text-xs text-muted-foreground">
                       {t("auth.huitCaracteresMin")}
@@ -341,7 +354,9 @@ function ContenuReinitialisation() {
                           <div
                             key={index}
                             className={`flex-1 rounded-full transition-all duration-300 ${
-                              index <= forceMdp.score ? forceMdp.couleur : "bg-muted"
+                              index <= forceMdp.score
+                                ? forceMdp.couleur
+                                : "bg-muted"
                             }`}
                           />
                         ))}
@@ -356,7 +371,9 @@ function ContenuReinitialisation() {
 
                 {/* Champ Confirmation du mot de passe */}
                 <div className="space-y-2">
-                  <Label htmlFor="mdp2">{t("auth.confirmationMotDePasse")}</Label>
+                  <Label htmlFor="mdp2">
+                    {t("auth.confirmationMotDePasse")}
+                  </Label>
                   <div className="relative">
                     <Input
                       id="mdp2"
@@ -385,7 +402,9 @@ function ContenuReinitialisation() {
                     </button>
                   </div>
                   {erreurs.confirmation && (
-                    <p className="text-xs text-destructive">{erreurs.confirmation}</p>
+                    <p className="text-xs text-destructive">
+                      {erreurs.confirmation}
+                    </p>
                   )}
                 </div>
 
@@ -420,9 +439,9 @@ function ContenuReinitialisation() {
 
           {statut === "succes" && (
             <div className="rounded-2xl border bg-card p-6 md:p-8 shadow-sm space-y-6 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-inner mx-auto">
+              {/* <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-inner mx-auto">
                 <CheckCircle2 className="h-8 w-8" />
-              </div>
+              </div> */}
               <div className="space-y-2">
                 <h1 className="font-heading text-xl md:text-2xl font-bold tracking-tight">
                   {t("auth.motDePasseReinitialiseSucces")}

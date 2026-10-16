@@ -221,7 +221,7 @@ export function SectionFacturation() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : statutAbonnement ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-xl border bg-muted/20 p-4 space-y-1.5">
                 <span className="text-xs text-muted-foreground">Formule active</span>
                 <div className="flex items-center gap-2">
@@ -264,6 +264,28 @@ export function SectionFacturation() {
                       ({statutAbonnement.jours_restants} jours)
                     </span>
                   )}
+                </div>
+              </div>
+
+              <div className="rounded-xl border bg-muted/20 p-4 space-y-1.5">
+                <span className="text-xs text-muted-foreground">Renouvellement auto</span>
+                <div className="flex items-center justify-between gap-1 pt-0.5">
+                  <span
+                    className={`text-xs font-semibold ${
+                      statutAbonnement.renouvellement_auto
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {statutAbonnement.renouvellement_auto ? "Activé (Carte)" : "Désactivé"}
+                  </span>
+                  <Link
+                    href="/mon-compte/abonnement"
+                    className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-0.5"
+                  >
+                    Gérer
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
                 </div>
               </div>
             </div>

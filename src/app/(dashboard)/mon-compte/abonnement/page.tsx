@@ -19,7 +19,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -30,13 +30,11 @@ import {
   Info,
   Loader2,
   Lock,
-  MessageCircle,
+  Pencil,
   Phone,
-  Scale,
-  FileText,
+  RefreshCw,
   ShieldCheck,
   Smartphone,
-  Store,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -45,9 +43,8 @@ import { useRateLimit } from "@/lib/useRateLimit";
 import { AlerteRateLimit } from "@/components/ui/alerte-rate-limit";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
-import { Apparait, SqueletteAbonnement, TitrePage } from "@/components/ui-commun";
+import { SqueletteAbonnement } from "@/components/ui-commun";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -58,6 +55,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ChampTelephone } from "@/components/champ-telephone";
+import { IconeTelora } from "@/components/ui/logo-telora";
 import {
   IconeCarteBancaire,
   IconeMtnMomo,
@@ -70,10 +68,98 @@ import type {
   StatutAbonnementComplet,
 } from "@/types";
 
+/**
+ * Icône florale / botanique minimaliste inspirée de Claude (1 tige, 3 nœuds)
+ */
+function IconeClaudeStandard({ className = "w-8 h-8" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 40 40"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="20" y1="34" x2="20" y2="12" />
+      <circle cx="20" cy="9" r="3" />
+      <path d="M20 23 C14 23 13 19 13 16" />
+      <circle cx="13" cy="15" r="2.5" />
+      <path d="M20 23 C26 23 27 19 27 16" />
+      <circle cx="27" cy="15" r="2.5" />
+    </svg>
+  );
+}
+
+/**
+ * Icône florale / botanique ramifiée inspirée de Claude (1 tige, 5 nœuds symétriques)
+ */
+function IconeClaudePremium({ className = "w-8 h-8" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 40 40"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="20" y1="34" x2="20" y2="10" />
+      <circle cx="20" cy="7.5" r="2.5" />
+      <path d="M20 18 C14 18 13 14 13 12" />
+      <circle cx="13" cy="11.5" r="2.2" />
+      <path d="M20 18 C26 18 27 14 27 12" />
+      <circle cx="27" cy="11.5" r="2.2" />
+      <path d="M20 26 C11 26 9 20 9 17" />
+      <circle cx="9" cy="16.5" r="2.2" />
+      <path d="M20 26 C29 26 31 20 31 17" />
+      <circle cx="31" cy="16.5" r="2.2" />
+    </svg>
+  );
+}
+
+/**
+ * Coche ultra-fine et discrète fidèle à la liste Claude
+ */
+function CocheMinimaliste({ className = "w-4 h-4 text-foreground/60 shrink-0 mt-0.5" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3.5 8.5L6.5 11.5L12.5 4.5" />
+    </svg>
+  );
+}
+
 export default function PageAbonnement() {
   const { utilisateur, rafraichir } = useAuth();
   const { t, lang, formatMontant, formatDateCourte } = useI18n();
+  const router = useRouter();
   const searchParams = useSearchParams();
+
+  const caracteristiquesStandard = [
+    t("monCompte.featBoutiqueUnique"),
+    t("monCompte.featImeiIllimite"),
+    t("monCompte.featCaisseClotures"),
+    t("monCompte.featComptesProteges"),
+    t("monCompte.featSuiviStockAlertes"),
+  ];
+
+  const caracteristiquesPremium = [
+    t("monCompte.featBoutiquesIllimitees"),
+    t("monCompte.featTransfertsStock"),
+    t("monCompte.featBeneficeNetPointVente"),
+    t("monCompte.featExportsComptables"),
+    t("monCompte.featSupportWhatsapp"),
+  ];
 
   const [statut, setStatut] = useState<StatutAbonnementComplet | null>(null);
   const [chargement, setChargement] = useState(true);
@@ -81,17 +167,49 @@ export default function PageAbonnement() {
   // Rate limiting dynamique
   const rateLimitPaiement = useRateLimit();
 
+  const [modalAnnulationOuverte, setModalAnnulationOuverte] = useState(false);
+
   // Choix de la formule
   const [duree, setDuree] = useState<1 | 12>(1); // 1 mois ou 12 mois
   const [planSelectionne, setPlanSelectionne] = useState<PlanAbonnement>("standard");
   const [moyenPaiement, setMoyenPaiement] = useState<MoyenPaiement>("orange_money");
   const [telephonePaiement, setTelephonePaiement] = useState("");
+  const [telephoneOrange, setTelephoneOrange] = useState("");
+  const [telephoneMtn, setTelephoneMtn] = useState("");
+  const [enregistrementMoyenEnCours, setEnregistrementMoyenEnCours] = useState(false);
+  const [conditionsAcceptees, setConditionsAcceptees] = useState(false);
 
-  // Modale de paiement
+  // Vue de configuration demandée via paramètre URL
+  const vueParam = searchParams.get("vue");
+  const planParam = searchParams.get("plan");
+  const dureeParam = searchParams.get("duree") || searchParams.get("periode");
+
+  const estVueConfigurer = vueParam === "configurer";
+
+  // Synchronisation avec l'URL
+  useEffect(() => {
+    if (planParam === "premium" || planParam === "standard") {
+      setPlanSelectionne(planParam);
+    }
+  }, [planParam]);
+
+  useEffect(() => {
+    if (dureeParam === "12" || dureeParam === "annuel") {
+      setDuree(12);
+    } else if (dureeParam === "1" || dureeParam === "mensuel") {
+      setDuree(1);
+    }
+  }, [dureeParam]);
+
+  // Modale de paiement & Push direct
   const [modalOuvert, setModalOuvert] = useState(false);
   const [session, setSession] = useState<SessionPaiementReponse | null>(null);
   const [initialisationEnCours, setInitialisationEnCours] = useState(false);
   const [simulationEnCours, setSimulationEnCours] = useState(false);
+  const [pushDirectEnCours, setPushDirectEnCours] = useState(false);
+  const [statutPushDirect, setStatutPushDirect] = useState<"attente" | "succes" | "echec">("attente");
+  const [messageErreurPush, setMessageErreurPush] = useState<string | null>(null);
+  const [verificationManuelleEnCours, setVerificationManuelleEnCours] = useState(false);
 
   const chargerStatut = useCallback(async () => {
     try {
@@ -99,6 +217,22 @@ export default function PageAbonnement() {
       setStatut(data);
       if (data.plan) {
         setPlanSelectionne(data.plan);
+      }
+      if (data.telephone_orange) {
+        setTelephoneOrange(data.telephone_orange);
+      }
+      if (data.telephone_mtn) {
+        setTelephoneMtn(data.telephone_mtn);
+      }
+      const moyen = data.moyen_prefere || "orange_money";
+      setMoyenPaiement(moyen);
+
+      if (moyen === "orange_money") {
+        setTelephonePaiement(data.telephone_orange || data.telephone_paiement || "");
+      } else if (moyen === "mtn_momo") {
+        setTelephonePaiement(data.telephone_mtn || data.telephone_paiement || "");
+      } else {
+        setTelephonePaiement(data.telephone_paiement || "");
       }
     } catch (e) {
       toast.error(e instanceof ErreurApi ? e.resume() : t("commun.erreur"));
@@ -109,10 +243,128 @@ export default function PageAbonnement() {
 
   useEffect(() => {
     void chargerStatut();
-    if (utilisateur?.telephone) {
-      setTelephonePaiement(utilisateur.telephone);
+  }, [chargerStatut]);
+
+  /**
+   * Bascule le moyen de paiement et recharge automatiquement le numéro propre à cet opérateur
+   */
+  function choisirMoyenPaiement(nouveauMoyen: MoyenPaiement) {
+    setMoyenPaiement(nouveauMoyen);
+    if (nouveauMoyen === "orange_money") {
+      setTelephonePaiement(telephoneOrange);
+    } else if (nouveauMoyen === "mtn_momo") {
+      setTelephonePaiement(telephoneMtn);
     }
-  }, [chargerStatut, utilisateur]);
+  }
+
+  /**
+   * Saisie manuelle du numéro de téléphone avec mise à jour du numéro lié à l'opérateur en cours
+   */
+  function changerTelephone(nouveauTel: string) {
+    setTelephonePaiement(nouveauTel);
+    if (moyenPaiement === "orange_money") {
+      setTelephoneOrange(nouveauTel);
+    } else if (moyenPaiement === "mtn_momo") {
+      setTelephoneMtn(nouveauTel);
+    }
+  }
+
+  /**
+   * Enregistre le moyen de paiement choisi et son numéro associé en base de données
+   */
+  async function enregistrerMoyenPaiement() {
+    if (moyenPaiement !== "carte" && !telephonePaiement.trim()) {
+      toast.error(t("monCompte.telephoneObligatoire"));
+      return;
+    }
+
+    setEnregistrementMoyenEnCours(true);
+    try {
+      const res = await api.post<{
+        message: string;
+        moyen_prefere: MoyenPaiement;
+        telephone_paiement: string;
+        telephone_orange: string | null;
+        telephone_mtn: string | null;
+      }>("/abonnements/enregistrer-moyen", {
+        moyen_paiement: moyenPaiement,
+        telephone: telephonePaiement.trim() || undefined,
+      });
+
+      if (res.telephone_orange) setTelephoneOrange(res.telephone_orange);
+      if (res.telephone_mtn) setTelephoneMtn(res.telephone_mtn);
+
+      setStatut((prev) =>
+        prev
+          ? {
+              ...prev,
+              moyen_prefere: res.moyen_prefere,
+              telephone_paiement: res.telephone_paiement,
+              telephone_orange: res.telephone_orange,
+              telephone_mtn: res.telephone_mtn,
+            }
+          : prev
+      );
+
+      toast.success(res.message || t("monCompte.moyenMisAJourSucces"));
+      setModalOuvert(false);
+    } catch (e) {
+      toast.error(
+        e instanceof ErreurApi ? e.resume() : t("commun.erreur")
+      );
+    } finally {
+      setEnregistrementMoyenEnCours(false);
+    }
+  }
+
+  // Polling automatique pour les paiements Push USSD directs Softpay
+  useEffect(() => {
+    if (!pushDirectEnCours || !session?.reference || statutPushDirect !== "attente") {
+      return;
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await api.get<{ statut: string; reference_operateur?: string }>(`/paiements/${session.reference}`);
+        if (res.reference_operateur && res.reference_operateur !== session.reference_operateur) {
+          setSession((prev) => (prev ? { ...prev, reference_operateur: res.reference_operateur } : prev));
+        }
+
+        if (res.statut === "valide") {
+          setStatutPushDirect("succes");
+          clearInterval(interval);
+          toast.success(t("monCompte.abonnementActiveSucces"));
+          await rafraichir();
+          await chargerStatut();
+          setTimeout(() => {
+            setModalOuvert(false);
+            setPushDirectEnCours(false);
+            setStatutPushDirect("attente");
+          }, 2500);
+        } else if (res.statut === "echec" || res.statut === "annule") {
+          setStatutPushDirect("echec");
+          setMessageErreurPush(t("monCompte.transactionRefuseeDesc"));
+          clearInterval(interval);
+        }
+      } catch {
+        // En cas de micro-coupure réseau temporaire, continuer le polling
+      }
+    }, 2500);
+
+    // Arrêt de sécurité après 90 secondes si aucune validation
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      if (statutPushDirect === "attente") {
+        setStatutPushDirect("echec");
+        setMessageErreurPush(t("monCompte.delaiDepasseDesc"));
+      }
+    }, 90000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [pushDirectEnCours, session?.reference, statutPushDirect, t, rafraichir, chargerStatut]);
 
   // Retour de passerelle SaasPay externe
   useEffect(() => {
@@ -123,6 +375,41 @@ export default function PageAbonnement() {
     }
   }, [searchParams, chargerStatut, rafraichir, lang]);
 
+  const [chargementRenouvellement, setChargementRenouvellement] = useState(false);
+
+  async function basculerRenouvellementAuto() {
+    if (!statut || chargementRenouvellement) return;
+
+    // Si on veut activer et qu'aucune carte n'est encore enregistrée
+    if (!statut.renouvellement_auto && !statut.a_carte_enregistree) {
+      toast.info(t("monCompte.configurerCartePourRenouvellement"));
+      setMoyenPaiement("carte");
+      setModalOuvert(true);
+      return;
+    }
+
+    setChargementRenouvellement(true);
+    try {
+      const res = await api.post<{ renouvellement_auto: boolean; message: string }>(
+        "/abonnements/toggle-renouvellement-auto",
+        { activer: !statut.renouvellement_auto }
+      );
+      setStatut((prev) => (prev ? { ...prev, renouvellement_auto: res.renouvellement_auto } : prev));
+      toast.success(res.message);
+      await rafraichir();
+    } catch (e) {
+      if (e instanceof ErreurApi && (e.donnees as Record<string, unknown>)?.doit_ajouter_carte) {
+        toast.info(e.resume());
+        setMoyenPaiement("carte");
+        setModalOuvert(true);
+      } else {
+        toast.error(e instanceof ErreurApi ? e.resume() : t("monCompte.impossibleModifierPreference"));
+      }
+    } finally {
+      setChargementRenouvellement(false);
+    }
+  }
+
   // Calcul du tarif
   const montantActuel = (plan: PlanAbonnement, d: 1 | 12) => {
     if (!statut) return 0;
@@ -131,25 +418,169 @@ export default function PageAbonnement() {
   };
 
   /**
-   * Initialise la session de règlement
+   * Ouvre la modale pour choisir l'opérateur et saisir son numéro
    */
-  async function ouvrirModalPaiement(planChoisi: PlanAbonnement) {
+  /**
+   * Lance directement la souscription :
+   * - Si un moyen de paiement et un numéro sont déjà enregistrés sur le compte :
+   *   Lancement direct en 1 clic ! Le push Mobile Money est envoyé immédiatement
+   *   et la modale s'ouvre directement avec le logo Telora et le spinner d'attente.
+   * - Sinon (aucun numéro) :
+   *   Ouvre la modale pour choisir son opérateur et renseigner son numéro.
+   */
+  async function declencherSouscription(planChoisi: PlanAbonnement) {
     if (rateLimitPaiement.estBloque || initialisationEnCours) return;
 
     setPlanSelectionne(planChoisi);
+
+    const telCible = telephonePaiement.trim() || statut?.telephone_paiement?.trim() || utilisateur?.telephone?.trim() || "";
+    const moyenCible = moyenPaiement || statut?.moyen_prefere || "orange_money";
+
+    // Si on a déjà les informations nécessaires (numéro Mobile Money, ou Carte)
+    if (telCible || moyenCible === "carte") {
+      if (telCible && telephonePaiement !== telCible) {
+        setTelephonePaiement(telCible);
+      }
+      if (moyenCible && moyenPaiement !== moyenCible) {
+        setMoyenPaiement(moyenCible);
+      }
+
+      setPushDirectEnCours(true);
+      setStatutPushDirect("attente");
+      setMessageErreurPush(null);
+      setModalOuvert(true);
+
+      await executerPaiementDirect(planChoisi, moyenCible, telCible);
+    } else {
+      // Aucun numéro renseigné : on ouvre la modale de configuration
+      setPushDirectEnCours(false);
+      setStatutPushDirect("attente");
+      setMessageErreurPush(null);
+      setModalOuvert(true);
+    }
+  }
+
+  /**
+   * Bascule vers l'écran de configuration du forfait demandé via argument d'URL
+   */
+  function naviguerVersConfiguration(planChoisi: PlanAbonnement) {
+    setPlanSelectionne(planChoisi);
+    router.push(
+      `/mon-compte/abonnement?vue=configurer&plan=${planChoisi}&duree=${duree}`,
+      { scroll: false }
+    );
+  }
+
+  /**
+   * Déclenche la souscription finale depuis l'écran de configuration
+   */
+  async function validerSouscriptionDepuisConfiguration() {
+    if (!conditionsAcceptees || rateLimitPaiement.estBloque || initialisationEnCours) return;
+
+    const telCible =
+      telephonePaiement.trim() ||
+      statut?.telephone_paiement?.trim() ||
+      utilisateur?.telephone?.trim() ||
+      "";
+    const moyenCible = moyenPaiement || statut?.moyen_prefere || "orange_money";
+
+    if (moyenCible !== "carte" && !telCible) {
+      toast.info(t("monCompte.veuillezRenseignerTelephone"));
+      setModalOuvert(true);
+      return;
+    }
+
+    setPushDirectEnCours(moyenCible !== "carte");
+    setStatutPushDirect("attente");
+    setMessageErreurPush(null);
+    if (moyenCible !== "carte") {
+      setModalOuvert(true);
+    }
+
+    await executerPaiementDirect(planSelectionne, moyenCible, telCible);
+  }
+
+  /**
+   * Vérification manuelle lors du clic sur le bouton Actualiser
+   */
+  async function verifierStatutPaiementManuel() {
+    if (!session?.reference || verificationManuelleEnCours) return;
+    setVerificationManuelleEnCours(true);
+    try {
+      const res = await api.get<{ statut: string; reference_operateur?: string }>(`/paiements/${session.reference}`);
+      if (res.reference_operateur && res.reference_operateur !== session.reference_operateur) {
+        setSession((prev) => (prev ? { ...prev, reference_operateur: res.reference_operateur } : prev));
+      }
+
+      if (res.statut === "valide") {
+        setStatutPushDirect("succes");
+        toast.success(t("monCompte.abonnementActiveSucces"));
+        await rafraichir();
+        await chargerStatut();
+        setTimeout(() => {
+          setModalOuvert(false);
+          setPushDirectEnCours(false);
+          setStatutPushDirect("attente");
+        }, 2000);
+      } else if (res.statut === "echec" || res.statut === "annule") {
+        setStatutPushDirect("echec");
+        setMessageErreurPush(t("monCompte.transactionRefuseeDesc"));
+      } else {
+        toast.info(t("monCompte.paiementToujoursEnAttente"));
+      }
+    } catch {
+      toast.error(t("monCompte.verificationImpossible"));
+    } finally {
+      setVerificationManuelleEnCours(false);
+    }
+  }
+
+  /**
+   * Déclenche le règlement auprès de SaasPay (Push USSD Softpay direct ou Checkout pré-rempli)
+   */
+  async function executerPaiementDirect(
+    planCible: PlanAbonnement,
+    moyenCible: MoyenPaiement,
+    telCible: string
+  ) {
+    if (rateLimitPaiement.estBloque || initialisationEnCours) return;
+
+    if (moyenCible !== "carte" && !telCible.trim()) {
+      setPushDirectEnCours(false);
+      toast.error(t("monCompte.veuillezRenseignerTelephone"));
+      return;
+    }
+
     setInitialisationEnCours(true);
+    setMessageErreurPush(null);
 
     try {
       const reponse = await api.post<SessionPaiementReponse>("/paiements/initialiser", {
-        plan: planChoisi,
+        plan: planCible,
         duree_mois: duree,
-        moyen_souhaite: moyenPaiement,
+        moyen_souhaite: moyenCible,
+        telephone: telCible,
+        mode_direct: moyenCible !== "carte",
         return_url: window.location.origin + "/mon-compte/abonnement?statut=retour",
       });
 
       setSession(reponse);
-      setModalOuvert(true);
+
+      if (reponse.mode === "test") {
+        setPushDirectEnCours(false);
+        return;
+      }
+
+      if (reponse.type === "direct_push" || !reponse.payment_url) {
+        setPushDirectEnCours(true);
+        setStatutPushDirect("attente");
+        toast.info(reponse.message || t("monCompte.demandePaiementEnvoyee"));
+      } else if (reponse.payment_url) {
+        toast.info(t("monCompte.redirectionPasserelle"));
+        window.location.href = reponse.payment_url;
+      }
     } catch (e) {
+      setPushDirectEnCours(false);
       if (e instanceof ErreurApi) {
         rateLimitPaiement.gererErreur(e);
         toast.error(e.resume());
@@ -161,29 +592,44 @@ export default function PageAbonnement() {
     }
   }
 
+  async function executerPaiement() {
+    await executerPaiementDirect(planSelectionne, moyenPaiement, telephonePaiement);
+  }
+
   /**
    * Simulation en mode test pour vérifier le parcours sans débourser d'argent
    */
   async function validerSimulationTest(succes: boolean) {
-    if (!session) return;
     setSimulationEnCours(true);
 
     try {
+      let ref = session?.reference;
+      if (!ref) {
+        const init = await api.post<SessionPaiementReponse>("/paiements/initialiser", {
+          plan: planSelectionne,
+          duree_mois: duree,
+          moyen_souhaite: moyenPaiement,
+          telephone: telephonePaiement,
+          mode_direct: true,
+          return_url: window.location.origin + "/mon-compte/abonnement?statut=retour",
+        });
+        ref = init.reference;
+      }
+
       if (succes) {
         await api.post("/paiements/simuler-succes", {
-          reference: session.reference,
+          reference: ref,
           moyen_paiement: moyenPaiement,
         });
 
         toast.success(t("monCompte.abonnementActiveSucces"));
-
         setModalOuvert(false);
         setSession(null);
         await rafraichir();
         await chargerStatut();
       } else {
         await api.post("/paiements/simuler-echec", {
-          reference: session.reference,
+          reference: ref,
         });
 
         toast.error(t("monCompte.simulationEchecEffectuee"));
@@ -206,703 +652,1282 @@ export default function PageAbonnement() {
   const dateProlongee = new Date(dateActuelle);
   dateProlongee.setMonth(dateProlongee.getMonth() + duree);
 
-  return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-16">
-      {/* ------------------------------------------------------------- */}
-      {/* Navigation et Titre chaleureux                                */}
-      {/* ------------------------------------------------------------- */}
-      <div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mb-2 -ml-2 text-muted-foreground hover:text-foreground"
-          nativeButton={false}
-          render={<Link href="/mon-compte#facturation" />}
-        >
-          <ArrowLeft className="mr-1.5 h-4 w-4" />
-          {t("monCompte.retourCompteEtFacturation")}
-        </Button>
+  // Prochaine facture estimée
+  const prochaineFactureInfo = (() => {
+    if (!statut) return null;
+    const plan = statut.plan || "standard";
+    const tarifsPlan = statut.tarifs?.[plan];
+    const devise = statut.tarifs?.devise || "XAF";
 
-        <TitrePage
-          titre={t("monCompte.pageAbonnementTitre")}
-          description={t("monCompte.pageAbonnementDesc")}
-        />
+    const montant = tarifsPlan
+      ? (duree === 12 ? tarifsPlan.annuel : tarifsPlan.mensuel)
+      : (plan === "premium" ? 25000 : 10000);
+    const datePrelevement = statut.echeance ? formatDateCourte(statut.echeance) : null;
+
+    if (!datePrelevement) return null;
+
+    return {
+      montant: formatMontant(montant, devise),
+      date: datePrelevement,
+    };
+  })();
+
+  const planActif = statut.plan || "standard";
+  const estPlanActuel = (plan: PlanAbonnement) => {
+    return planActif === plan && !statut.est_expire;
+  };
+
+  const libelleBouton = (plan: PlanAbonnement) => {
+    if (initialisationEnCours && planSelectionne === plan) {
+      return t("monCompte.boutonInitialisation");
+    }
+    if (statut.est_essai && planActif === plan) {
+      return plan === "premium"
+        ? t("monCompte.boutonActiverPremium")
+        : t("monCompte.boutonActiverStandard");
+    }
+    if (estPlanActuel(plan)) {
+      return plan === "premium"
+        ? t("monCompte.boutonProlongerPremium")
+        : t("monCompte.boutonProlongerStandard");
+    }
+    return plan === "premium"
+      ? t("monCompte.boutonObtenirPremium")
+      : t("monCompte.boutonObtenirStandard");
+  };
+
+  return (
+    <div className="space-y-6 max-w-5xl mx-auto pb-16 px-4 sm:px-6">
+      {/* 1. Barre de navigation haute & environnement */}
+      <div className="flex items-center justify-between pt-1">
+        {estVueConfigurer ? (
+          <button
+            type="button"
+            onClick={() => router.push("/mon-compte/abonnement", { scroll: false })}
+            className="-ml-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>{t("monCompte.retourAuxForfaits")}</span>
+          </button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-2 text-muted-foreground hover:text-foreground cursor-pointer font-medium"
+            nativeButton={false}
+            render={<Link href="/mon-compte#facturation" />}
+          >
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            {t("monCompte.retourMonCompte")}
+          </Button>
+        )}
+
+        {estModeTest && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+            {t("monCompte.modeDemonstrationTest")}
+          </span>
+        )}
       </div>
 
-      {/* ------------------------------------------------------------- */}
-      {/* 1. Bandeau d'état actuel : humain, clair et bienveillant       */}
-      {/* ------------------------------------------------------------- */}
-      <Apparait index={0}>
-        <Card
-          className={`border shadow-xs ${
-            statut.est_expire
-              ? "border-destructive/40 bg-destructive/5"
-              : statut.est_essai
-                ? "border-amber-500/30 bg-amber-500/5"
-                : "border-emerald-500/30 bg-emerald-500/5"
-          }`}
-        >
-          <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 sm:p-6">
-            <div className="flex items-start gap-3.5">
-              {/* <div
-                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-                  statut.est_expire
-                    ? "bg-destructive text-white"
-                    : statut.est_essai
-                      ? "bg-amber-500 text-white"
-                      : "bg-emerald-600 text-white"
+      {estVueConfigurer ? (
+        /* ------------------------------------------------------------- */
+        /* VUE ÉCRAN DE CONFIGURATION DU FORFAIT (STYLE ANTHROPIC/CLAUDE) */
+        /* ------------------------------------------------------------- */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-2">
+          {/* COLONNE GAUCHE (7 cols) : Sélecteur de formule et Mode de paiement */}
+          <div className="lg:col-span-7 space-y-6">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold font-heading text-foreground tracking-tight">
+                {t("monCompte.configurezVotreForfait")}
+              </h1>
+            </div>
+
+            {/* SÉLECTEUR RADIO MENSUEL / ANNUEL */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Option Mensuel */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  setDuree(1);
+                  router.replace(
+                    `/mon-compte/abonnement?vue=configurer&plan=${planSelectionne}&duree=1`,
+                    { scroll: false },
+                  );
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setDuree(1);
+                    router.replace(
+                      `/mon-compte/abonnement?vue=configurer&plan=${planSelectionne}&duree=1`,
+                      { scroll: false },
+                    );
+                  }
+                }}
+                className={`relative flex flex-col justify-between p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+                  duree === 1
+                    ? "border-sky-500/80 bg-sky-500/5 dark:bg-sky-500/10 ring-1 ring-sky-500/30 shadow-xs"
+                    : "border-border/80 dark:border-border/60 hover:border-foreground/30 bg-card/60"
                 }`}
               >
-                {statut.est_expire ? (
-                  <XCircle className="h-6 w-6" />
-                ) : statut.est_essai ? (
-                  <Clock className="h-6 w-6" />
-                ) : (
-                  <ShieldCheck className="h-6 w-6" />
-                )}
-              </div> */}
+                <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      duree === 1
+                        ? "border-sky-500"
+                        : "border-muted-foreground/40"
+                    }`}
+                  >
+                    {duree === 1 && (
+                      <div className="w-2.5 h-2.5 rounded-full bg-sky-500" />
+                    )}
+                  </div>
+                </div>
 
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-heading font-semibold text-foreground text-base">
-                    {statut.est_expire
-                      ? t("monCompte.essaiTermineTitre")
-                      : statut.est_essai
-                        ? t("monCompte.essaiRestantTitre", {
-                            jours: statut.jours_restants,
-                          })
-                        : t("monCompte.boutiqueActiveTitre", {
-                            formule:
-                              statut.plan === "premium"
-                                ? t("monCompte.formulePremiumTitre")
-                                : t("monCompte.formuleStandardTitre"),
-                          })}
-                  </h3>
+                <div className="space-y-1">
+                  <div className="text-sm font-semibold text-foreground">
+                    {planSelectionne === "premium"
+                      ? t("monCompte.formulePremiumMensuel")
+                      : t("monCompte.formuleStandardMensuel")}
+                  </div>
+                  <div className="text-xl sm:text-2xl font-bold font-heading text-foreground tabular-nums">
+                    {formatMontant(
+                      montantActuel(planSelectionne, 1),
+                      statut.tarifs.devise,
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t("monCompte.factureMensuellement")}
+                  </div>
+                </div>
+              </div>
 
-                  {statut.est_premium && (
-                    <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-[11px] font-bold text-primary uppercase">
-                      Multi-Boutiques
-                    </span>
+              {/* Option Annuel */}
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  setDuree(12);
+                  router.replace(
+                    `/mon-compte/abonnement?vue=configurer&plan=${planSelectionne}&duree=12`,
+                    { scroll: false },
+                  );
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setDuree(12);
+                    router.replace(
+                      `/mon-compte/abonnement?vue=configurer&plan=${planSelectionne}&duree=12`,
+                      { scroll: false },
+                    );
+                  }
+                }}
+                className={`relative flex flex-col justify-between p-5 rounded-2xl border-2 cursor-pointer transition-all ${
+                  duree === 12
+                    ? "border-sky-500/80 bg-sky-500/5 dark:bg-sky-500/10 ring-1 ring-sky-500/30 shadow-xs"
+                    : "border-border/80 dark:border-border/60 hover:border-foreground/30 bg-card/60"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      duree === 12
+                        ? "border-sky-500"
+                        : "border-muted-foreground/40"
+                    }`}
+                  >
+                    {duree === 12 && (
+                      <div className="w-2.5 h-2.5 rounded-full bg-sky-500" />
+                    )}
+                  </div>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                    {t("monCompte.economisez17")}
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-sm font-semibold text-foreground">
+                    {planSelectionne === "premium"
+                      ? t("monCompte.formulePremiumAnnuel")
+                      : t("monCompte.formuleStandardAnnuel")}
+                  </div>
+                  <div className="text-xl sm:text-2xl font-bold font-heading text-foreground tabular-nums">
+                    {formatMontant(
+                      montantActuel(planSelectionne, 12),
+                      statut.tarifs.devise,
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t("monCompte.factureAnnuellement")}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Commutateur de formule (Standard vs Premium) */}
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-xs text-muted-foreground font-medium">
+                {t("monCompte.formuleLabel")}
+              </span>
+              <div className="inline-flex items-center rounded-full bg-muted/60 border border-border/60 p-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlanSelectionne("standard");
+                    router.replace(
+                      `/mon-compte/abonnement?vue=configurer&plan=standard&duree=${duree}`,
+                      { scroll: false },
+                    );
+                  }}
+                  className={`rounded-full px-3 py-1 font-medium transition-all cursor-pointer ${
+                    planSelectionne === "standard"
+                      ? "bg-background text-foreground shadow-xs font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Standard 
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlanSelectionne("premium");
+                    router.replace(
+                      `/mon-compte/abonnement?vue=configurer&plan=premium&duree=${duree}`,
+                      { scroll: false },
+                    );
+                  }}
+                  className={`rounded-full px-3 py-1 font-medium transition-all cursor-pointer ${
+                    planSelectionne === "premium"
+                      ? "bg-background text-foreground shadow-xs font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Premium 
+                </button>
+              </div>
+            </div>
+
+            {/* Section Mode de paiement */}
+            <div className="space-y-3 pt-3">
+              <h2 className="text-sm font-bold text-foreground">
+                {t("monCompte.modalModePaiementTitre")}
+              </h2>
+
+              <div className="rounded-2xl border border-border/80 dark:border-border/60 bg-card/60 p-4 sm:p-5 flex items-center justify-between gap-4 shadow-xs">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  {moyenPaiement === "carte" ? (
+                    <div className="flex items-center gap-3">
+                      <IconeCarteBancaire className="h-6 w-9 rounded-xs shadow-xs shrink-0" />
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">
+                          {statut?.carte_info
+                            ? statut.carte_info
+                            : `${t("monCompte.carteBancaire")} (${t("monCompte.visaMastercard")})`}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {t("monCompte.paiementSecuriseSaaspay3d")}
+                        </div>
+                      </div>
+                    </div>
+                  ) : moyenPaiement === "orange_money" ? (
+                    <div className="flex items-center gap-3">
+                      <IconeOrangeMoney className="h-7 w-7 rounded-md shadow-xs shrink-0" />
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">
+                          {t("monCompte.orangeMoney")}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-mono">
+                          {telephonePaiement
+                            ? t("monCompte.debitSurLeNumero", { tel: telephonePaiement })
+                            : t("monCompte.numeroARenseigner")}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <IconeMtnMomo className="h-7 w-7 rounded-md shadow-xs shrink-0" />
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">
+                          {t("monCompte.mtnMomo")}
+                        </div>
+                        <div className="text-xs text-muted-foreground font-mono">
+                          {telephonePaiement
+                            ? t("monCompte.debitSurLeNumero", { tel: telephonePaiement })
+                            : t("monCompte.numeroARenseigner")}
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
-                  {statut.est_expire
-                    ? t("monCompte.essaiTermineDesc")
-                    : statut.est_essai
-                      ? t("monCompte.essaiEnCoursDesc")
-                      : t("monCompte.actifDesc", {
-                          date: statut.echeance ? formatDateCourte(statut.echeance) : "—",
-                          jours: statut.jours_restants,
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPushDirectEnCours(false);
+                    setModalOuvert(true);
+                  }}
+                  className="p-2.5 rounded-xl border border-border/70 hover:border-foreground/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer shrink-0"
+                  title={t("monCompte.modifierMoyenPaiement")}
+                  aria-label={t("monCompte.modifierMoyenPaiement")}
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* <p className="text-[11px] text-muted-foreground/80 leading-relaxed">
+                Cliquez sur le crayon pour modifier votre opérateur ou saisir le
+                numéro de débit.
+              </p> */}
+            </div>
+          </div>
+
+          {/* COLONNE DROITE (5 cols) : Carte Récapitulatif Claude Serif */}
+          <div className="lg:col-span-5 lg:sticky lg:top-6">
+            <div className="rounded-3xl border border-border/80 dark:border-border/60 bg-card/90 backdrop-blur-xs p-6 sm:p-7 shadow-xl space-y-5">
+              {/* Titre Serif style Claude */}
+              <div className="border-b border-border/60 pb-4">
+                <h2 className="text-2xl sm:text-3xl font-serif font-normal text-foreground tracking-tight">
+                  {planSelectionne === "premium"
+                    ? t("monCompte.titreForfaitPremium")
+                    : t("monCompte.titreForfaitStandard")}
+                </h2>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {planSelectionne === "premium"
+                    ? t("monCompte.descForfaitPremiumCourt")
+                    : t("monCompte.descForfaitStandardCourt")}
+                </p>
+              </div>
+
+              {/* Détail du tarif */}
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center justify-between text-muted-foreground">
+                  <span>
+                    {planSelectionne === "premium" ? "Premium" : "Standard"}{" "}
+                    {duree === 12 ? t("monCompte.periodeAnnuel") : t("monCompte.periodeMensuel")}
+                  </span>
+                  <span className="font-semibold text-foreground tabular-nums">
+                    {formatMontant(
+                      montantActuel(planSelectionne, duree),
+                      statut.tarifs.devise,
+                    )}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-muted-foreground">
+                  <span>{t("monCompte.sousTotal")}</span>
+                  <span className="font-semibold text-foreground tabular-nums">
+                    {formatMontant(
+                      montantActuel(planSelectionne, duree),
+                      statut.tarifs.devise,
+                    )}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-muted-foreground">
+                  <span>{t("monCompte.taxesEtFraisReseau")}</span>
+                  <span className="text-xs text-muted-foreground italic">
+                    {t("monCompte.inclusSelonReseau")}
+                  </span>
+                </div>
+
+                <hr className="border-border/60 pt-1" />
+
+                <div className="flex items-baseline justify-between pt-1">
+                  <span className="text-xs font-bold text-foreground">
+                    {t("monCompte.totalDuAujourdhui")}
+                  </span>
+                  <span className="text-xl font-extrabold font-heading text-foreground tabular-nums">
+                    {formatMontant(
+                      montantActuel(planSelectionne, duree),
+                      statut.tarifs.devise,
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {/* Encart réassurance / renouvellement */}
+              <div className="rounded-2xl bg-muted/60 border border-border/60 p-4 space-y-2">
+                <div className="flex items-start gap-3">
+                  <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <div className="text-xs text-muted-foreground leading-relaxed space-y-1.5">
+                    {moyenPaiement === "carte" ? (
+                      <p>
+                        {t("monCompte.renouvellementCarteNotice", {
+                          date: formatDateCourte(dateProlongee.toISOString()),
+                          montant: formatMontant(
+                            montantActuel(planSelectionne, duree),
+                            statut.tarifs.devise,
+                          ),
+                          periode: duree === 12 ? t("monCompte.an") : t("monCompte.mois"),
                         })}
+                      </p>
+                    ) : (
+                      <p>
+                        {t("monCompte.nonRenouvellementNotice", {
+                          date: formatDateCourte(dateProlongee.toISOString()),
+                        })}
+                      </p>
+                    )}
+                    <p className="text-[11px] text-muted-foreground/80 italic">
+                      {t("monCompte.fraisOperateurAvertissement")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Case à cocher CGU */}
+              <div className="flex items-start gap-3 pt-1">
+                <input
+                  id="accord-cgu"
+                  type="checkbox"
+                  checked={conditionsAcceptees}
+                  onChange={(e) => setConditionsAcceptees(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary/20 accent-primary cursor-pointer shrink-0"
+                />
+                <label
+                  htmlFor="accord-cgu"
+                  className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none"
+                >
+                  {moyenPaiement === "carte"
+                    ? t("monCompte.accordCguCartePre")
+                    : t("monCompte.accordCguMobilePre")}
+                  <Link
+                    href="/legal/cgu"
+                    target="_blank"
+                    className="underline hover:text-foreground font-medium"
+                  >
+                    {t("monCompte.conditionsUtilisationLien")}
+                  </Link>
+                  {t("monCompte.accordCguSuffixePoint")}
+                </label>
+              </div>
+
+              {/* Bouton S'abonner */}
+              <div className="space-y-2 pt-1">
+                <button
+                  type="button"
+                  disabled={
+                    !conditionsAcceptees ||
+                    initialisationEnCours ||
+                    rateLimitPaiement.estBloque
+                  }
+                  onClick={validerSouscriptionDepuisConfiguration}
+                  className={`w-full rounded-2xl py-3.5 px-6 text-sm font-semibold transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 ${
+                    !conditionsAcceptees ||
+                    initialisationEnCours ||
+                    rateLimitPaiement.estBloque
+                      ? "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+                      : "bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100"
+                  }`}
+                >
+                  {initialisationEnCours ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>{t("monCompte.boutonInitialisation")}</span>
+                    </>
+                  ) : (
+                    <span>{t("monCompte.sAbonner")}</span>
+                  )}
+                </button>
+
+                <p className="text-[11px] text-center text-muted-foreground">
+                  {t("monCompte.paiementChiffreSansEngagement")}
                 </p>
               </div>
             </div>
-
-            {/* Indicateur d'environnement */}
-            <div className="shrink-0 self-start sm:self-center">
-              {estModeTest ? (
-                <div className="flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-3.5 py-1.5 text-xs font-semibold text-amber-700 dark:text-amber-300">
-                  <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                  <span>{t("monCompte.environnementTest")}</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span>{t("monCompte.paiementsSecurises")}</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </Apparait>
-
-      {/* ------------------------------------------------------------- */}
-      {/* 2. Bascule Mensuel / Annuel (2 mois offerts)                  */}
-      {/* ------------------------------------------------------------- */}
-      <div className="flex flex-col items-center justify-center gap-2 pt-2">
-        <p className="text-xs sm:text-sm text-muted-foreground font-medium">
-          {t("monCompte.rythmeReglement")}
-        </p>
-
-        <div className="inline-flex items-center rounded-xl border bg-muted/40 p-1.5 text-sm shadow-xs">
-          <button
-            type="button"
-            onClick={() => setDuree(1)}
-            className={`rounded-lg px-4 py-2 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-              duree === 1
-                ? "bg-background text-foreground shadow-xs"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t("monCompte.mensuelSansEngagement")}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setDuree(12)}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-              duree === 12
-                ? "bg-background text-foreground shadow-xs"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <span>{t("monCompte.annuelTitre")}</span>
-            <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
-              {t("monCompte.deuxMoisOfferts")}
-            </span>
-          </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* 2. Titre éditorial épuré (style Claude) */}
+          <div className="text-center pt-2 sm:pt-4 space-y-2">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-normal text-foreground tracking-tight">
+                {/* Des forfaits qui évoluent avec vous */}
+                {t("monCompte.desForfaitsQuiEvoluent")}
+            </h1>
+          </div>
 
-      {/* ------------------------------------------------------------- */}
-      {/* 3. Les Formules : Standard (1 boutique) vs Premium (multi)   */}
-      {/* ------------------------------------------------------------- */}
-      <div className="grid gap-6 md:grid-cols-2 pt-2">
-        {/* FORMULE STANDARD */}
-        <Apparait index={1}>
-          <Card
-            className={`flex flex-col justify-between border-2 transition-all ${
-              planSelectionne === "standard"
-                ? "border-primary shadow-lg"
-                : "border-border hover:border-foreground/25"
-            }`}
-          >
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl font-heading font-bold text-foreground">
-                    {t("monCompte.formuleStandardTitre")}
-                  </CardTitle>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {t("monCompte.formuleStandardSousTitre")}
-                  </p>
-                </div>
-                {/* <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                  <Store className="h-5 w-5" />
-                </div> */}
-              </div>
-
-              <div className="pt-4">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold font-mono text-foreground">
-                    {formatMontant(montantActuel("standard", duree), statut.tarifs.devise)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {duree === 12
-                      ? t("monCompte.parAnDouzeMois")
-                      : t("monCompte.parMois")}
-                  </span>
-                </div>
-                {duree === 12 && (
-                  <p className="text-xs text-emerald-600 font-semibold mt-1">
-                    {t("monCompte.payezDixMoisStandard")}
-                  </p>
-                )}
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              <div className="space-y-3 text-xs sm:text-sm">
-                <div className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>1 Boutique physique complète</strong> : votre point de vente principal.
-                  </span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Scannage IMEI illimité</strong> : enregistrez chaque carton en 3 secondes avec votre douchette ou téléphone.
-                  </span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Gestion de caisse & ventes</strong> : sachez exactement combien d&apos;espèces vous devez trouver dans le tiroir à 19h.
-                  </span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Comptes vendeuses protégés</strong> : elles enregistrent les ventes sans jamais voir vos prix d&apos;achat confidentiels.
-                  </span>
-                </div>
-              </div>
-
-              {/* Moyens de paiement acceptés avec logos officiels */}
-              <div className="pt-2 border-t flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground font-medium">Paiement accepté par :</span>
-                <div className="flex items-center gap-2">
-                  <IconeOrangeMoney className="h-5 w-5 rounded-sm shadow-xs" />
-                  <IconeMtnMomo className="h-5 w-5 rounded-sm shadow-xs" />
-                  <IconeCarteBancaire className="h-5 w-8 rounded-sm shadow-xs" />
-                </div>
-              </div>
-
-              {rateLimitPaiement.estBloque && (
-                <AlerteRateLimit
-                  secondes={rateLimitPaiement.secondes}
-                  message={rateLimitPaiement.message}
-                  compact
-                />
-              )}
-
-              <Button
+          {/* 3. Sélecteur Mensuel / Annuel (remplace Particulier / Entreprise de Claude) */}
+          <div className="flex justify-center mt-6 mb-6">
+            <div className="inline-flex items-center rounded-full bg-muted/70 border border-border/50 text-xs sm:text-sm">
+              <button
                 type="button"
-                variant={planSelectionne === "standard" ? "default" : "outline"}
-                className="w-full font-semibold cursor-pointer py-5 text-sm"
-                disabled={initialisationEnCours || rateLimitPaiement.estBloque}
-                onClick={() => ouvrirModalPaiement("standard")}
+                onClick={() => setDuree(1)}
+                className={`rounded-full px-5 py-2 transition-all font-medium cursor-pointer ${
+                  duree === 1
+                    ? "bg-background text-foreground shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                {initialisationEnCours && planSelectionne === "standard" ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <CreditCard className="mr-2 h-4 w-4" />
-                )}
-                {rateLimitPaiement.estBloque
-                  ? t("auth.reessayerDans", {
-                      secondes: rateLimitPaiement.secondes,
-                    })
-                  : t("monCompte.activerFormuleStandard")}
-              </Button>
-            </CardContent>
-          </Card>
-        </Apparait>
+                {t("monCompte.mensuelSansEngagement")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDuree(12)}
+                className={`rounded-full px-5 py-2 transition-all font-medium cursor-pointer flex items-center gap-1.5 ${
+                  duree === 12
+                    ? "bg-background text-foreground shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span>{t("monCompte.annuelTitre")}</span>
+                <span className="text-sky-600 dark:text-sky-400 font-semibold">
+                  · {t("monCompte.economisez17")}
+                </span>
+              </button>
+            </div>
+          </div>
 
-        {/* FORMULE PREMIUM */}
-        <Apparait index={2}>
-          <Card
-            className={`flex flex-col justify-between border-2 relative overflow-hidden transition-all ${
-              planSelectionne === "premium"
-                ? "border-primary shadow-xl bg-primary/5"
-                : "border-border hover:border-foreground/25"
-            }`}
-          >
-            <div className="absolute top-0 right-0 rounded-bl-xl bg-primary px-3.5 py-1 text-[10px] font-bold text-primary-foreground uppercase tracking-wide">
-              {t("monCompte.prefereMultiBoutiques")}
+          {/* 4. Bandeau discret de réassurance / statut en cours */}
+          {statut.est_essai && (
+            <div className="flex justify-center -mt-2 mb-6">
+              <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-4 py-1.5 text-xs font-medium text-amber-800 dark:text-amber-300">
+                <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                <span>
+                  {t("monCompte.essaiActifBandeau", { jours: statut.jours_restants })}
+                </span>
+              </div>
+            </div>
+          )}
+          {statut.est_expire && (
+            <div className="flex justify-center -mt-2 mb-6">
+              <div className="inline-flex items-center gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-4 py-1.5 text-xs font-medium text-destructive">
+                <XCircle className="h-3.5 w-3.5 text-destructive" />
+                <span>
+                  {t("monCompte.expireBandeau")}
+                </span>
+              </div>
+            </div>
+          )}
+          {!statut.est_essai && !statut.est_expire && statut.echeance && (
+            <div className="flex justify-center -mt-2 mb-6">
+              <div className="inline-flex items-center gap-2  px-4 py-1.5 text-xs font-medium text-emerald-800 dark:text-emerald-300">
+                <span>
+                  {t("monCompte.actifBandeau", {
+                    plan: statut.plan === "premium" ? "Premium" : "Standard",
+                    date: formatDateCourte(statut.echeance),
+                  })}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Alerte Rate Limiting si nécessaire */}
+          {rateLimitPaiement.estBloque && (
+            <div className="max-w-md mx-auto mb-6">
+              <AlerteRateLimit
+                secondes={rateLimitPaiement.secondes}
+                message={rateLimitPaiement.message}
+                compact
+              />
+            </div>
+          )}
+
+          {/* 5. Grille des 2 forfaits (style Claude minimaliste, épuré et élégant) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto items-stretch pt-2">
+            {/* CARTE STANDARD */}
+            <div className="relative flex flex-col justify-between rounded-3xl border border-border/80 dark:border-border/60 bg-card p-6 sm:p-8 shadow-xs hover:border-foreground/25 transition-all">
+              <div>
+                {/* Icône minimaliste */}
+                <div className="text-foreground/80 mb-4">
+                  <IconeClaudeStandard className="w-9 h-9" />
+                </div>
+
+                {/* Titre & Sous-titre minimal */}
+                <h2 className="text-2xl font-bold font-heading text-foreground tracking-tight">
+                  Standard
+                </h2>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 min-h-[38px] flex items-center">
+                  {t("monCompte.taglineStandard")}
+                </p>
+
+                {/* Tarif */}
+                <div className="mt-5 mb-5">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl sm:text-4xl font-extrabold font-heading text-foreground tracking-tight tabular-nums">
+                      {formatMontant(
+                        montantActuel("standard", duree),
+                        statut.tarifs.devise,
+                      )}
+                    </span>
+                    <div className="text-xs text-muted-foreground leading-tight">
+                      <div>
+                        {duree === 12
+                          ? t("monCompte.factureAnnuellementCourt")
+                          : t("monCompte.parMoisCourt")}
+                      </div>
+                      {duree === 12 && (
+                        <div className="text-sky-600 dark:text-sky-400 font-medium pt-0.5">
+                          {t("monCompte.soitMontantParMois", {
+                            montant: formatMontant(
+                              Math.round(statut.tarifs.standard.annuel / 12),
+                              statut.tarifs.devise,
+                            ),
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bouton d'action pilule (noir en light, blanc en dark, épuré) */}
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    disabled={
+                      initialisationEnCours || rateLimitPaiement.estBloque
+                    }
+                    onClick={() => naviguerVersConfiguration("standard")}
+                    className={`w-full rounded-full py-3.5 px-6 text-sm font-semibold transition-all cursor-pointer shadow-xs ${
+                      estPlanActuel("standard")
+                        ? "border border-border bg-muted/40 hover:bg-muted text-foreground"
+                        : "bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100"
+                    }`}
+                  >
+                    {initialisationEnCours && planSelectionne === "standard" ? (
+                      <span className="inline-flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>{t("commun.chargement")}</span>
+                      </span>
+                    ) : (
+                      libelleBouton("standard")
+                    )}
+                  </button>
+
+                  <p className="text-[11px] text-center text-muted-foreground">
+                    {t("monCompte.sansEngagementAnnulation")}
+                  </p>
+                </div>
+
+                {/* Séparateur fin */}
+                <hr className="border-border/60 my-6" />
+
+                {/* Inclusions */}
+                <div className="space-y-3.5">
+                  <p className="text-xs font-semibold text-foreground/80">
+                    {t("monCompte.inclusionsStandardTitre")}
+                  </p>
+                  <ul className="space-y-3">
+                    {caracteristiquesStandard.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2.5">
+                        <CocheMinimaliste />
+                        <span className="text-xs sm:text-sm text-foreground/90 font-normal leading-relaxed">
+                          {item}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </div>
 
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl font-heading font-bold text-foreground">
-                    {t("monCompte.formulePremiumTitre")}
-                  </CardTitle>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {t("monCompte.formulePremiumSousTitre")}
+            {/* CARTE PREMIUM */}
+            <div className="relative flex flex-col justify-between rounded-3xl border border-border/80 dark:border-border/60 bg-card p-6 sm:p-8 shadow-xs hover:border-foreground/25 transition-all">
+              <div>
+                {/* Icône minimaliste */}
+                <div className="text-foreground/80 mb-4">
+                  <IconeClaudePremium className="w-9 h-9" />
+                </div>
+
+                {/* Titre & Sous-titre minimal */}
+                <h2 className="text-2xl font-bold font-heading text-foreground tracking-tight">
+                  Premium
+                </h2>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 min-h-[38px] flex items-center">
+                  {t("monCompte.taglinePremium")}
+                </p>
+
+                {/* Tarif */}
+                <div className="mt-5 mb-5">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl sm:text-4xl font-extrabold font-heading text-foreground tracking-tight tabular-nums">
+                      {formatMontant(
+                        montantActuel("premium", duree),
+                        statut.tarifs.devise,
+                      )}
+                    </span>
+                    <div className="text-xs text-muted-foreground leading-tight">
+                      <div>
+                        {duree === 12
+                          ? t("monCompte.factureAnnuellementCourt")
+                          : t("monCompte.parMoisCourt")}
+                      </div>
+                      {duree === 12 && (
+                        <div className="text-sky-600 dark:text-sky-400 font-medium pt-0.5">
+                          {t("monCompte.soitMontantParMois", {
+                            montant: formatMontant(
+                              Math.round(statut.tarifs.premium.annuel / 12),
+                              statut.tarifs.devise,
+                            ),
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bouton d'action pilule (noir en light, blanc en dark, épuré) */}
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    disabled={
+                      initialisationEnCours || rateLimitPaiement.estBloque
+                    }
+                    onClick={() => naviguerVersConfiguration("premium")}
+                    className={`w-full rounded-full py-3.5 px-6 text-sm font-semibold transition-all cursor-pointer shadow-xs ${
+                      estPlanActuel("premium")
+                        ? "border border-border bg-muted/40 hover:bg-muted text-foreground"
+                        : "bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100"
+                    }`}
+                  >
+                    {initialisationEnCours && planSelectionne === "premium" ? (
+                      <span className="inline-flex items-center justify-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>{t("commun.chargement")}</span>
+                      </span>
+                    ) : (
+                      libelleBouton("premium")
+                    )}
+                  </button>
+
+                  <p className="text-[11px] text-center text-muted-foreground">
+                    {t("monCompte.sansEngagementAnnulation")}
                   </p>
                 </div>
-                {/* <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                  <Store className="h-5 w-5" />
-                </div> */}
-              </div>
 
-              <div className="pt-4">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold font-mono text-foreground">
-                    {formatMontant(montantActuel("premium", duree), statut.tarifs.devise)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {duree === 12
-                      ? t("monCompte.parAnDouzeMois")
-                      : t("monCompte.parMois")}
-                  </span>
-                </div>
-                {duree === 12 && (
-                  <p className="text-xs text-emerald-600 font-semibold mt-1">
-                    {t("monCompte.payezDixMoisPremium")}
+                {/* Séparateur fin */}
+                <hr className="border-border/60 my-6" />
+
+                {/* Inclusions */}
+                <div className="space-y-3.5">
+                  <p className="text-xs font-semibold text-foreground/80">
+                    {t("monCompte.inclusionsPremiumPlus")}
                   </p>
-                )}
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-6">
-              <div className="space-y-3 text-xs sm:text-sm">
-                <div className="flex items-start gap-2.5 font-semibold text-foreground">
-                  <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Boutiques et magasins illimités</strong> : pilotez tous vos points de vente sur votre téléphone.
-                  </span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Transferts inter-boutiques tracés</strong> : sachez qui a envoyé quel carton et quelle boutique l&apos;a reçu.
-                  </span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Bénéfice net réel par boutique</strong> : suivez vos vraies marges après déduction de vos dépenses.
-                  </span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Exports Excel & comptabilité</strong> : pour vos bilans ou vos associés en fin de mois.
-                  </span>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                  <span>
-                    <strong>Assistance WhatsApp prioritaire</strong> : notre équipe répond directement à vos urgences du quotidien.
-                  </span>
+                  <ul className="space-y-3">
+                    {caracteristiquesPremium.map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2.5">
+                        <CocheMinimaliste />
+                        <span className="text-xs sm:text-sm text-foreground/90 font-normal leading-relaxed">
+                          {item}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Moyens de paiement acceptés avec logos officiels */}
-              <div className="pt-2 border-t flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground font-medium">Paiement accepté par :</span>
-                <div className="flex items-center gap-2">
-                  <IconeOrangeMoney className="h-5 w-5 rounded-sm shadow-xs" />
-                  <IconeMtnMomo className="h-5 w-5 rounded-sm shadow-xs" />
-                  <IconeCarteBancaire className="h-5 w-8 rounded-sm shadow-xs" />
-                </div>
-              </div>
-
-              {rateLimitPaiement.estBloque && (
-                <AlerteRateLimit
-                  secondes={rateLimitPaiement.secondes}
-                  message={rateLimitPaiement.message}
-                  compact
-                />
-              )}
-
-              <Button
-                type="button"
-                variant="default"
-                className="w-full font-semibold shadow-md cursor-pointer py-5 text-sm"
-                disabled={initialisationEnCours || rateLimitPaiement.estBloque}
-                onClick={() => ouvrirModalPaiement("premium")}
-              >
-                {initialisationEnCours && planSelectionne === "premium" ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          {/* 5.b Option Renouvellement Automatique par Carte */}
+          <div className="max-w-4xl mx-auto rounded-3xl border border-border/80 dark:border-border/60 bg-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs mt-6">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-foreground/80" />
+                <h3 className="text-sm font-bold text-foreground">
+                  {t("monCompte.renouvellementAutoCarteTitre")}
+                </h3>
+                {statut.renouvellement_auto ? (
+                  <span className="rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold px-2.5 py-0.5 border border-emerald-500/20 uppercase tracking-wide">
+                    {t("monCompte.statutActiveBadge")}
+                  </span>
                 ) : (
-                  <CreditCard className="mr-2 h-4 w-4" />
+                  <span className="rounded-full bg-muted text-muted-foreground text-[10px] font-semibold px-2.5 py-0.5 border border-border/60 uppercase tracking-wide">
+                    {t("monCompte.statutDesactiveBadge")}
+                  </span>
                 )}
-                {rateLimitPaiement.estBloque
-                  ? t("auth.reessayerDans", {
-                      secondes: rateLimitPaiement.secondes,
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed max-w-xl">
+                {statut.renouvellement_auto
+                  ? t("monCompte.renouvellementAutoActiveDesc", {
+                      carte: statut.carte_info
+                        ? t("monCompte.avecVotreCarte", { info: statut.carte_info })
+                        : t("monCompte.avecVotreCarteBancaire"),
                     })
-                  : t("monCompte.activerFormulePremium")}
-              </Button>
-            </CardContent>
-          </Card>
-        </Apparait>
-      </div>
+                  : t("monCompte.renouvellementAutoDesactiveDesc")}
+              </p>
+            </div>
 
-      {/* ------------------------------------------------------------- */}
-      {/* 4. Réassurance humaine : pas de piège ni d'engagement forcé   */}
-      {/* ------------------------------------------------------------- */}
-      <div className="rounded-2xl border bg-muted/20 p-5 mt-6 grid sm:grid-cols-3 gap-4 text-xs sm:text-sm">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-            <Lock className="h-4 w-4" />
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                disabled={chargementRenouvellement}
+                onClick={basculerRenouvellementAuto}
+                className={`rounded-full px-5 py-2.5 text-xs font-semibold transition-all cursor-pointer shadow-xs ${
+                  statut.renouvellement_auto
+                    ? "border border-border bg-muted/40 hover:bg-muted text-foreground"
+                    : "bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100"
+                }`}
+              >
+                {chargementRenouvellement ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>{t("monCompte.miseAJourEnCours")}</span>
+                  </span>
+                ) : statut.renouvellement_auto ? (
+                  t("monCompte.desactiverRenouvellement")
+                ) : (
+                  t("monCompte.activerRenouvellement")
+                )}
+              </button>
+            </div>
           </div>
-          <div>
-            <h4 className="font-semibold text-foreground">Aucun prélèvement surprise</h4>
-            <p className="text-muted-foreground mt-0.5 leading-relaxed text-xs">
-              Vous gardez la main. C&apos;est vous qui confirmez chaque règlement avec votre code secret Mobile Money.
+
+          {/* 6. Note de bas de page & Liens utiles */}
+          <div className="pt-10 text-center space-y-3 max-w-2xl mx-auto">
+            <p className="text-l text-muted-foreground leading-relaxed">
+              {t("monCompte.noteDiscretionPrix")}
             </p>
           </div>
-        </div>
-
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-            <ShieldCheck className="h-4 w-4" />
-          </div>
-          <div>
-            <h4 className="font-semibold text-foreground">Vos stocks restent intacts</h4>
-            <p className="text-muted-foreground mt-0.5 leading-relaxed text-xs">
-              Même si votre forfait expire, vos appareils enregistrés et vos numéros IMEI restent sauvegardés en sécurité.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-            <MessageCircle className="h-4 w-4" />
-          </div>
-          <div>
-            <h4 className="font-semibold text-foreground">Une question avant de payer ?</h4>
-            <p className="text-muted-foreground mt-0.5 leading-relaxed text-xs">
-              Notre équipe d&apos;assistance est à votre écoute pour vous guider selon la taille de votre magasin.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* ------------------------------------------------------------- */}
-      {/* 4.b Cadre Contractuel : CGU & Accord de Confidentialité       */}
-      {/* ------------------------------------------------------------- */}
-      <div className="rounded-2xl border border-border/80 bg-card/60 p-5 mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <Scale className="h-4 w-4 text-primary" />
-            <span>{t("monCompte.cadreContractuel")}</span>
-          </div>
-          <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
-            {t("monCompte.cadreContractuelDesc")}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <Link
-            href="/legal/cgu"
-            target="_blank"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border hover:bg-muted text-foreground transition-colors cursor-pointer"
-          >
-            <FileText className="h-3.5 w-3.5 text-primary" />
-            <span>{t("monCompte.consulterCgu")}</span>
-          </Link>
-          <Link
-            href="/legal/confidentialite"
-            target="_blank"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border hover:bg-muted text-foreground transition-colors cursor-pointer"
-          >
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-            <span>{t("monCompte.consulterNda")}</span>
-          </Link>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* ------------------------------------------------------------- */}
       {/* 5. MODALE "RÉGLER VOTRE ABONNEMENT" (REFONDUE ET 100% LISIBLE) */}
       {/* ------------------------------------------------------------- */}
       <Dialog open={modalOuvert} onOpenChange={setModalOuvert}>
         <DialogContent className="sm:max-w-lg p-0 overflow-hidden border shadow-2xl">
-          {/* En-tête fixe avec fond clair/sombre contrasté et typographie nette */}
-          <DialogHeader className="bg-muted/40 px-4 pt-4 pb-3 sm:px-6 sm:pt-6 sm:pb-4 border-b">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                <CreditCard className="h-5 w-5" />
-              </div>
-              <div>
-                <DialogTitle className="text-lg sm:text-xl font-heading font-bold text-foreground">
-                  Régler votre abonnement
-                </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                  Activation instantanée et sécurisée de votre boutique.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          {/* Corps défilable sans coupure avec DialogCorps */}
-          {session && (
-            <DialogCorps className="px-4 py-3.5 sm:px-6 sm:py-5 space-y-4 sm:space-y-5 overflow-y-auto max-h-[65vh]">
-              {/* Carte récapitulative haute visibilité */}
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-xs font-semibold uppercase text-primary tracking-wider">
-                    {session.plan === "premium" ? "Formule Premium (Multi-Boutiques)" : "Formule Standard"}
-                  </span>
-                  <p className="text-sm font-medium text-foreground">
-                    Durée : {session.duree_mois === 12 ? "1 an complet (12 mois)" : "1 mois"}
-                  </p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                    ✓ Boutique active jusqu&apos;au {formatDateCourte(dateProlongee.toISOString())}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs text-muted-foreground block">Montant à régler</span>
-                  <span className="text-2xl font-bold font-mono text-foreground">
-                    {formatMontant(session.montant, session.devise)}
-                  </span>
+          {/* En-tête fixe avec fond clair/sombre contrasté (uniquement en formulaire de saisie) */}
+          {!pushDirectEnCours && (
+            <DialogHeader className="bg-muted/40 px-4 pt-4 pb-3 sm:px-6 sm:pt-6 sm:pb-4 border-b">
+              <div className="flex items-center gap-2.5">
+                <div>
+                  <DialogTitle className="text-lg sm:text-xl font-heading font-bold text-foreground">
+                    {t("monCompte.modalModePaiementTitre")}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                    {t("monCompte.modalModePaiementDesc")}
+                  </DialogDescription>
                 </div>
               </div>
-
-              {/* Étape 1 : Choix de l'opérateur avec LOGOS OFFICIELS */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-foreground uppercase tracking-wide flex items-center gap-1.5">
-                  <Smartphone className="h-4 w-4 text-primary" />
-                  <span>1. Choisissez votre moyen de paiement :</span>
-                </label>
-
-                <div className="grid grid-cols-3 gap-2.5">
-                  {/* ORANGE MONEY AVEC LOGO OFFICIEL */}
-                  <button
-                    type="button"
-                    onClick={() => setMoyenPaiement("orange_money")}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all cursor-pointer ${
-                      moyenPaiement === "orange_money"
-                        ? "border-[#FF7900] bg-[#FF7900]/10 ring-2 ring-[#FF7900]/30 shadow-xs"
-                        : "border-border hover:bg-muted/40"
-                    }`}
-                  >
-                    <IconeOrangeMoney className="h-8 w-8 mb-2 rounded-md shadow-xs" />
-                    <span className="font-bold text-xs text-foreground">Orange Money</span>
-                    <span className="text-[11px] text-muted-foreground mt-0.5">Push ou #150#</span>
-                  </button>
-
-                  {/* MTN MOMO AVEC LOGO OFFICIEL */}
-                  <button
-                    type="button"
-                    onClick={() => setMoyenPaiement("mtn_momo")}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all cursor-pointer ${
-                      moyenPaiement === "mtn_momo"
-                        ? "border-[#FFCC00] bg-[#FFCC00]/15 ring-2 ring-[#FFCC00]/40 shadow-xs"
-                        : "border-border hover:bg-muted/40"
-                    }`}
-                  >
-                    <IconeMtnMomo className="h-8 w-8 mb-2 rounded-md shadow-xs" />
-                    <span className="font-bold text-xs text-foreground">MTN MoMo</span>
-                    <span className="text-[11px] text-muted-foreground mt-0.5">Invite sur l&apos;écran</span>
-                  </button>
-
-                  {/* CARTE BANCAIRE AVEC LOGOS OFFICIELS */}
-                  <button
-                    type="button"
-                    onClick={() => setMoyenPaiement("carte")}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all cursor-pointer ${
-                      moyenPaiement === "carte"
-                        ? "border-blue-600 bg-blue-600/10 ring-2 ring-blue-600/30 shadow-xs"
-                        : "border-border hover:bg-muted/40"
-                    }`}
-                  >
-                    <IconeCarteBancaire className="h-8 w-12 mb-2 rounded-sm shadow-xs" />
-                    <span className="font-bold text-xs text-foreground">Carte Bancaire</span>
-                    <span className="text-[11px] text-muted-foreground mt-0.5">Visa / Mastercard</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Étape 2 : Numéro pour le débit Mobile Money */}
-              {moyenPaiement !== "carte" && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground uppercase tracking-wide flex items-center gap-1.5">
-                    <Phone className="h-4 w-4 text-primary" />
-                    <span>2. Sur quel numéro envoyer la demande de débit ?</span>
-                  </label>
-
-                  <ChampTelephone
-                    valeur={telephonePaiement}
-                    onChange={setTelephonePaiement}
-                    placeholder="ex: 699 00 00 00"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    C&apos;est sur ce numéro {moyenPaiement === "orange_money" ? "Orange Money" : "MTN MoMo"} que vous validerez avec votre code secret.
-                  </p>
-                </div>
-              )}
-
-              {/* Explications claires pas à pas */}
-              <div className="rounded-xl border bg-muted/40 p-4 space-y-2">
-                <div className="flex items-center gap-2 font-bold text-xs text-foreground">
-                  <Info className="h-4 w-4 text-primary shrink-0" />
-                  <span>Comment valider votre règlement :</span>
-                </div>
-
-                {moyenPaiement === "orange_money" && (
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    1. Cliquez sur le bouton ci-dessous.<br />
-                    2. Un message Orange s&apos;affiche sur votre téléphone pour taper votre code secret (ou composez <strong>#150#</strong>).<br />
-                    3. Dès validation, votre boutique est activée automatiquement !
-                  </p>
-                )}
-
-                {moyenPaiement === "mtn_momo" && (
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    1. Cliquez sur le bouton ci-dessous.<br />
-                    2. Une notification apparaît sur l&apos;écran de votre téléphone MTN pour confirmer avec votre code PIN.<br />
-                    3. Dès confirmation, votre stock reste accessible sans coupure !
-                  </p>
-                )}
-
-                {moyenPaiement === "carte" && (
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Vous allez être dirigé vers le formulaire sécurisé pour renseigner les numéros de votre carte Visa ou Mastercard (UBA ou toute banque locale/internationale) avec validation par SMS 3D-Secure.
-                  </p>
-                )}
-              </div>
-
-              {/* MODE TEST OU MODE PRODUCTION */}
-              {session.mode === "test" ? (
-                <div className="space-y-3">
-                  <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 space-y-1.5">
-                    <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300">
-                      <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
-                      <span>Mode Démonstration & Test actif</span>
-                    </div>
-                    <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-                      Aucun argent ne sera débité de votre compte. Cliquez sur le bouton vert ci-dessous pour tester l&apos;activation instantanée de votre abonnement.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      type="button"
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-5 cursor-pointer shadow-md text-sm"
-                      disabled={simulationEnCours}
-                      onClick={() => validerSimulationTest(true)}
-                    >
-                      {simulationEnCours ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                      )}
-                      <span>
-                        Valider le paiement de test ({moyenPaiement === "orange_money" ? "Orange Money" : moyenPaiement === "mtn_momo" ? "MTN MoMo" : "Carte"})
-                      </span>
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs text-muted-foreground hover:text-destructive cursor-pointer"
-                      disabled={simulationEnCours}
-                      onClick={() => validerSimulationTest(false)}
-                    >
-                      Simuler un refus ou échec de test
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2 pt-1">
-                  <Button
-                    type="button"
-                    className="w-full font-bold py-6 shadow-lg cursor-pointer text-sm sm:text-base"
-                    onClick={() => {
-                      window.location.href = session.payment_url;
-                    }}
-                  >
-                    <span>
-                      Payer {formatMontant(session.montant, session.devise)} avec{" "}
-                      {moyenPaiement === "orange_money"
-                        ? "Orange Money"
-                        : moyenPaiement === "mtn_momo"
-                          ? "MTN MoMo"
-                          : "ma Carte"}
-                    </span>
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-
-                  <p className="text-center text-xs text-muted-foreground">
-                    Paiement chiffré SSL • Votre reçu est disponible dès validation
-                  </p>
-                </div>
-              )}
-            </DialogCorps>
+            </DialogHeader>
           )}
 
-          {/* Pied fixe de la modale */}
-          <DialogFooter className="px-4 py-2.5 sm:px-6 sm:py-3 border-t bg-muted/30 flex items-center justify-between sm:justify-between">
-            <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <Lock className="h-3.5 w-3.5 text-emerald-600" />
-              <span>Paiement certifié SaasPay</span>
-            </span>
+          {/* Corps défilable sans coupure avec DialogCorps */}
+          <DialogCorps className="px-4 py-5 sm:px-6 sm:py-6 space-y-4 sm:space-y-5 overflow-y-auto max-h-[75vh]">
+            {pushDirectEnCours ? (
+              /* ÉCRAN EXACT DEMANDÉ : LOGO TELORA AVEC SPINNER CIRCULAIRE SANS ICÔNE INUTILE */
+              <div className="py-2 px-2 text-center space-y-6">
+                {statutPushDirect === "attente" && (
+                  <div className="space-y-5">
+                    {/* 1. Titre et Nom de l'opérateur */}
+                    <div className="space-y-1">
+                      <h3 className="text-lg sm:text-xl font-bold font-heading text-foreground tracking-tight">
+                        {t("monCompte.enAttenteDePaiement")}
+                      </h3>
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                        {moyenPaiement === "orange_money"
+                          ? t("monCompte.orangeMoney")
+                          : moyenPaiement === "mtn_momo"
+                            ? t("monCompte.mtnMomo")
+                            : t("monCompte.carteBancaire")}
+                      </p>
+                    </div>
 
+                    {/* 2. Logo Telora avec Spinner circulaire tout autour (sans icône inutile) */}
+                    <div className="relative mx-auto flex items-center justify-center h-32 w-32 my-2">
+                      {/* Spinner de points orbitaux en rotation fluide avec dégradé cyan / bleu Telora */}
+                      <svg
+                        className="absolute inset-0 h-full w-full animate-spin [animation-duration:2.5s]"
+                        viewBox="0 0 120 120"
+                      >
+                        <defs>
+                          <linearGradient
+                            id="spinner-telora-cyan"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="100%"
+                          >
+                            <stop offset="0%" stopColor="#00F5FF" />
+                            <stop offset="100%" stopColor="#0088FF" />
+                          </linearGradient>
+                        </defs>
+                        {Array.from({ length: 12 }).map((_, i) => {
+                          const angle = (i * 30 * Math.PI) / 180;
+                          const r = 46;
+                          const cx = 60 + r * Math.cos(angle);
+                          const cy = 60 + r * Math.sin(angle);
+                          const dotRadius = 2.2 + (i / 11) * 3.6;
+                          const opacity = 0.15 + (i / 11) * 0.85;
+                          return (
+                            <circle
+                              key={i}
+                              cx={cx}
+                              cy={cy}
+                              r={dotRadius}
+                              fill="url(#spinner-telora-cyan)"
+                              opacity={opacity}
+                            />
+                          );
+                        })}
+                      </svg>
+
+                      {/* Emblème officiel Telora au centre exact */}
+                      <div className="relative z-10 flex items-center justify-center rounded-full p-2 bg-background shadow-xs">
+                        <IconeTelora size={44} />
+                      </div>
+                    </div>
+
+                    {/* 3. Bouton Actualiser */}
+                    <div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={verificationManuelleEnCours}
+                        onClick={verifierStatutPaiementManuel}
+                        className="rounded-lg border-border px-4 py-2 text-xs font-semibold text-foreground shadow-xs hover:bg-muted cursor-pointer transition-colors"
+                      >
+                        <RefreshCw
+                          className={`mr-1.5 h-3.5 w-3.5 text-primary ${verificationManuelleEnCours ? "animate-spin" : ""}`}
+                        />
+                        <span>{t("monCompte.actualiser")}</span>
+                      </Button>
+                    </div>
+
+                    {/* 4. Statut du Paiement */}
+                    <div className="space-y-2 pt-1">
+                      <div className="text-xs sm:text-sm font-medium text-muted-foreground">
+                        {t("monCompte.statutDuPaiement")}{" "}
+                        <span className="font-bold text-amber-500 uppercase tracking-wide">
+                          {t("monCompte.enAttenteDePaiementMaj")}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                        {t("monCompte.validerDemandeSurTelephone")}
+                      </p>
+
+                      {telephonePaiement && (
+                        <div className="pt-1 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                          <span>{t("monCompte.envoyeSurLe")}</span>
+                          <span className="font-semibold text-foreground font-mono">
+                            {telephonePaiement}
+                          </span>
+                          <span>•</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPushDirectEnCours(false);
+                              setStatutPushDirect("attente");
+                            }}
+                            className="text-primary hover:underline font-medium cursor-pointer"
+                          >
+                            {t("monCompte.changer")}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 5. Bouton Fermer pour revenir à l'accueil / formule */}
+                    <div className="pt-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => {
+                          setPushDirectEnCours(false);
+                          setStatutPushDirect("attente");
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-lg px-6 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <ArrowLeft className="h-3.5 w-3.5" />
+                        <span>{t("commun.fermer")}</span>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {statutPushDirect === "succes" && (
+                  <div className="space-y-4 py-6">
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
+                      <CheckCircle2 className="h-12 w-12" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-bold font-heading text-foreground">
+                        {t("monCompte.paiementValideSucces")}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {t("monCompte.boutiquePreteDesc")}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {statutPushDirect === "echec" && (
+                  <div className="space-y-4 py-6">
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-destructive/15 text-destructive">
+                      <XCircle className="h-12 w-12" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-bold font-heading text-foreground">
+                        {t("monCompte.echecOuDelaiExpire")}
+                      </h3>
+                      <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                        {messageErreurPush ||
+                          t("monCompte.transactionRefuseeDesc")}
+                      </p>
+                    </div>
+                    <div className="pt-2 flex items-center justify-center gap-2">
+                      <Button
+                        type="button"
+                        className="cursor-pointer font-semibold text-xs"
+                        onClick={() => {
+                          setPushDirectEnCours(false);
+                          setStatutPushDirect("attente");
+                        }}
+                      >
+                        {t("monCompte.reessayerPaiement")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="cursor-pointer font-semibold text-xs"
+                        onClick={() => setModalOuvert(false)}
+                      >
+                        {t("commun.fermer")}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* FORMULAIRE ÉPURÉ : CHOISIR OU MODIFIER LE MOYEN DE PAIEMENT */
+              <div className="space-y-5">
+                {/* 1. Sélection de l'opérateur avec affichage direct du numéro ou carte enregistrée */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-foreground uppercase tracking-wide flex items-center gap-1.5">
+                    <span>{t("monCompte.modePaiementLabel")}</span>
+                  </label>
+
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {/* ORANGE MONEY AVEC LOGO OFFICIEL */}
+                    <button
+                      type="button"
+                      onClick={() => choisirMoyenPaiement("orange_money")}
+                      className={`relative flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all cursor-pointer ${
+                        moyenPaiement === "orange_money"
+                          ? "border-[#FF7900] bg-[#FF7900]/10 ring-2 ring-[#FF7900]/30 shadow-xs"
+                          : "border-border hover:bg-muted/40"
+                      }`}
+                    >
+                      {moyenPaiement === "orange_money" && (
+                        <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#FF7900] text-white">
+                          <Check className="h-2.5 w-2.5 stroke-[3]" />
+                        </span>
+                      )}
+                      <IconeOrangeMoney className="h-8 w-8 mb-1.5 rounded-md shadow-xs" />
+                      <span className="font-bold text-xs text-foreground">
+                        {t("monCompte.orangeMoney")}
+                      </span>
+                      <span className="text-[11px] font-mono text-muted-foreground mt-0.5 truncate max-w-full px-1">
+                        {telephoneOrange || t("monCompte.nonConfigure")}
+                      </span>
+                    </button>
+
+                    {/* MTN MOMO AVEC LOGO OFFICIEL */}
+                    <button
+                      type="button"
+                      onClick={() => choisirMoyenPaiement("mtn_momo")}
+                      className={`relative flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all cursor-pointer ${
+                        moyenPaiement === "mtn_momo"
+                          ? "border-[#FFCC00] bg-[#FFCC00]/15 ring-2 ring-[#FFCC00]/40 shadow-xs"
+                          : "border-border hover:bg-muted/40"
+                      }`}
+                    >
+                      {moyenPaiement === "mtn_momo" && (
+                        <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#FFCC00] text-neutral-900">
+                          <Check className="h-2.5 w-2.5 stroke-[3]" />
+                        </span>
+                      )}
+                      <IconeMtnMomo className="h-8 w-8 mb-1.5 rounded-md shadow-xs" />
+                      <span className="font-bold text-xs text-foreground">
+                        {t("monCompte.mtnMomo")}
+                      </span>
+                      <span className="text-[11px] font-mono text-muted-foreground mt-0.5 truncate max-w-full px-1">
+                        {telephoneMtn || t("monCompte.nonConfigure")}
+                      </span>
+                    </button>
+
+                    {/* CARTE BANCAIRE AVEC LOGOS OFFICIELS */}
+                    <button
+                      type="button"
+                      onClick={() => choisirMoyenPaiement("carte")}
+                      className={`relative flex flex-col items-center justify-center p-3 rounded-xl border-2 text-center transition-all cursor-pointer ${
+                        moyenPaiement === "carte"
+                          ? "border-blue-600 bg-blue-600/10 ring-2 ring-blue-600/30 shadow-xs"
+                          : "border-border hover:bg-muted/40"
+                      }`}
+                    >
+                      {moyenPaiement === "carte" && (
+                        <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-white">
+                          <Check className="h-2.5 w-2.5 stroke-[3]" />
+                        </span>
+                      )}
+                      <IconeCarteBancaire className="h-8 w-12 mb-1.5 rounded-xs shadow-xs" />
+                      <span className="font-bold text-xs text-foreground">
+                        {t("monCompte.carteBancaire")}
+                      </span>
+                      <span className="text-[11px] font-mono text-muted-foreground mt-0.5 truncate max-w-full px-1">
+                        {statut?.carte_info
+                          ? statut.carte_info.split(" ")[1] || t("monCompte.numeroEnregistreCourt")
+                          : t("monCompte.visaMastercard")}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2. Détail spécifique au mode sélectionné */}
+                {moyenPaiement !== "carte" ? (
+                  <div className="space-y-1.5 pt-1">
+                    <label className="text-xs font-semibold text-foreground flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <span>
+                          {moyenPaiement === "orange_money"
+                            ? t("monCompte.numeroOrangeMoneyLabel")
+                            : t("monCompte.numeroMtnMomoLabel")}
+                        </span>
+                      </span>
+                      {(moyenPaiement === "orange_money" ? telephoneOrange : telephoneMtn) && (
+                        <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                          {t("monCompte.numeroEnregistreBadge")}
+                        </span>
+                      )}
+                    </label>
+
+                    <ChampTelephone
+                      valeur={telephonePaiement}
+                      onChange={changerTelephone}
+                      placeholder="ex: 699 00 00 00"
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      {t("monCompte.demandeDebitSurCeNumero", {
+                        moyen: moyenPaiement === "orange_money"
+                          ? t("monCompte.orangeMoney")
+                          : t("monCompte.mtnMomo"),
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 pt-1">
+                    {statut?.a_carte_enregistree ? (
+                      <div className="rounded-xl border border-border/80 bg-muted/30 p-3.5 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <IconeCarteBancaire className="h-6 w-9 rounded-xs shadow-xs shrink-0" />
+                          <div>
+                            <div className="text-xs font-semibold text-foreground">
+                              {statut.carte_info || t("monCompte.carteBancaireEnregistree")}
+                            </div>
+                            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                              {t("monCompte.carteActivePrete")}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-border/80 bg-muted/30 p-3.5 space-y-1">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                          <Lock className="h-3.5 w-3.5 text-primary shrink-0" />
+                          <span>{t("monCompte.paiementSecuriseCarteTitre")}</span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                          {t("monCompte.redirectionSaaspayCarteDesc")}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogCorps>
+
+          {/* Pied fixe de la modale */}
+          {!pushDirectEnCours && (
+            <DialogFooter className="px-4 py-3 sm:px-6 sm:py-3.5 border-t bg-muted/30 flex items-center justify-end sm:justify-end gap-3">
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-xs cursor-pointer font-medium"
+                  onClick={() => setModalOuvert(false)}
+                  disabled={enregistrementMoyenEnCours}
+                >
+                  {t("commun.annuler")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="text-xs font-bold cursor-pointer"
+                  disabled={enregistrementMoyenEnCours}
+                  onClick={enregistrerMoyenPaiement}
+                >
+                  {enregistrementMoyenEnCours ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Check className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  <span>{t("monCompte.enregistrerCeMoyen")}</span>
+                </Button>
+              </div>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 6. MODALE CONFIRMATION ANNULATION (RASSURANTE ET HUMAINE)     */}
+      {/* ------------------------------------------------------------- */}
+      <Dialog
+        open={modalAnnulationOuverte}
+        onOpenChange={setModalAnnulationOuverte}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-heading font-bold text-foreground">
+              {t("monCompte.annulerAbonnementTitre")}
+            </DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm text-muted-foreground mt-1.5 leading-relaxed">
+              {t("monCompte.accesGarantiJusquAu", {
+                date: statut.echeance
+                  ? formatDateCourte(statut.echeance)
+                  : t("monCompte.termeDeLaPeriode"),
+              })}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs sm:text-sm text-muted-foreground">
+            <div className="flex items-start gap-2.5 rounded-xl border border-border/70 bg-muted/30 p-3.5">
+              <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span className="leading-relaxed">
+                <strong>{t("monCompte.aucunPrelevementForceTitre")}</strong> : {t("monCompte.aucunPrelevementForceDesc")}
+              </span>
+            </div>
+            <div className="flex items-start gap-2.5 rounded-xl border border-border/70 bg-muted/30 p-3.5">
+              <Lock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <span className="leading-relaxed">
+                <strong>{t("monCompte.donneesSauvegardeesTitre")}</strong> : {t("monCompte.donneesSauvegardeesDesc")}
+              </span>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0 pt-2">
             <Button
               type="button"
               variant="outline"
-              size="sm"
-              className="text-xs cursor-pointer font-medium"
-              onClick={() => setModalOuvert(false)}
-              disabled={simulationEnCours}
+              onClick={() => {
+                setModalAnnulationOuverte(false);
+                toast.info(t("monCompte.demandeNonRenouvellementPriseEnCompte"));
+              }}
+              className="cursor-pointer"
             >
-              Fermer
+              {t("monCompte.confirmerArretForfait")}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setModalAnnulationOuverte(false)}
+              className="cursor-pointer font-semibold"
+            >
+              {t("monCompte.garderMonAbonnement")}
             </Button>
           </DialogFooter>
         </DialogContent>

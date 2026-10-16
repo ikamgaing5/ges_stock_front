@@ -464,6 +464,35 @@ export function MenuPaiement() {
   const modeDefaut =
     modesPaiement.find((m) => m.est_defaut) || modesPaiement[0] || null;
 
+  // Calcul de la prochaine facture et date de prélèvement
+  const prochaineFactureInfo = (() => {
+    if (!statutAbonnement) return null;
+
+    const plan = statutAbonnement.plan || "standard";
+    const tarifsPlan = statutAbonnement.tarifs?.[plan];
+    const devise = statutAbonnement.tarifs?.devise || "XAF";
+
+    // Si on a l'historique des factures, on regarde la durée du dernier abonnement (1 mois ou 12 mois)
+    const derniereFactureValide = factures.find((f) => f.statut === "valide");
+    const estAnnuel = derniereFactureValide?.duree_mois === 12;
+
+    const montant = tarifsPlan
+      ? (estAnnuel ? tarifsPlan.annuel : tarifsPlan.mensuel)
+      : (plan === "premium" ? (estAnnuel ? 250000 : 25000) : (estAnnuel ? 100000 : 10000));
+
+    // Date de prélèvement : échéance actuelle de l'abonnement
+    const datePrelevement = statutAbonnement.echeance
+      ? formatDateCourte(statutAbonnement.echeance)
+      : null;
+
+    if (!datePrelevement) return null;
+
+    return {
+      montant: formatMontant(montant, devise),
+      date: datePrelevement,
+    };
+  })();
+
   return (
     <>
       <Card>
@@ -475,9 +504,8 @@ export function MenuPaiement() {
         <CardContent className="space-y-4">
           {/* Rubrique 1 : Mon abonnement & forfaits */}
           <div className="flex items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={() => setModalAbonnementOuverte(true)}
+            <Link
+              href="/mon-compte/abonnement"
               className="group w-full flex items-center justify-between p-2 sm:p-2.5 -mx-2 rounded-lg text-left hover:bg-muted/40 transition-colors cursor-pointer select-none"
             >
               <div className="flex items-center">
@@ -492,10 +520,23 @@ export function MenuPaiement() {
                         )}`
                       : "Chargement du statut..."}
                   </span>
+                  {prochaineFactureInfo && (
+                    <span className="text-xs text-muted-foreground block mt-1 leading-relaxed">
+                      Votre prochaine facture sera de{" "}
+                      <strong className="text-foreground font-semibold">
+                        {prochaineFactureInfo.montant}
+                      </strong>
+                      . Le montant sera prélevé le{" "}
+                      <strong className="text-foreground font-semibold">
+                        {prochaineFactureInfo.date}
+                      </strong>
+                      .
+                    </span>
+                  )}
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-transform group-hover:translate-x-0.5 shrink-0 ml-2" />
-            </button>
+            </Link>
           </div>
 
           {/* Rubrique 2 : Modes de paiement et facturation */}
@@ -643,6 +684,19 @@ export function MenuPaiement() {
                           : "Standard"}
                       </span>
                     </div>
+                    {prochaineFactureInfo && (
+                      <p className="text-xs text-muted-foreground pt-1 leading-relaxed border-t border-border/40">
+                        Votre prochaine facture sera de{" "}
+                        <strong className="text-foreground font-semibold">
+                          {prochaineFactureInfo.montant}
+                        </strong>
+                        . Le montant sera prélevé le{" "}
+                        <strong className="text-foreground font-semibold">
+                          {prochaineFactureInfo.date}
+                        </strong>
+                        .
+                      </p>
+                    )}
                   </div>
 
                   <div className="rounded-xl border bg-muted/20 p-4 space-y-1.5">

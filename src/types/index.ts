@@ -348,6 +348,7 @@ export interface Paiement {
   id: number;
   user_id: number;
   reference: string;
+  reference_operateur?: string | null;
   montant: number;
   devise: string;
   plan: PlanAbonnement;
@@ -380,6 +381,14 @@ export interface StatutAbonnementComplet {
   est_actif: boolean;
   est_premium: boolean;
   mode_paiement: ModePaiement;
+  telephone_paiement?: string | null;
+  telephone_orange?: string | null;
+  telephone_mtn?: string | null;
+  moyen_prefere?: MoyenPaiement | null;
+  renouvellement_auto?: boolean;
+  a_carte_enregistree?: boolean;
+  carte_info?: string | null;
+  modes_enregistres?: ModePaiementItem[];
   tarifs: {
     standard: { mensuel: number; annuel: number };
     premium: { mensuel: number; annuel: number };
@@ -396,6 +405,7 @@ export interface InfoStatutAbonnement {
   est_essai: boolean;
   est_actif: boolean;
   est_premium: boolean;
+  renouvellement_auto?: boolean;
   tarifs: {
     standard: { mensuel: number; annuel: number };
     premium: { mensuel: number; annuel: number };
@@ -421,6 +431,7 @@ export interface FacturationStatutEtPreferences {
   abonnement: InfoStatutAbonnement;
   mode_paiement: PreferencesModePaiement;
   modes_paiement?: ModePaiementItem[];
+  renouvellement_auto?: boolean;
 }
 
 export interface PreferencesModePaiement {
@@ -516,12 +527,15 @@ export interface ConfigurationPaiementAdmin {
 
 export interface SessionPaiementReponse {
   reference: string;
+  reference_operateur?: string | null;
   montant: number;
   devise: string;
   plan: PlanAbonnement;
   duree_mois: number;
   mode: ModePaiement;
-  payment_url: string;
+  type?: "direct_push" | "redirect";
+  message?: string | null;
+  payment_url?: string | null;
   payment_token: string | null;
 }
 

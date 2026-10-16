@@ -979,9 +979,10 @@ export const fr = {
     environnementTest: "Mode Test (Sans frais)",
     paiementsSecurises: "Paiements Sécurisés",
     rythmeReglement: "À quel rythme préférez-vous régler ?",
-    mensuelSansEngagement: "Au mois le mois (sans engagement)",
-    annuelTitre: "Pour toute l'année",
+    mensuelSansEngagement: "Mensuel",
+    annuelTitre: "Annuel",
     deuxMoisOfferts: "2 mois offerts",
+    economise17:"Économisez 17%",
     formuleStandardTitre: "Formule Standard",
     prefereMultiBoutiques: "Le préféré des multi-boutiques",
     formulePremiumTitre: "Formule Premium",
@@ -1024,6 +1025,189 @@ export const fr = {
     activerFormulePremium: "Activer la Formule Premium",
     cadreContractuelDesc:
       "Votre abonnement est régi par nos Conditions Générales SaaS (traçabilité IMEI unitaire, garantie anti-recel) et notre Accord Bilatéral de Confidentialité (protection de vos marges et secrets d'affaires).",
+    paiements: "Vos informations de paiements",
+
+    // --- Forfaits & Abonnement ---
+    retourMonCompte: "Retour à mon compte",
+    retourAuxForfaits: "Retour aux forfaits",
+    modeDemonstrationTest: "Mode Démonstration & Test",
+    configurezVotreForfait: "Configurez votre forfait",
+    factureMensuellement: "Facturé mensuellement",
+    factureAnnuellement: "Facturé annuellement",
+    factureAnnuellementCourt: "facturé annuellement",
+    parMoisCourt: "par mois",
+    an: "an",
+    mois: "mois",
+    soitMontantParMois: "soit {montant} / mois",
+    economisez17: "Économisez 17 %",
+    formuleStandardMensuel: "Standard mensuel",
+    formulePremiumMensuel: "Premium mensuel",
+    formuleStandardAnnuel: "Standard annuel",
+    formulePremiumAnnuel: "Premium annuel",
+    formuleLabel: "Formule :",
+    sansEngagementAnnulation: "Sans engagement · Annulation à tout moment",
+    desForfaitsQuiEvoluent: "Des forfaits qui évoluent avec vous",
+    taglineStandard: "Gérez votre boutique physique en toute sérénité.",
+    taglinePremium: "Pilotez plusieurs boutiques et magasins sans limites.",
+    essaiActifBandeau:
+      "Période d'essai gratuite active : {jours} jours restants. Vos données restent sauvegardées.",
+    expireBandeau:
+      "Votre abonnement a expiré. Choisissez une formule ci-dessous pour réactiver vos accès sans interruption.",
+    actifBandeau: "Abonnement actif ({plan}) jusqu'au {date}.",
+
+    // Inclusions
+    inclusionsStandardTitre: "Tout ce qui est inclus dans Standard :",
+    inclusionsPremiumTitre: "Tout ce qui est inclus dans Premium :",
+    featBoutiqueUnique: "1 boutique physique complète",
+    featImeiIllimite: "Scannage IMEI illimité (douchette & smartphone)",
+    featCaisseClotures: "Gestion de caisse & clôtures journalières",
+    featComptesProteges: "Comptes vendeuses protégés (prix d'achat masqués)",
+    featSuiviStockAlertes: "Suivi des stocks en temps réel & alertes de rupture",
+    featBoutiquesIllimitees: "Boutiques et magasins illimités",
+    featTransfertsStock: "Transferts de stock & traçabilité multi-magasins",
+    featBeneficeNetPointVente: "Bénéfice net réel calculé par point de vente",
+    featExportsComptables: "Exports comptables & bilans Excel",
+    featSupportWhatsapp: "Assistance prioritaire directe par WhatsApp",
+
+    // Récapitulatif commande & checkout review
+    titreForfaitStandard: "Forfait Standard",
+    titreForfaitPremium: "Forfait Premium",
+    descForfaitStandardCourt: "Gestion complète pour 1 boutique physique",
+    descForfaitPremiumCourt: "Accès multi-boutiques et magasins illimités",
+    periodeAnnuel: "annuel",
+    periodeMensuel: "mensuel",
+    sousTotal: "Sous-total",
+    taxesEtFraisReseau: "Taxes & frais de réseau",
+    inclusSelonReseau: "Inclus / Selon réseau",
+    totalDuAujourdhui: "Total dû aujourd'hui",
+    factureParAn: "Facturé {montant} par an",
+    factureParMois: "Facturé {montant} par mois",
+    boutiqueActiveJusquAu: "Boutique active jusqu'au {date}",
+    accordCgvPrefix: "J'accepte les",
+    accordCgvLien: "Conditions Générales de Vente",
+    accordCgvSuffix: "et autorise Telora à activer mon abonnement.",
+    renouvellementCarteNotice:
+      "Votre abonnement sera automatiquement renouvelé le {date}. Le montant facturé sera de {montant}/{periode}.",
+    nonRenouvellementNotice:
+      "Votre formule restera active jusqu'au {date}. Des rappels vous seront envoyés avant expiration pour renouveler vos accès sans coupure.",
+    fraisOperateurAvertissement:
+      "* Des frais de transaction propres à votre opérateur mobile ou à votre banque peuvent s'appliquer lors du débit.",
+    accordCguCartePre:
+      "Vous acceptez que Telora débite votre carte du montant ci-dessus aujourd'hui et de manière récurrente à chaque échéance jusqu'à résiliation dans les paramètres de votre compte, conformément à nos ",
+    accordCguMobilePre:
+      "Vous acceptez que Telora initialise le débit du montant ci-dessus aujourd'hui pour activer votre formule pour la période choisie, conformément à nos ",
+    conditionsUtilisationLien: "conditions d'utilisation",
+    accordCguSuffixePoint: ".",
+    sAbonner: "S'abonner",
+    paiementChiffreSansEngagement:
+      "Paiement chiffré et sécurisé · Sans engagement",
+    paiementSecuriseSaaspay3d: "Paiement sécurisé SaasPay 3D-Secure",
+    inclusionsPremiumPlus: "Tout ce qui est inclus dans Standard, plus :",
+    validerAbonnement: "Valider l'abonnement",
+    paiementDirectSaspayInfo:
+      "Paiement direct sécurisé SasPay • Votre reçu est disponible dès validation",
+    noteDiscretionPrix:
+      "Les prix et les forfaits sont susceptibles d’être modifiés à la discrétion de Telora.",
+
+    // Renouvellement automatique
+    renouvellementAutoCarteTitre: "Renouvellement automatique par carte",
+    renouvellementAutoActiveDesc:
+      "Votre formule sera automatiquement reconduite à chaque échéance{carte}. Aucune interruption de service pour vos magasins. Annulable à tout moment en 1 clic.",
+    renouvellementAutoDesactiveDesc:
+      "Reconduire automatiquement votre forfait à chaque échéance sans coupure d'accès à vos boutiques. Uniquement disponible avec une carte bancaire (Visa / Mastercard).",
+    avecVotreCarte: " avec votre carte {info}",
+    avecVotreCarteBancaire: " avec votre carte bancaire",
+    statutActiveBadge: "Activé",
+    statutDesactiveBadge: "Désactivé",
+    renouvellementAutoTitre: "Renouvellement automatique",
+    prelevementAutoDesc: "Prélèvement automatique à chaque échéance",
+    renouvellementAutoAide:
+      "Vous pouvez désactiver le renouvellement automatique à tout moment en 1 clic sans frais.",
+    activerRenouvellement: "Activer le renouvellement",
+    desactiverRenouvellement: "Désactiver le renouvellement",
+    miseAJourEnCours: "Mise à jour...",
+    configurerCartePourRenouvellement:
+      "Veuillez d'abord configurer une carte bancaire pour activer le renouvellement automatique.",
+    impossibleModifierPreference: "Impossible de modifier cette préférence.",
+
+    // Boutons forfaits
+    boutonInitialisation: "Initialisation...",
+    boutonActiverStandard: "Activer le forfait Standard",
+    boutonActiverPremium: "Activer le forfait Premium",
+    boutonProlongerStandard: "Prolonger le forfait Standard",
+    boutonProlongerPremium: "Prolonger le forfait Premium",
+    boutonObtenirStandard: "Obtenir le forfait Standard",
+    boutonObtenirPremium: "Obtenir le forfait Premium",
+
+    // Modale Mode de paiement
+    modalModePaiementTitre: "Mode de paiement",
+    modalModePaiementDesc:
+      "Sélectionnez le moyen de paiement à utiliser pour vos règlements.",
+    modePaiementLabel: "Mode de paiement :",
+    orangeMoney: "Orange Money",
+    mtnMomo: "MTN MoMo",
+    carteBancaire: "Carte Bancaire",
+    visaMastercard: "Visa / Mastercard",
+    nonConfigure: "Non configuré",
+    numeroOrangeMoneyLabel: "Numéro Orange Money :",
+    numeroMtnMomoLabel: "Numéro MTN MoMo :",
+    numeroEnregistreBadge: "✓ Numéro enregistré",
+    numeroEnregistreCourt: "✓ Enregistré",
+    demandeDebitSurCeNumero:
+      "La demande de débit {moyen} sera envoyée sur ce numéro.",
+    carteBancaireEnregistree: "Carte bancaire enregistrée",
+    carteActivePrete: "✓ Carte active prête pour vos règlements",
+    paiementSecuriseCarteTitre: "Paiement sécurisé par carte",
+    redirectionSaaspayCarteDesc:
+      "Vous serez redirigé vers l'interface sécurisée SaasPay 3D-Secure pour enregistrer ou utiliser votre carte bancaire lors de la validation.",
+    paiementCertifieSaasPay: "Paiement certifié SaasPay",
+    enregistrerCeMoyen: "Enregistrer ce moyen",
+    moyenMisAJourSucces: "Moyen de paiement enregistré avec succès.",
+    veuillezRenseignerTelephone:
+      "Veuillez renseigner votre numéro de téléphone pour recevoir la demande de débit.",
+    debitSurLeNumero: "Débit sur le {tel}",
+    numeroARenseigner: "Numéro à renseigner",
+    modifierMoyenPaiement: "Modifier le moyen de paiement",
+
+    // Modale Push direct Telora
+    enAttenteDePaiement: "En attente de paiement",
+    actualiser: "Actualiser",
+    statutDuPaiement: "Statut du Paiement :",
+    enAttenteDePaiementMaj: "EN ATTENTE DE PAIEMENT",
+    validerDemandeSurTelephone:
+      "Veuillez valider la demande sur votre téléphone avec votre code secret pour finaliser.",
+    envoyeSurLe: "Envoyé sur le",
+    changer: "Changer",
+    paiementValideSucces: "Paiement validé avec succès !",
+    boutiquePreteDesc:
+      "Votre abonnement Telora a été instantanément activé. Votre boutique est prête !",
+    echecOuDelaiExpire: "Échec ou délai expiré",
+    transactionRefuseeDesc:
+      "Le règlement a été rejeté ou a échoué sur le réseau de l'opérateur.",
+    delaiDepasseDesc: "Délai de confirmation dépassé (90 secondes).",
+    reessayerPaiement: "Réessayer le paiement",
+    paiementToujoursEnAttente:
+      "Paiement toujours en cours de validation sur votre téléphone.",
+    verificationImpossible: "Vérification impossible pour le moment.",
+    demandePaiementEnvoyee:
+      "Demande de paiement envoyée sur votre téléphone !",
+    redirectionPasserelle: "Redirection vers la passerelle sécurisée...",
+
+    // Modale Annulation
+    annulerAbonnementTitre: "Annuler votre abonnement ?",
+    accesGarantiJusquAu:
+      "Votre accès complet à Telora reste 100% garanti jusqu'au {date}.",
+    termeDeLaPeriode: "terme de la période",
+    aucunPrelevementForceTitre: "Aucun prélèvement automatique forcé",
+    aucunPrelevementForceDesc:
+      "Vos règlements s'effectuent par Mobile Money. Aucun montant ne peut être débité sans votre code secret sur votre téléphone.",
+    donneesSauvegardeesTitre: "Vos stocks et données restent sauvegardés",
+    donneesSauvegardeesDesc:
+      "Vos historiques de ventes, vos prix d'achat et vos numéros IMEI enregistrés restent à vous en toute confidentialité.",
+    confirmerArretForfait: "Confirmer l'arrêt du forfait",
+    garderMonAbonnement: "Garder mon abonnement",
+    demandeNonRenouvellementPriseEnCompte:
+      "Demande de non-renouvellement prise en compte. Votre boutique reste active jusqu'à l'échéance.",
   },
   admin: {
     titre: "Administration de la plateforme",

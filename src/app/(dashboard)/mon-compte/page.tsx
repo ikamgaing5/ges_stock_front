@@ -146,7 +146,7 @@ export default function PageMonCompte() {
         description={`${libelleRole(utilisateur.role)} · ${utilisateur.email}`}
       />
 
-      <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-1 sm:space-y-2">
         {/* Rubrique Paiement & Facturation (format liste avec modales dédiées pour le propriétaire) */}
         {utilisateur.role === "proprietaire" ? (
           <Apparait>

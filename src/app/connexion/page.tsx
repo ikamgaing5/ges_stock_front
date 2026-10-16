@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Loader2, Mail, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth-provider";
 import { useI18n } from "@/lib/i18n";
@@ -156,6 +156,7 @@ export default function PageConnexion() {
   function formaterErreur(err: string | null): string | null {
     if (!err) return null;
     const errMinuscule = err.toLowerCase();
+    
     if (
       errMinuscule.includes("email ou mot de passe incorrect") ||
       errMinuscule.includes("ces identifiants") ||
@@ -244,20 +245,35 @@ export default function PageConnexion() {
           setActiviteSuspecte(true);
           setEmailSuspect(emailCible);
           if (typeof window !== "undefined") {
-            window.sessionStorage.setItem("telora_activite_suspecte_email", emailCible);
+            window.sessionStorage.setItem(
+              "telora_activite_suspecte_email",
+              emailCible,
+            );
           }
           setEnvoiEnCours(false);
+          setMotDePasse("");
           return;
         }
 
         const estRateLimite = rateLimitLogin.gererErreur(e);
         const msg = e.erreurDe("email") ?? e.message;
         setErreur(msg);
+
+        // Vider le mot de passe si les identifiants sont incorrects
+        if (
+          msg.toLowerCase().includes("mot de passe incorrect") ||
+          msg.toLowerCase().includes("credentials do not match") ||
+          msg.toLowerCase().includes("incorrect email or password") ||
+          msg.toLowerCase().includes("ces identifiants")
+        ) {
+          setMotDePasse("");
+        }
         if (estRateLimite) {
           // Décompte activé automatiquement via rateLimitLogin
         }
       } else {
         setErreur(t("commun.erreur"));
+        setMotDePasse("");
       }
       setEnvoiEnCours(false);
     }
@@ -312,6 +328,7 @@ export default function PageConnexion() {
         }
       } else {
         setErreur(t("commun.erreur"));
+        // setMotDePasse("");
       }
       setEnvoiEnCours(false);
     }

@@ -11,7 +11,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { TriangleAlert } from "lucide-react";
+import { TriangleAlert, X } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -54,12 +54,22 @@ export default function DashboardLayout({
     }
   }, [chargement, utilisateur]);
 
+  // Empêcher tout défilement parasite au niveau de la fenêtre (html / body) pour éliminer la double barre
+  useEffect(() => {
+    document.documentElement.classList.add("overflow-hidden");
+    document.body.classList.add("overflow-hidden");
+    return () => {
+      document.documentElement.classList.remove("overflow-hidden");
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, []);
+
   if (chargement || !utilisateur || utilisateur.role === "admin") {
     return <SqueletteShellDashboard />;
   }
 
   return (
-    <div className="flex h-[calc(100dvh-var(--hauteur-barre-titre,0px))] overflow-hidden">
+    <div className="fixed inset-0 top-[var(--hauteur-barre-titre,0px)] flex overflow-hidden">
       {/* 1. Barre latérale gauche : totalement fixe et figée, ne bouge jamais */}
       {ouverte && (
         <aside className="hidden h-full w-60 shrink-0 border-r lg:block animate-in fade-in duration-150 select-none">
@@ -92,12 +102,36 @@ function BandeauAbonnement() {
   // l'heure en plein rendu donnerait un résultat différent sur le serveur
   // et dans le navigateur, et React le signale à juste titre.
   const [aujourdhui, setAujourdhui] = useState<number | null>(null);
+  const [ferme, setFerme] = useState(false);
 
   useEffect(() => {
     setAujourdhui(Date.now());
+    try {
+      if (typeof window !== "undefined") {
+        const masque = window.sessionStorage.getItem(
+          "telora_bandeau_expiration_masque",
+        );
+        if (masque === "1") {
+          setFerme(true);
+        }
+      }
+    } catch {
+      // Ignorer
+    }
   }, []);
 
-  if (!abonnement?.statut) return null;
+  function masquerBandeau() {
+    setFerme(true);
+    try {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem("telora_bandeau_expiration_masque", "1");
+      }
+    } catch {
+      // Ignorer
+    }
+  }
+
+  if (ferme || !abonnement?.statut) return null;
 
   const bloque = !abonnement.utilisable;
 
@@ -149,6 +183,19 @@ function BandeauAbonnement() {
           ? t("monCompte.choisirForfait")
           : t("monCompte.gererAbonnement")}
       </Link>
+      <button
+        type="button"
+        onClick={masquerBandeau}
+        aria-label={t("commun.fermer")}
+        title={t("commun.fermer")}
+        className={
+          bloque
+            ? "ml-1 -mr-1 rounded-md p-1 text-destructive/70 transition-colors hover:bg-destructive/10 hover:text-destructive"
+            : "ml-1 -mr-1 rounded-md p-1 text-statut-attente/70 transition-colors hover:bg-statut-attente/15 hover:text-statut-attente"
+        }
+      >
+        <X className="h-4 w-4" />
+      </button>
     </div>
   );
 }
